@@ -56,29 +56,49 @@ const DailyMealCountForm = () => {
     return;
   }
 
+
   // Check for missing dates
-  const startDate = startOfMonth(selectedDate);
-  const endDate = selectedDate;
-  const allDates = eachDayOfInterval({ start: startDate, end: endDate });
-  const missing = allDates.filter(date => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    return !monthlyMealCount[formattedDate];
-  });
+const pickedMonth = format(selectedDate, "yyyy-MM");
+
+// Flatten all dates for the picked month across all members
+const aggregatedDays = Object.values(monthlyMealCount).flatMap(memberData => {
+  return memberData[pickedMonth] ? Object.keys(memberData[pickedMonth]).map(Number) : [];
+});
+
+// Find the earliest and latest day of data for the picked month
+const startDate = aggregatedDays.length > 0 
+  ? new Date(`${pickedMonth}-${Math.max(...aggregatedDays)}`) 
+  : startOfMonth(selectedDate);
+
+const endDate = selectedDate;
+
+// Generate all dates in the interval
+const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+
+// Filter out missing dates
+const missingDates = allDates.filter(date => {
+  const day = Number(format(date, "d")); // Get the day of the month as a number
+  return !aggregatedDays.includes(day);
+});
+
+
 
   // Filter out the selected date from the missing dates
-  const filteredMissing = missing.filter(date => format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd"));
+
+  const filteredMissing = missingDates.filter(date => format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd"));
 
   if (filteredMissing.length > 0) {
     const firstMissingDate = filteredMissing[0];
     setMissingDates(filteredMissing);
     let errorMessage;
     if (filteredMissing.length === 1) {
-      errorMessage = `Please fill in the meal count for ${format(firstMissingDate, "MMM dd")}`;
+      errorMessage = `Fill in the meal count for ${format(firstMissingDate, "MMM dd")}`;
     } else if (filteredMissing.length === 2) {
-      errorMessage = `Please fill in the meal counts for ${format(firstMissingDate, "MMM dd")} and ${format(filteredMissing[1], "MMM dd")}`;
+      errorMessage = `Fill in the meal counts for ${format(firstMissingDate, "MMM dd")} and ${format(filteredMissing[1], "MMM dd")}`;
     } else {
-      errorMessage = `Please fill in the meal counts for ${filteredMissing.length} missing dates starting from ${format(firstMissingDate, "MMM dd")} to ${format(filteredMissing[filteredMissing.length - 1], "MMM dd")}`;
+      errorMessage = `Fill in the meal counts for ${filteredMissing.length} missing dates starting from ${format(firstMissingDate, "MMM dd")} to ${format(filteredMissing[filteredMissing.length - 1], "MMM dd")}`;
     }
+    alert(errorMessage);
     setError(errorMessage);
     return;
   }
@@ -155,94 +175,96 @@ const DailyMealCountForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 mb-8">
-      <h1 className="text-xl font-bold mb-4">Set Daily Meal Count</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex space-x-4">
-          {/* this is the date picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-[230px] justify-start text-left font-normal",
-                  !selectedDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate
-                  ? format(selectedDate, "EEEE, MMM dd, yyyy")
-                  : "Pick the date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                initialFocus
-                disabled={(date) => isAfter(date, endOfToday())}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Meal Counts for Members */}
-        {members.map((member) => (
-          <div key={member.member_id} className="flex items-center space-x-12">
-            <Label htmlFor={`member-${member.member_id}`} className="w-28">
-              {member.member_name}
-            </Label>
-            <Input
-              id={`member-${member.member_id}`}
-              type="text"
-              value={dailyMealCount[member.member_id] || ""}
-              onChange={(e) => handleInputChange(e, member.member_id)}
-              placeholder=""
-              className="w-[6ch] text-center appearance-none"
-            />
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="max-w-md mx-auto p-4 mb-8">
+        <h1 className="text-xl font-bold mb-4">Set Daily Meal Count</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex space-x-4">
+            {/* this is the date picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[230px] justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate
+                    ? format(selectedDate, "EEEE, MMM dd, yyyy")
+                    : "Pick the date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                  disabled={(date) => isAfter(date, endOfToday())}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-        ))}
 
-        {/* Validation Error Message */}
-        {error && <div className="text-red-500 text-sm">{error}</div>}
+          {/* Meal Counts for Members */}
+          {members.map((member) => (
+            <div key={member.member_id} className="flex items-center space-x-12">
+              <Label htmlFor={`member-${member.member_id}`} className="w-28">
+                {member.member_name}
+              </Label>
+              <Input
+                id={`member-${member.member_id}`}
+                type="text"
+                value={dailyMealCount[member.member_id] || ""}
+                onChange={(e) => handleInputChange(e, member.member_id)}
+                placeholder=""
+                className="w-[6ch] text-center appearance-none"
+              />
+            </div>
+          ))}
 
-        {/* Submit and Reset Buttons */}
-        <div className="flex space-x-4">
-          <Button onClick={handleReset} variant="secondary">
-            Reset
-          </Button>
-          <Button type="submit">Set Counts</Button>
-        </div>
-      </form>
+          {/* Validation Error Message */}
+          {error && <div className="text-red-500 text-sm">{error}</div>}
 
-      {/* Modal for showing summary and confirming */}
-      {isModalOpen && !isConfirmed && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-[250px]">
-            <h2 className="text-lg font-semibold">Meal Counts Summary </h2>
-            <h3 className="font-light mb-4">
-              {selectedDate
-                ? format(selectedDate, "MMM dd, EEEE")
-                : "No Date Selected"}
-            </h3>
-            <ul>
-              {members.map((member) => (
-                <li className="p-2 flex justify-between" key={member.member_id}>
-                  <span>{member.member_name}:</span>{" "}
-                  <span>{dailyMealCount[member.member_id]}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 flex justify-between">
-              <Button onClick={closeModal} variant="secondary">
-                Close
-              </Button>
-              <Button onClick={handleConfirmSubmit}>Confirm Submit</Button>
+          {/* Submit and Reset Buttons */}
+          <div className="flex space-x-4">
+            <Button onClick={handleReset} variant="secondary">
+              Reset
+            </Button>
+            <Button type="submit">Set Counts</Button>
+          </div>
+        </form>
+
+        {/* Modal for showing summary and confirming */}
+        {isModalOpen && !isConfirmed && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg w-[250px]">
+              <h2 className="text-lg font-semibold">Meal Counts Summary </h2>
+              <h3 className="font-light mb-4">
+                {selectedDate
+                  ? format(selectedDate, "MMM dd, EEEE")
+                  : "No Date Selected"}
+              </h3>
+              <ul>
+                {members.map((member) => (
+                  <li className="p-2 flex justify-between" key={member.member_id}>
+                    <span>{member.member_name}:</span>{" "}
+                    <span>{dailyMealCount[member.member_id]}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 flex justify-between">
+                <Button onClick={closeModal} variant="secondary">
+                  Close
+                </Button>
+                <Button onClick={handleConfirmSubmit}>Confirm Submit</Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

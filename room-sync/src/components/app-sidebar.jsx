@@ -45,7 +45,7 @@
 
 
 import { useNavigate } from "react-router-dom";  // Import useNavigate
-import { Calendar, ShoppingBasket, Banknote, UserRoundPen, HandHelping } from "lucide-react";
+import { UsersRound, ShoppingBasket, Banknote, UserRoundPen, HandHelping } from "lucide-react";
 
 import {
   Sidebar,
@@ -119,6 +119,19 @@ export function AppSidebar() {
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button
+                    onClick={() => handleNavigate("/members")}
+                    className="flex items-center"
+                  >
+                    <UsersRound className="mr-2 h-4 w-4" />
+                    <span>Manage Members</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

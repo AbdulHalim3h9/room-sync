@@ -42,7 +42,7 @@ export default function CreditChart({ data }) {
             {member.member_name}
           </h3>
         </div>
-        <div className="flex items-center flex-col md:flex-row">
+        <div className="flex items-center justify-center flex-col md:flex-row">
           <BarChart
             width={350}
             height={350}
@@ -69,12 +69,32 @@ export default function CreditChart({ data }) {
             <Bar dataKey="due" fill="#ff7f7f" stackId="stack" />
             <Bar dataKey="consumed" fill="#82ca9d" stackId="stack" />
           </BarChart>
-          <div className="text-md text-slate-600 m-5">
-            <h4>{member.contribution.contributed} contribution this month</h4>{" "}
+          <div className="text-md text-slate-600 m-5 mds:mr-20">
+            <h4 className="pl-3"><span className="font-bold text-lg">{member.contribution.contributed} tk</span> contribution this month</h4>{" "}
             <br />
             <h4>
-              {member.consumption.consumed} worth of consumption this month
+              - <span className="font-bold text-lg">{member.consumption.consumed} tk </span>
+               worth of consumption this month
             </h4>
+            <hr />
+
+            {/* Conditional rendering using if-else */}
+  {(() => {
+    const contribution = member.contribution.contributed;
+    const consumption = member.consumption.consumed;
+    const balance = contribution - consumption;
+
+    if (balance > 0) {
+      return (
+        <div className="mt-2" ><span className="text-lg font-bold text-slate-600 pl-3">{balance} tk</span>  worth of credit left this month</div>
+      );
+    } else {
+      return (
+        <div className="mt-2" ><span className="text-lg font-bold text-red-400 pl-3">{balance} tk</span>  Oops! add some money bro</div>
+      );
+    }
+  })()}
+
           </div>
         </div>
       </div>

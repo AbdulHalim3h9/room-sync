@@ -19,6 +19,7 @@ import SetDailyMealCount from "./components/AdminComponents/SetDailyMealCount";
 import SetPayables from "./components/AdminComponents/SetPayables";
 import AddMealFund from "./components/AdminComponents/AddMealFund";
 import AddGrocerySpendings from "./components/AdminComponents/AddGrocerySpendings";
+import ManageMembers from "./components/AdminComponents/ManageMembers";
 
 const App = () => {
   return (
@@ -40,6 +41,7 @@ const App = () => {
         <Route path="/add-meal-fund" element={<AddMealFund />} />
         <Route path="/set-payables" element={<SetPayables />} />
         <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
+        <Route path="/members" element={<ManageMembers />} />
       </Routes>
       <BottomNavigation />
     </>

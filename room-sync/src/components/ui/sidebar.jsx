@@ -223,21 +223,23 @@ const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) 
   const { toggleSidebar } = useSidebar()
 
   return (
-    (<Button
+    <Button
       ref={ref}
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn("h-10 w-10", className)}  // Increased button size
       onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
+        onClick?.(event);
+        toggleSidebar();
       }}
-      {...props}>
-      <Menu size={48} />
+      {...props}
+    >
+      <Menu style={{ width: 25, height: 25 }} strokeWidth={2.5} /> {/* Increased icon size */}
       <span className="sr-only">Toggle Sidebar</span>
-    </Button>)
+    </Button>
   );
+  
 })
 SidebarTrigger.displayName = "SidebarTrigger"
 

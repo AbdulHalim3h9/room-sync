@@ -1,49 +1,3 @@
-// import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
-
-// import {
-//   Sidebar,
-//   SidebarContent,
-//   SidebarGroup,
-//   SidebarGroupContent,
-//   SidebarGroupLabel,
-//   SidebarMenu,
-//   SidebarMenuButton,
-//   SidebarMenuItem,
-// } from "@/components/ui/sidebar"
-
-
-// export function AppSidebar() {
-//   return (
-//     <Sidebar>
-//       <SidebarContent>
-//         <SidebarGroup>
-//           <SidebarGroupLabel>RoomSync</SidebarGroupLabel>
-//           <SidebarGroupContent>
-//             <SidebarMenu>
-//                 <SidebarMenuItem>
-//                   <SidebarMenuButton asChild>
-//                     Item1
-//                   </SidebarMenuButton>
-//                 </SidebarMenuItem>
-//               {/* {items.map((item) => (
-//                 <SidebarMenuItem key={item.title}>
-//                   <SidebarMenuButton asChild>
-//                     <a href={item.url}>
-//                       <item.icon />
-//                       <span>{item.title}</span>
-//                     </a>
-//                   </SidebarMenuButton>
-//                 </SidebarMenuItem>
-//               ))} */}
-//             </SidebarMenu>
-//           </SidebarGroupContent>
-//         </SidebarGroup>
-//       </SidebarContent>
-//     </Sidebar>
-//   )
-// }
-
-
 import { useNavigate } from "react-router-dom";  // Import useNavigate
 import { UsersRound, ShoppingBasket, Banknote, UserRoundPen, HandHelping } from "lucide-react";
 
@@ -82,7 +36,7 @@ export function AppSidebar() {
                     className="flex items-center"
                   >
                     <ShoppingBasket className="mr-2 h-4 w-4" />
-                    <span>Add Grocery Spendings</span>
+                    <span className="text-lg">Add Grocery Spendings</span>
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -93,7 +47,7 @@ export function AppSidebar() {
                     className="flex items-center"
                   >
                     <HandHelping className="mr-2 h-4 w-4" />
-                    <span>Add Meal Fund</span>
+                    <span className="text-lg">Add Meal Fund</span>
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -104,7 +58,7 @@ export function AppSidebar() {
                     className="flex items-center"
                   >
                     <Banknote className="mr-2 h-4 w-4" />
-                    <span>Set Payables</span>
+                    <span className="text-lg">Set Payables</span>
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -115,7 +69,7 @@ export function AppSidebar() {
                     className="flex items-center"
                   >
                     <UserRoundPen className="mr-2 h-4 w-4" />
-                    <span>Set Daily Meal Count</span>
+                    <span className="text-lg">Set Daily Meal Count</span>
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -127,7 +81,7 @@ export function AppSidebar() {
                     className="flex items-center"
                   >
                     <UsersRound className="mr-2 h-4 w-4" />
-                    <span>Manage Members</span>
+                    <span className="text-lg">Manage Members</span>
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>

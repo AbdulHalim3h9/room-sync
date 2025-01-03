@@ -15,11 +15,11 @@ import CreditConsumed from "./components/CreditConsumed";
 import Payables from "./components/Payables";
 import GroceryTurns from "./components/GroceryTurns";
 import MemberForm from "./components/TestComponent";
-import SetDailyMealCount from "./components/AdminComponents/SetDailyMealCount";
-import SetPayables from "./components/AdminComponents/SetPayables";
-import AddMealFund from "./components/AdminComponents/AddMealFund";
-import AddGrocerySpendings from "./components/AdminComponents/AddGrocerySpendings";
-import ManageMembers from "./components/AdminComponents/ManageMembers";
+import SetDailyMealCount from "./components/ManagerComponents/SetDailyMealCount";
+import SetPayables from "./components/ManagerComponents/SetPayables";
+import AddMealFund from "./components/ManagerComponents/AddMealFund";
+import AddGrocerySpendings from "./components/ManagerComponents/AddGrocerySpendings";
+import ManageMembers from "./components/ManagerComponents/ManageMembers";
 
 const App = () => {
   return (
@@ -33,7 +33,7 @@ const App = () => {
         <Route path="/creditconsumed/*" element={<CreditConsumed />}></Route>
         <Route path="/payables" element={<Payables />}></Route>
         <Route path="/groceryturns" element={<GroceryTurns />}></Route>
-        {/* Admin Routes */}
+        {/* Manager Routes */}
         <Route
           path="/add-grocery-spendings"
           element={<AddGrocerySpendings />}

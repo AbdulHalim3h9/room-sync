@@ -33,7 +33,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <button
                     onClick={() => handleNavigate("/add-grocery-spendings")}
-                    className="flex items-center"
+                    className="flex items-center py-6"
                   >
                     <ShoppingBasket className="mr-2 h-4 w-4" />
                     <span className="text-lg">Add Grocery Spendings</span>
@@ -44,7 +44,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <button
                     onClick={() => handleNavigate("/add-meal-fund")}
-                    className="flex items-center"
+                    className="flex items-center py-6"
                   >
                     <HandHelping className="mr-2 h-4 w-4" />
                     <span className="text-lg">Add Meal Fund</span>
@@ -55,7 +55,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <button
                     onClick={() => handleNavigate("/set-payables")}
-                    className="flex items-center"
+                    className="flex items-center py-6"
                   >
                     <Banknote className="mr-2 h-4 w-4" />
                     <span className="text-lg">Set Payables</span>
@@ -66,7 +66,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <button
                     onClick={() => handleNavigate("/set-daily-meal-count")}
-                    className="flex items-center"
+                    className="flex items-center py-6"
                   >
                     <UserRoundPen className="mr-2 h-4 w-4" />
                     <span className="text-lg">Set Daily Meal Count</span>
@@ -78,7 +78,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <button
                     onClick={() => handleNavigate("/members")}
-                    className="flex items-center"
+                    className="flex items-center py-6 py-6"
                   >
                     <UsersRound className="mr-2 h-4 w-4" />
                     <span className="text-lg">Manage Members</span>

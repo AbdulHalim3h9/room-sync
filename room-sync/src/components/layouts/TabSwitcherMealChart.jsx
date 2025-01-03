@@ -6,7 +6,7 @@ import MealCountMonth from "../MealCountMonth";
 
 const TabSwitcherMealChart = ({ data }) => {
   return (
-    <div className="z-40"> {/* Apply opacity here */}
+    <div className=""> {/* Apply opacity here */}
       <Tabs defaultValue="chart">
         <TabsList className="fixed left-1/2 -translate-x-1/2 top-2">
           <TabsTrigger value="chart">Chart</TabsTrigger>

@@ -14,14 +14,15 @@ const Member = ({ user }) => {
                   <div className="mr-2.5 text-slate-800">
                         <p>{user.member_name}</p>
                   </div>
-                  <AssignRoles/>
-                  <div className="flex flex-col items-center gap-x-2">
+                  
+                  <div className="flex items-center gap-x-2">
                         {isApproved ? (
-                              <Button variant="secondary" disabled>Verified</Button>
+                              <AssignRoles memberName={user.member_name}/>
+                              // <Button variant="secondary" disabled>Verified</Button>
                         ) : (
-                              <Button onClick={handleApprove} className="bg-green-400">Approve</Button>
+                              <Button onClick={handleApprove} className="w-32 bg-green-400">Approve</Button>
                         )}
-                        <Button variant="destructive">Remove</Button>
+                        <Button className="w-32" variant="destructive">Remove</Button>
                   </div>
             </div>
       );

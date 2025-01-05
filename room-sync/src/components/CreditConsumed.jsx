@@ -1,34 +1,36 @@
-import React from 'react'
-import CreditChart from './CreditChart'
-import NavigateMembers from './layouts/NavigateMembers'
+import React from 'react';
+import CreditChart from './CreditChart';
+import NavigateMembers from './layouts/NavigateMembers';
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
-  useNavigate,
   Outlet,
 } from "react-router-dom";
 import { membersData } from "@/membersData";
 import TabSwitcherMealChart from './layouts/TabSwitcherMealChart';
+import Overview from './Overview';
+import ResponsiveChartWrapper from './ResponsiveChartWrapper';
 
 const CreditConsumed = () => {
   return (
     <div>
-      
-      <Routes>
-        <Route path="/" element={`hello`} />
-        {/* <Route
-          path=":member_id"
-          element={<CreditChart data={membersData} />}
-        /> */}
-        <Route path=':member_id' element={<TabSwitcherMealChart data={membersData} />} ></Route>
-      </Routes>
-      <Outlet></Outlet>
-      
+      {/* Navigation Component */}
       <NavigateMembers />
-    </div>
-  )
-}
 
-export default CreditConsumed
+      {/* Routes Setup */}
+      <Routes>
+        <Route path="/" element={<ResponsiveChartWrapper />} />
+        <Route 
+          path=":member_id" 
+          element={<TabSwitcherMealChart data={membersData} />} 
+        />
+      </Routes>
+
+      {/* Nested Route Rendering */}
+      <Outlet />
+    </div>
+  );
+};
+
+export default CreditConsumed;

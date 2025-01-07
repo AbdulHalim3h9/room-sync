@@ -17,18 +17,18 @@ const ResponsiveChartWrapper = () => {
 
   return (
     <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        // height: "100vh",
-        // width: "100vw",
-        height: isSmallScreen ? "100vw" : "100vh",
-        width: isSmallScreen ? "100vh" : "100vw",
-        transform: isSmallScreen ? "rotate(90deg)" : "rotate(0deg)",
-        transformOrigin: "center",
-        // overflow: "hidden",
-      }}
+      // style={{
+      //   display: "flex",
+      //   justifyContent: "center",
+      //   alignItems: "center",
+      //   // height: "100vh",
+      //   // width: "100vw",
+      //   height: isSmallScreen ? "100vw" : "100vh",
+      //   width: isSmallScreen ? "100vh" : "100vw",
+      //   transform: isSmallScreen ? "rotate(90deg)" : "rotate(0deg)",
+      //   transformOrigin: "center",
+      //   // overflow: "hidden",
+      // }}
     >
       <Overview />
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   LineChart,
   Line,
@@ -53,7 +53,11 @@ const CustomizedDot = (props) => {
 };
 
 export default function Overview() {
-  
+  const isMobile = window.innerWidth <= 768;
+
+  const chartWidth = isMobile ? window.innerWidth : 700;
+  const chartHeight = 325;
+
   return (
     <div>
       <div
@@ -61,41 +65,45 @@ export default function Overview() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-      //     height: rotate ? "100vh" : "100vw",
-      //     width: rotate ? "100vw" : "86vw",
+          height: "40vh",
+          width: "100vw",
+          transition: "transform 0.5s, width 0.5s, height 0.5s",
         }}
       >
-        <div
-      //     style={{
-      //       transform: rotate ? "rotate(90deg)" : "rotate(0deg)",
-      //       transformOrigin: "center",
-      //     }}
+        <LineChart
+          width={chartWidth}
+          height={chartHeight}
+          data={data}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
         >
-          <LineChart
-            width={770}
-            height={300}
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" angle={90} textAnchor="start" />
+          <YAxis />
+          <Tooltip />
+          <Legend
+            wrapperStyle={{
+              position: "relative",
+              width: "340px",
+              height: "auto",
+              left: "20px",
+              bottom: "-42px", // Change positioning
+              marginTop: "20px",
             }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="pv"
-              stroke="#8884d8"
-              dot={<CustomizedDot />}
-            />
-            <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
-          </LineChart>
-        </div>
+          />
+
+          <Line
+            type="monotone"
+            dataKey="pv"
+            stroke="#8884d8"
+            dot={<CustomizedDot />}
+          />
+          <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+        </LineChart>
       </div>
     </div>
   );

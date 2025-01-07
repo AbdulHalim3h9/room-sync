@@ -22,7 +22,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="fixed z-[999]">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>RoomSync</SidebarGroupLabel>

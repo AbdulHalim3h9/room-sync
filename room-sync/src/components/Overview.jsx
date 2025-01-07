@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, PureComponent } from "react";
 import {
+  PieChart,
+  Pie,
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
@@ -18,6 +21,23 @@ const data = [
   { name: "Page F", uv: 2390, pv: 3800, amt: 2500 },
   { name: "Page G", uv: 3490, pv: 4300, amt: 2100 },
   { name: "Page H", uv: 3490, pv: 4300, amt: 2100 },
+];
+
+const data01 = [
+  { name: 'Group A', value: 400 },
+  { name: 'Group B', value: 300 },
+  { name: 'Group C', value: 300 },
+  { name: 'Group D', value: 200 },
+  { name: 'Group E', value: 278 },
+  { name: 'Group F', value: 189 },
+];
+const data02 = [
+  { name: 'Group A', value: 2400 },
+  { name: 'Group B', value: 4567 },
+  { name: 'Group C', value: 1398 },
+  { name: 'Group D', value: 9800 },
+  { name: 'Group E', value: 3908 },
+  { name: 'Group F', value: 4800 },
 ];
 
 const CustomizedDot = (props) => {
@@ -53,19 +73,22 @@ const CustomizedDot = (props) => {
 };
 
 export default function Overview() {
-  const isMobile = window.innerWidth <= 768;
+  // const isMobile = window.innerWidth <= 768;
 
-  const chartWidth = isMobile ? window.innerWidth : 700;
+  const chartWidth = 700;
   const chartHeight = 325;
 
   return (
     <div>
+              <h1 className="text-xl text-center mt-0 mb-10 md:mb-20">Summary</h1>
       <div
         style={{
           display: "flex",
           position: "relative",
+          zIndex: 40,
           justifyContent: "center",
           alignItems: "center",
+          marginTop: "20px",
           height: "40vh",
           width: "100vw",
           transition: "transform 0.5s, width 0.5s, height 0.5s",
@@ -89,7 +112,7 @@ export default function Overview() {
           <Legend
             wrapperStyle={{
               position: "relative",
-              width: "340px",
+              width: {chartWidth},
               height: "auto",
               left: "20px",
               bottom: "-42px", // Change positioning
@@ -106,6 +129,24 @@ export default function Overview() {
           <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
         </LineChart>
       </div>
+      {/* pie chart */}
+
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart width={400} height={400}>
+          <Pie
+            dataKey="value"
+            isAnimationActive={false}
+            data={data01}
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            fill="#8884d8"
+            label
+          />
+          <Pie dataKey="value" data={data02} cx={500} cy={200} innerRadius={40} outerRadius={80} fill="#82ca9d" />
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 }

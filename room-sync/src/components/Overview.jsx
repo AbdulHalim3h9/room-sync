@@ -1,8 +1,5 @@
-import React, { useState, PureComponent } from "react";
+import React from "react";
 import {
-  PieChart,
-  Pie,
-  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
@@ -11,7 +8,6 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import PieContribution from "./PieContribution";
 
 const data = [
   { name: "Abdul Halim", uv: 4000, pv: 2400, amt: 2400 },
@@ -22,23 +18,6 @@ const data = [
   { name: "Page F", uv: 2390, pv: 3800, amt: 2500 },
   { name: "Page G", uv: 3490, pv: 4300, amt: 2100 },
   { name: "Page H", uv: 3490, pv: 4300, amt: 2100 },
-];
-
-const data01 = [
-  { name: 'Group A', value: 400 },
-  { name: 'Group B', value: 300 },
-  { name: 'Group C', value: 300 },
-  { name: 'Group D', value: 200 },
-  { name: 'Group E', value: 278 },
-  { name: 'Group F', value: 189 },
-];
-const data02 = [
-  { name: 'Group A', value: 2400 },
-  { name: 'Group B', value: 4567 },
-  { name: 'Group C', value: 1398 },
-  { name: 'Group D', value: 9800 },
-  { name: 'Group E', value: 3908 },
-  { name: 'Group F', value: 4800 },
 ];
 
 const CustomizedDot = (props) => {
@@ -74,34 +53,21 @@ const CustomizedDot = (props) => {
 };
 
 export default function Overview() {
-  // const isMobile = window.innerWidth <= 768;
-
-  const chartWidth = 700;
-  const chartHeight = 325;
+  // Filter data with `uv` values less than or equal to 2500
+  const filteredData = data.filter((item) => item.uv <= 2500);
 
   return (
-    <div>
-              <h1 className="text-xl text-center mt-0 mb-10 md:mb-20">Summary</h1>
-      <div
-        style={{
-          display: "flex",
-          position: "relative",
-          zIndex: 40,
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: "20px",
-          height: "40vh",
-          width: "100vw",
-          transition: "transform 0.5s, width 0.5s, height 0.5s",
-        }}
-      >
+    <div className="w-full">
+      <h1 className="text-xl text-center mt-0 mb-20 md:mb-20">Summary</h1>
+      
+      <div className="flex justify-center items-center mt-5 w-full h-[40vh]">
         <LineChart
-          width={chartWidth}
-          height={chartHeight}
+          width={window.innerWidth * 0.9}
+          height={window.innerHeight * 0.5}
           data={data}
           margin={{
             top: 5,
-            right: 30,
+            right: 20,
             left: 20,
             bottom: 5,
           }}
@@ -113,14 +79,9 @@ export default function Overview() {
           <Legend
             wrapperStyle={{
               position: "relative",
-              width: {chartWidth},
-              height: "auto",
-              left: "20px",
-              bottom: "-42px", // Change positioning
-              marginTop: "20px",
+              marginTop: "2vh",
             }}
           />
-
           <Line
             type="monotone"
             dataKey="pv"
@@ -130,9 +91,10 @@ export default function Overview() {
           <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
         </LineChart>
       </div>
-      {/* pie chart */}
-<PieContribution />
-
+      <h2 className="relative w-[80vw] md:w-[50vw] lg:w-[30vw] mx-auto mt-20 text-md text-slate-600 text-center">
+        <span className="text-italic text-red-500 text-start">{filteredData.map((item) => item.name).join(", ")} <br /> </span>
+         need to contribute money to the meal fund.
+      </h2>
     </div>
   );
 }

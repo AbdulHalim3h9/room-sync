@@ -9,7 +9,7 @@ const BottomNavigation = () => {
     <div className="fixed z-[999] bottom-0 left-0 w-full flex justify-around py-3">
       <Button variant="secondary" className="bg-gradient-to-r from-slate-100 to-gray-500 hover:from-pink-500 hover:to-orange-500 shadow-xl" onClick={() => {navigate('/creditconsumed')}} >Credit/Consumed</Button>
       <Button variant="secondary" onClick={() => {navigate('/payables')}}>Payables</Button>
-      <Button variant="secondary" onClick={() => {navigate('/groceryturns')}}>Grocery Turns</Button>
+      <Button variant="secondary" onClick={() => {navigate('/groceries_spendings')}}>Groceries/Spendings</Button>
     </div>
     // </nav>
   );

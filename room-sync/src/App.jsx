@@ -13,7 +13,7 @@ import {
 import { membersData } from "@/membersData";
 import CreditConsumed from "./components/CreditConsumed";
 import Payables from "./components/Payables";
-import GroceryTurns from "./components/GroceryTurns";
+import Groceries_spendings from "./components/GroceryTurns";
 import MemberForm from "./components/TestComponent";
 import SetDailyMealCount from "./components/ManagerComponents/SetDailyMealCount";
 import SetPayables from "./components/ManagerComponents/SetPayables";
@@ -32,7 +32,7 @@ const App = () => {
       <Routes>
         <Route path="/creditconsumed/*" element={<CreditConsumed />}></Route>
         <Route path="/payables" element={<Payables />}></Route>
-        <Route path="/groceryturns" element={<GroceryTurns />}></Route>
+        <Route path="/groceries_spendings" element={<Groceries_spendings />}></Route>
         {/* Manager Routes */}
         <Route
           path="/add-grocery-spendings"

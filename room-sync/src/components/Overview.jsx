@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import SingleMonthYearPicker from "./SingleMonthYearPicker";
 
 const data = [
   { name: "Abdul Halim", uv: 4000, pv: 2400, amt: 2400 },
@@ -59,7 +60,10 @@ export default function Overview() {
   return (
     <div className="w-full">
       <h1 className="text-xl text-center mt-0 mb-20 md:mb-20">Summary</h1>
-      
+      <div className="flex justify-end mr-4 md:mr-8 mb-10">
+
+      <SingleMonthYearPicker />
+      </div>
       <div className="flex justify-center items-center mt-5 w-full h-[40vh]">
         <LineChart
           width={window.innerWidth * 0.9}

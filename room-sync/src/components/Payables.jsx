@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import billsData from "@/bills.json";
+import MonthYearPicker from "./SingleMonthYearPicker";
 
 const Payables = () => {
   const [bills, setBills] = useState([]);
@@ -16,7 +17,14 @@ const Payables = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 grid grid-cols-1 sm:gap-2 md:gap-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div>
+      <div className="container p-6 ">
+        <h3 className="text-2xl text-center">Monthly Payables and Dues</h3>
+        <div className="flex justify-end my-4">
+
+       <MonthYearPicker />
+        </div>
+      <div className="mx-auto  grid grid-cols-1 sm:gap-2 md:gap-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
       {bills.map((bill) => (
         <Card key={bill.id} className="flex bg-slate-50 shadow-xl"> {/* Add shadow to the Card */}
           <div className="flex flex-col items-center w-full"> {/* Center content horizontally */}
@@ -45,6 +53,9 @@ const Payables = () => {
           </div>
         </Card>
       ))}
+    </div>
+    
+    </div>
     </div>
   );
 };

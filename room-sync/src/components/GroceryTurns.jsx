@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SingleMonthYearPicker from "./SingleMonthYearPicker";
 
 const GroceriesSpendings = () => {
   // Example data (you can replace it with your actual data source)
@@ -44,7 +45,10 @@ const GroceriesSpendings = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-xl font-bold mb-4">Spendings List of</h2>
+      <div className="flex justify-between items-center mb-4">
+      <h2 className="text-xl font-bold mb-4">Monthly Spendings List</h2>
+      <SingleMonthYearPicker />
+      </div>
       {/* Table Layout */}
       <div className="space-y-4">
         {spendings.map((spending, index) => (

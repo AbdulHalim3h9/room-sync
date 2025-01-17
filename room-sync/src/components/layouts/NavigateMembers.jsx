@@ -5,7 +5,7 @@ import { membersData } from "@/membersData";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const NavigateMembers = () => {
-  const [isVisible, setIsVisible] = useState(false); // State to track visibility
+  const [isVisible, setIsVisible] = useState(true); // State to track visibility
   const navigate = useNavigate();
 
   const toggleVisibility = () => {
@@ -21,7 +21,7 @@ const NavigateMembers = () => {
       {/* Toggle Button */}
       <Button
         className={`fixed top-1/2 bg-slate-700 opacity-30 transform -translate-y-1/2 h-12 transition-all duration-300 ${
-          isVisible ? 'w-8 rounded-l-full bg-slate-300 right-[4.5rem]' : 'w-12 rounded-full right-4'
+          isVisible ? 'w-8 rounded-l-full right-[4.5rem]' : 'w-12 rounded-full right-4'
         } z-20`}
         onClick={toggleVisibility}
       >

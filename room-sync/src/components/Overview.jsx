@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -9,17 +9,7 @@ import {
   Legend,
 } from "recharts";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
-
-const data = [
-  { name: "Abdul Halim", uv: 4000, pv: 2400, amt: 2400 },
-  { name: "Page B", uv: 3000, pv: 1398, amt: 2210 },
-  { name: "Page C", uv: 2000, pv: 9800, amt: 2290 },
-  { name: "Page D", uv: 2780, pv: 3908, amt: 2000 },
-  { name: "Page E", uv: 1890, pv: 4800, amt: 2181 },
-  { name: "Page F", uv: 2390, pv: 3800, amt: 2500 },
-  { name: "Page G", uv: 3490, pv: 4300, amt: 2100 },
-  { name: "Page H", uv: 3490, pv: 4300, amt: 2100 },
-];
+import overviewData from "@/overviewData.json";  // Importing overviewData directly
 
 const CustomizedDot = (props) => {
   const { cx, cy, value } = props;
@@ -54,20 +44,38 @@ const CustomizedDot = (props) => {
 };
 
 export default function Overview() {
-  // Filter data with `uv` values less than or equal to 2500
-  const filteredData = data.filter((item) => item.uv <= 2500);
+  const [data, setData] = useState(overviewData);  // Directly set the data to overviewData
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  // Update window size when the window is resized
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Filter data with `eaten` values less than or equal to 2500
+  const filteredData = data.filter((item) => item.eaten <= 2500);
 
   return (
     <div className="w-full">
       <h1 className="text-xl text-center mt-0 mb-20 md:mb-20">Summary</h1>
       <div className="flex justify-end mr-4 md:mr-8 mb-10">
-
-      <SingleMonthYearPicker />
+        <SingleMonthYearPicker />
       </div>
       <div className="flex justify-center items-center mt-5 w-full h-[40vh]">
         <LineChart
-          width={window.innerWidth * 0.9}
-          height={window.innerHeight * 0.5}
+          width={windowSize.width * 0.9}
+          height={windowSize.height * 0.5}
           data={data}
           margin={{
             top: 5,
@@ -88,16 +96,18 @@ export default function Overview() {
           />
           <Line
             type="monotone"
-            dataKey="pv"
-            stroke="#8884d8"
+            dataKey="given"
+            stroke="#00ff00"
             dot={<CustomizedDot />}
           />
-          <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+          <Line type="monotone" dataKey="eaten" stroke="#ffd700" />
         </LineChart>
       </div>
       <h2 className="relative w-[80vw] md:w-[50vw] lg:w-[30vw] mx-auto mt-20 text-md text-slate-600 text-center">
-        <span className="text-italic text-red-500 text-start">{filteredData.map((item) => item.name).join(", ")} <br /> </span>
-         need to contribute money to the meal fund.
+        <span className="text-italic text-red-500 text-start">
+          {filteredData.map((item) => item.name).join(", ")} <br />
+        </span>
+        need to contribute money to the meal fund.
       </h2>
     </div>
   );

@@ -7,14 +7,23 @@ import {
 } from "@/components/ui/card";
 import billsData from "@/bills.json";
 import MonthYearPicker from "./SingleMonthYearPicker";
+import { useMonth } from "@/App";
 
 const Payables = () => {
+  const { month, setMonth } = useMonth(); // Access the context
   const [bills, setBills] = useState([]);
 
-  useEffect(() => {
-    // Set the bills data once the component is mounted
-    setBills(billsData.bills);
-  }, []);
+  // Update bills when month changes
+  useEffect(() => {// Format the month
+    console.log("Current month:", month); // Log the current month
+    console.log("Selected bills:", billsData[month]); // Log the bills data for the selected month
+    const selectedBills = billsData[month]?.bills || [];
+    setBills(selectedBills);
+  }, [month]);
+  // Handle date change from MonthYearPicker
+  const handleDateChange = (newMonth) => {
+    setMonth(newMonth); // Set the new month
+  };
 
   return (
     <div>
@@ -22,7 +31,7 @@ const Payables = () => {
         <h3 className="text-2xl text-center">Monthly Payables and Dues</h3>
         <div className="flex justify-end my-4">
 
-       <MonthYearPicker />
+       <MonthYearPicker onChange={handleDateChange} />
         </div>
       <div className="mx-auto  grid grid-cols-1 sm:gap-2 md:gap-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
       {bills.map((bill) => (

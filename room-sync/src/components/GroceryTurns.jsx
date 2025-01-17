@@ -1,28 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
+import spendingsData from "@/spendings.json"; // Importing JSON file
+import { useMonth } from "@/App"; // Assuming you are using a context like in Payables
 
 const GroceriesSpendings = () => {
-  // Example data (you can replace it with your actual data source)
-  const [spendings, setSpendings] = useState([
-    {
-      amount: 400,
-      date: "2025-01-01",
-      description: "Groceries",
-      member: "Shakil",
-    },
-    {
-      amount: 250,
-      date: "2025-01-03",
-      description: "Groceries",
-      member: "Abdul Halim Khan",
-    },
-    {
-      amount: 150,
-      date: "2025-01-05",
-      description: "Groceries",
-      member: "John Doe",
-    },
-  ]);
+  const { month, setMonth } = useMonth(); // Access the context
+  const [spendings, setSpendings] = useState([]);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -37,45 +20,52 @@ const GroceriesSpendings = () => {
     );
   };
 
+  // Update spendings when month changes
+  useEffect(() => {
+    console.log(month);
+    console.log("Selected month:", month); // Log the selected month
+    console.log("Selected spendings:", spendingsData[month]); // Log the spendings data for the selected month
+    const selectedSpendings = spendingsData[month]?.spendings || [];
+    setSpendings(selectedSpendings);
+  }, [month]);
+
   // Calculate total spending
   const totalSpending = spendings.reduce(
     (total, spending) => total + spending.amount,
     0
   );
 
+  // Handle date change from SingleMonthYearPicker
+  const handleDateChange = (newMonth) => {
+    setMonth(newMonth); // Set the new month
+  };
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-bold mb-4">Monthly Spendings List</h2>
-      <SingleMonthYearPicker />
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">Monthly Spendings List</h2>
+        <SingleMonthYearPicker onChange={handleDateChange} /> {/* Month-Year Picker */}
       </div>
-      {/* Table Layout */}
+      {/* Spendings List */}
       <div className="space-y-4">
         {spendings.map((spending, index) => (
-          <div
-            key={index}
-            className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 pb-2"
-          >
-            <span>{formatDate(spending.date)}</span>
-            <span>{spending.description}</span>
-            <span>
-              {"by "}
-              {spending.member}
-            </span>
-            <span className="text-right">{spending.amount}tk</span>
+          <div key={index} className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 pb-2">
+            <span className="text-sm sm:text-base">{formatDate(spending.date)}</span>
+            <span className="text-sm sm:text-base">{spending.description}</span>
+            <span className="text-sm sm:text-base">{"by "}{spending.member}</span>
+            <span className="text-right text-sm sm:text-base">{spending.amount}tk</span>
           </div>
         ))}
 
         <div className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 border-t pb-2 font-semibold">
           <span></span>
-          <span>
+          <span className="text-sm sm:text-base">
             Groceries{" (x"}
             {spendings.length}
-            {")"}
-            {" and others"}
+            {") and others"}
           </span>
           <span></span>
-          <span className="text-right">
+          <span className="text-right text-sm sm:text-base">
             {"total "}
             {totalSpending}tk
           </span>

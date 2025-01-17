@@ -1,54 +1,54 @@
-import React from "react";
-import CreditChart from "./components/CreditChart";
-import Layout from "./components/layouts/layout";
-import BottomNavigation from "./components/layouts/BottomNavigation";
-import NavigateMembers from "./components/layouts/NavigateMembers";
+import React, { createContext, useState, useContext } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
-  useNavigate,
 } from "react-router-dom";
-import { membersData } from "@/membersData";
+import Layout from "./components/layouts/layout";
+import BottomNavigation from "./components/layouts/BottomNavigation";
 import CreditConsumed from "./components/CreditConsumed";
 import Payables from "./components/Payables";
 import Groceries_spendings from "./components/GroceryTurns";
-import MemberForm from "./components/TestComponent";
-import SetDailyMealCount from "./components/ManagerComponents/SetDailyMealCount";
-import SetPayables from "./components/ManagerComponents/SetPayables";
 import AddMealFund from "./components/ManagerComponents/AddMealFund";
 import AddGrocerySpendings from "./components/ManagerComponents/AddGrocerySpendings";
+import SetDailyMealCount from "./components/ManagerComponents/SetDailyMealCount";
+import SetPayables from "./components/ManagerComponents/SetPayables";
 import ManageMembers from "./components/ManagerComponents/ManageMembers";
 
+// Create the context
+const MonthContext = createContext();
+
+// Custom hook for accessing the context
+export const useMonth = () => useContext(MonthContext);
+
 const App = () => {
+  const [month, setMonth] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // Ensure 2 digits
+    return `${year}-${month}`; // Format as "YYYY-MM"
+  });
+
   return (
-    <>
-      <Layout />
-      {/* <AddGrocerySpendings/> */}
-      {/* <AddMealFund/> */}
-      {/* <SetPayables/> */}
-      {/* <SetDailyMealCount/> */}
-      <Routes>
-        <Route path="/creditconsumed/*" element={<CreditConsumed />}></Route>
-        <Route path="/payables" element={<Payables />}></Route>
-        <Route path="/groceries_spendings" element={<Groceries_spendings />}></Route>
-        {/* Manager Routes */}
-        <Route
-          path="/add-grocery-spendings"
-          element={<AddGrocerySpendings />}
-        />
-        <Route path="/add-meal-fund" element={<AddMealFund />} />
-        <Route path="/set-payables" element={<SetPayables />} />
-        <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
-        <Route path="/members" element={<ManageMembers />} />
-      </Routes>
-      <BottomNavigation />
-    </>
+    <MonthContext.Provider value={{ month, setMonth }}>
+        <Layout />
+        <Routes>
+          <Route path="/creditconsumed/*" element={<CreditConsumed />} />
+          <Route path="/payables" element={<Payables />} />
+          <Route path="/groceries_spendings" element={<Groceries_spendings />} />
+          <Route path="/add-grocery-spendings" element={<AddGrocerySpendings />} />
+          <Route path="/add-meal-fund" element={<AddMealFund />} />
+          <Route path="/set-payables" element={<SetPayables />} />
+          <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
+          <Route path="/members" element={<ManageMembers />} />
+        </Routes>
+        <BottomNavigation />
+    </MonthContext.Provider>
   );
 };
 
 export default App;
+
 
 // import React, { useState, useEffect } from "react";
 // import { db } from "./firebase";

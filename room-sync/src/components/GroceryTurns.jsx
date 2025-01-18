@@ -66,7 +66,7 @@ const GroceriesSpendings = () => {
             <span className="text-sm sm:text-base">
               {expense.expenseTitle || expense.expenseType}
             </span>
-            <span className="text-sm sm:text-base">{expense.shopper || ``}</span>
+            <span className="text-sm sm:text-base">{expense.shopper ? `by ${expense.shopper}` : ``}</span>
             <span className="text-right text-sm sm:text-base">{expense.amountSpent}tk</span>
           </div>
         ))}

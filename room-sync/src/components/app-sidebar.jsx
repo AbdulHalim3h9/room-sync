@@ -5,6 +5,7 @@ import {
   Banknote,
   UserRoundPen,
   HandHelping,
+  PhoneOutgoing,
 } from "lucide-react";
 
 import {
@@ -80,6 +81,23 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Button to call Khala */}
+<SidebarMenuItem key="call-khala">
+  <SidebarMenuButton asChild>
+    <button
+      
+      onClick={() => window.location.href = "tel:+8801762990866"}  
+      className="flex items-center my-0 py-6 rounded-md bg-gray-50 hover:bg-gray-100"
+    >
+      <span>
+  <PhoneOutgoing className="mr-2 h-4 w-4"/>
+      </span>
+      <span className="text-lg">Call Khala</span>
+    </button>
+  </SidebarMenuButton>
+</SidebarMenuItem>
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -17,7 +17,7 @@ const NavigateMembers = () => {
   };
 
   return (
-    <div className="relative z-[999]">
+    <div className="relative z-[40]">
       {/* Toggle Button */}
       <Button
         className={`fixed top-1/2 bg-slate-700 opacity-30 transform -translate-y-1/2 h-12 transition-all duration-300 ${

@@ -10,11 +10,12 @@ import {
 } from "recharts";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import overviewData from "@/overviewData.json";  // Importing overviewData directly
+import { useMonth } from "@/App"; // Assuming you're using the context like in your Payables component
 
 const CustomizedDot = (props) => {
-  const { cx, cy, value } = props;
-
-  if (value > 2500) {
+  const { cx, cy, value, payload } = props;
+  const difference = payload.given - payload.eaten;
+  if (difference > 0) {
     return (
       <svg
         x={cx - 10}
@@ -44,38 +45,32 @@ const CustomizedDot = (props) => {
 };
 
 export default function Overview() {
-  const [data, setData] = useState(overviewData);  // Directly set the data to overviewData
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+  const { month, setMonth } = useMonth(); // Use the context to manage the month state
+  const [data, setData] = useState([]);
 
-  // Update window size when the window is resized
   useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
+    // Filter the data based on the selected month
+    const selectedMonthData = overviewData[month]?.['overview-members'] || [];
+    setData(selectedMonthData);
+  }, [month]);
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Handle date change from SingleMonthYearPicker
+  const handleDateChange = (newMonth) => {
+    setMonth(newMonth); // Set the new month in the context
+  };
 
-  // Filter data with `eaten` values less than or equal to 2500
-  const filteredData = data.filter((item) => item.eaten <= 2500);
+  const dueMembers = data.filter((item) => item.given - item.eaten <= 0);
 
   return (
     <div className="w-full">
       <h1 className="text-xl text-center mt-0 mb-20 md:mb-20">Summary</h1>
       <div className="flex justify-end mr-4 md:mr-8 mb-10">
-        <SingleMonthYearPicker />
+        <SingleMonthYearPicker onChange={handleDateChange} />
       </div>
       <div className="flex justify-center items-center mt-5 w-full h-[40vh]">
         <LineChart
-          width={windowSize.width * 0.9}
-          height={windowSize.height * 0.5}
+          width={window.innerWidth * 0.9}
+          height={window.innerHeight * 0.5}
           data={data}
           margin={{
             top: 5,
@@ -103,9 +98,9 @@ export default function Overview() {
           <Line type="monotone" dataKey="eaten" stroke="#ffd700" />
         </LineChart>
       </div>
-      <h2 className="relative w-[80vw] md:w-[50vw] lg:w-[30vw] mx-auto mt-20 text-md text-slate-600 text-center">
+      <h2 className="relative w-[80vw] md:w-[50vw] lg:w-[30vw] mx-auto my-20 text-md text-slate-600 text-center">
         <span className="text-italic text-red-500 text-start">
-          {filteredData.map((item) => item.name).join(", ")} <br />
+          {dueMembers.map((item) => item.name).join(", ")} <br />
         </span>
         need to contribute money to the meal fund.
       </h2>

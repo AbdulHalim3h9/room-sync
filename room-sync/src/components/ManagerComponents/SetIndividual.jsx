@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { db } from "@/firebase"; // Import Firestore config
-import { collection, addDoc } from "firebase/firestore"; // Firestore imports
+import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore"; // Firestore imports
 import SingleMonthYearPicker from "../SingleMonthYearPicker"; // Import the MonthYearPicker component
 
 const SetIndividual = () => {
@@ -14,6 +14,7 @@ const SetIndividual = () => {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toLocaleString("default", { month: "long", year: "numeric" }) // Default to current month
   );
+
   // Handle individual input changes
   const handleIndividualChange = (index, e) => {
     const updatedIndividuals = [...individuals];
@@ -46,6 +47,8 @@ const SetIndividual = () => {
   const handleMonthChange = (newMonth) => {
     setSelectedMonth(newMonth);
   };
+
+
   // Handle form submission
   const handleSubmit = async () => {
     // Validate the form data
@@ -78,13 +81,26 @@ const SetIndividual = () => {
     };
 
     try {
-      // Add bill data to Firestore
+      // Check if data already exists for the selected month
       const billsCollectionRef = collection(db, "payables"); // Firestore collection
-      await addDoc(billsCollectionRef, billData); // Add the document
-      console.log("Data uploaded successfully");
-      alert("Form submitted successfully!");
+      const q = query(billsCollectionRef, where("month", "==", selectedMonth)); // Query for the selected month
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // If data exists, update the existing document
+        const docId = querySnapshot.docs[0].id; // Get the document ID
+        const docRef = doc(db, "payables", docId); // Reference the document
+        await updateDoc(docRef, billData); // Update the document
+        console.log("Data updated successfully");
+        alert("Data updated successfully!");
+      } else {
+        // If data does not exist, create a new document
+        await addDoc(billsCollectionRef, billData); // Add the document
+        console.log("Data uploaded successfully");
+        alert("Form submitted successfully!");
+      }
     } catch (error) {
-      console.error("Error uploading data: ", error);
+      console.error("Error uploading/updating data: ", error);
     }
   };
 

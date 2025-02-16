@@ -142,6 +142,7 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/firebase"; // Import Firestore config
 import { collection, addDoc } from "firebase/firestore"; // Firestore imports
 import SetIndividual from "./SetIndividual";
+import SingleMonthYearPicker from "../SingleMonthYearPicker"; // Import the MonthYearPicker component
 
 const SetPayables = () => {
   const [formType, setFormType] = useState("apartment"); // Default is "apartment"
@@ -151,82 +152,90 @@ const SetPayables = () => {
   const [khalasBill, setKhalasBill] = useState("");
   const [utilityBill, setUtilityBill] = useState("");
   const [status, setStatus] = useState("Pending");
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toLocaleString("default", { month: "long", year: "numeric" }) // Default to current month
+  );
+
+  // Handle month change from MonthYearPicker
+  const handleMonthChange = (newMonth) => {
+    setSelectedMonth(newMonth);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Get current month and year
-    const currentMonth = new Date().toLocaleString("default", { month: "long", year: "numeric" });
-
+    // Create the payables array
     const payables = [
-      { name: "Room Rent", amount: parseInt(roomRent) },
-      { name: "Dining Rent", amount: parseInt(diningRent) },
-      { name: "Service Charge", amount: parseInt(serviceCharge) },
-      { name: "Khala's Bill", amount: parseInt(khalasBill) },
-      { name: "Utility Bill", amount: parseInt(utilityBill) },
+      { name: "Room Rent", amount: parseInt(roomRent) || 0 },
+      { name: "Dining Rent", amount: parseInt(diningRent) || 0 },
+      { name: "Service Charge", amount: parseInt(serviceCharge) || 0 },
+      { name: "Khala's Bill", amount: parseInt(khalasBill) || 0 },
+      { name: "Utility Bill", amount: parseInt(utilityBill) || 0 },
     ];
 
+    // Create the bills array
+    const bills = [
+      {
+        id: 1, // You can dynamically generate this ID
+        name: "Abdul Halim Khan",
+        status: status,
+        payables: [...payables], // Copy the payables array for each member
+      },
+      {
+        id: 2,
+        name: "Shakil",
+        status: status,
+        payables: [...payables],
+      },
+      {
+        id: 3,
+        name: "Ahad",
+        status: status,
+        payables: [...payables],
+      },
+      {
+        id: 4,
+        name: "Mafi",
+        status: status,
+        payables: [...payables],
+      },
+      {
+        id: 5,
+        name: "Pran",
+        status: status,
+        payables: [...payables],
+      },
+      {
+        id: 6,
+        name: "Alhaz",
+        status: status,
+        payables: [...payables],
+      },
+      {
+        id: 7,
+        name: "Abdan",
+        status: status,
+        payables: [...payables],
+      },
+      {
+        id: 8,
+        name: "AbdKhan",
+        status: status,
+        payables: [...payables],
+      },
+      // Add other members here if needed
+    ];
+
+    // Create the Firestore document
     const billData = {
-      bills: [
-        {
-          id: 1, // You can dynamically generate this ID
-          name: "Abdul Halim Khan",
-          status: status,
-          payables,
-        },
-        {
-          id: 2, // You can dynamically generate this ID
-          name: "Shakil",
-          status: status,
-          payables,
-        },
-        {
-          id: 3, // You can dynamically generate this ID
-          name: "Ahad",
-          status: status,
-          payables,
-        },
-        {
-          id: 4, // You can dynamically generate this ID
-          name: "Mafi",
-          status: status,
-          payables,
-        },
-        {
-          id: 5, // You can dynamically generate this ID
-          name: "Pran",
-          status: status,
-          payables,
-        },
-        {
-          id: 6, // You can dynamically generate this ID
-          name: "Alhaz",
-          status: status,
-          payables,
-        },
-        {
-          id: 7, // You can dynamically generate this ID
-          name: "Abdan",
-          status: status,
-          payables,
-        },
-        {
-          id: 8, // You can dynamically generate this ID
-          name: "AbdKhan",
-          status: status,
-          payables,
-        },
-        // Add other members here if needed
-      ],
+      month: selectedMonth, // Store the selected month
+      bills, // Store the bills array
     };
 
     try {
       // Add bill data to Firestore
       const billsCollectionRef = collection(db, "payables"); // Firestore collection
-      await addDoc(billsCollectionRef, {
-        month: currentMonth,
-        ...billData,
-      });
+      await addDoc(billsCollectionRef, billData); // Add the document
       console.log("Data uploaded successfully");
     } catch (error) {
       console.error("Error uploading data: ", error);
@@ -240,8 +249,16 @@ const SetPayables = () => {
   return (
     <div className="max-w-lg mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">
-        Add payables for {new Date().toLocaleString("default", { month: "long" })}
+        Add payables for {selectedMonth} {/* Display selected month */}
       </h1>
+
+      {/* Month Selection */}
+      <div className="mb-6">
+        <Label htmlFor="monthPicker" className="block mb-1">
+          Select Month
+        </Label>
+        <SingleMonthYearPicker onChange={handleMonthChange} />
+      </div>
 
       {/* Radio Button for Form Type */}
       <div className="mb-6">
@@ -361,4 +378,3 @@ const SetPayables = () => {
 };
 
 export default SetPayables;
-

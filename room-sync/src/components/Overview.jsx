@@ -49,6 +49,7 @@ export default function Overview() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
+    console.log(month);
     // Filter the data based on the selected month
     const selectedMonthData = overviewData[month]?.['overview-members'] || [];
     setData(selectedMonthData);

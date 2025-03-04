@@ -16,7 +16,7 @@ const TabSwitcherMealChart = ({ data }) => {
           <CreditChart data={data}></CreditChart>
         </TabsContent>
         <TabsContent className="mt-4 mb-14 mx-8" value="mealcount">
-          <MealCountMonth data={mealCountData} />
+          <MealCountMonth/>
         </TabsContent>
       </Tabs>
     </div>

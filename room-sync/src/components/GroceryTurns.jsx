@@ -48,7 +48,11 @@ const GroceriesSpendings = () => {
   );
 
   if (loading) {
-    return <p>Loading expenses...</p>;
+    return (
+      <div className="flex justify-center mt-24 items-center">
+        <img src="loading.gif" alt="Loading..." className="w-16 h-16" />
+      </div>
+    );
   }
 
   return (

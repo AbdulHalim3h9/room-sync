@@ -226,6 +226,7 @@ import { membersData as members } from "@/membersData";
 import DatePickerMealCount from "./DatePickerMealCount";  // Import DatePicker component
 import { db } from "@/firebase"; // Import Firebase configuration
 import { collection, addDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const DailyMealCountForm = () => {
   const [selectedDate, setSelectedDate] = useState(new Date()); // State for the date picked
@@ -352,16 +353,61 @@ const DailyMealCountForm = () => {
     console.log("Meal counts submitted:", dailyMealCount);
     console.log("Monthly meal count:", updatedMonthlyMealCount);
 
+    // try {
+    //   // Submit to Firebase Firestore
+    //   const docRef = await addDoc(collection(db, "mealCounts"), {
+    //     date: dailyMealCount.date,
+    //     dailyMealCount: dailyMealCount,
+    //   });
+    //   ////
+    //   console.log("Meal counts submitted:", dailyMealCount),
+    //   console.log("Document written with ID: ", docRef.id);
+    // } catch (e) {
+    //   console.error("Error adding document: ", e);
+    // }
+
     try {
-      // Submit to Firebase Firestore
-      const docRef = await addDoc(collection(db, "mealCounts"), {
-        date: dailyMealCount.date,
-        dailyMealCount: dailyMealCount,
-      });
-      console.log("Document written with ID: ", docRef.id);
+      // Extract month (YYYY-MM format)
+      const month = dailyMealCount.date.slice(0, 7); // "2025-03"
+    
+      // Reference the monthly document
+      const docRef = doc(db, "individualMeals", month);
+    
+      // Fetch existing data
+      const docSnap = await getDoc(docRef);
+      let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
+    
+      // Extract meal data without the date
+      const { date, ...mealData } = dailyMealCount;
+    
+      // Update the meal counts
+      for (const [memberId, mealCount] of Object.entries(mealData)) {
+        let meals = existingData.mealCounts[memberId] || []; // Get existing meals or initialize
+    
+        // Remove the last index (previous sum)
+        if (meals.length > 0) {
+          meals.pop();
+        }
+    
+        // Add new meal count
+        meals.push(parseInt(mealCount, 10));
+    
+        // Recalculate sum and add to the last index
+        const newSum = meals.reduce((acc, val) => acc + val, 0);
+        meals.push(newSum);
+    
+        // Update the member's meal count array
+        existingData.mealCounts[memberId] = meals;
+      }
+    
+      // Save updated data
+      await setDoc(docRef, existingData, { merge: true });
+    
+      console.log("Meal counts updated successfully");
     } catch (e) {
-      console.error("Error adding document: ", e);
+      console.error("Error updating document: ", e);
     }
+    
 
     setIsConfirmed(false); // Reset confirmation state
   };

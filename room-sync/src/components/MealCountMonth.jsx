@@ -26,22 +26,29 @@ const MealCountMonth = () => {
   console.log("Member:", member);
 
   let mapMeals = new Map();
-  member?.meals.forEach((meal) => {
-    mapMeals.set(meal.slice(0, 2), meal.slice(3)); // meal slice for key-value
+  member?.meals.forEach((meal, index, arr) => {
+    if (index === arr.length - 1) {
+      // Skip slicing for the last meal
+      mapMeals.set(meal.slice(0, 5), meal.slice(6));
+    } else {
+      mapMeals.set(meal.slice(0, 2), meal.slice(3));
+    }
   });
+  
 
   // Create two new Maps for the split ranges
   let firstColumn = new Map();
   let secondColumn = new Map();
-
+  let day = 1;
   // Iterate over mapMeals and distribute keys
   mapMeals.forEach((value, key) => {
-    let day = parseInt(key, 10); // Convert key to a number
+    console.log("keyyyyyy:", key, value);
     if (day >= 1 && day <= 16) {
       firstColumn.set(key, value);
-    } else if (day >= 17 && day <= 31) {
+    } else if (day >= 17 && day <= 32) {
       secondColumn.set(key, value);
     }
+    day++;
   });
 
   const handleDateChange = (newMonth) => {
@@ -93,7 +100,13 @@ const MealCountMonth = () => {
   }
 
   // Format date for display
-  const formatDate = (dateString) => {
+  const formatDate = (dateF) => {
+    if (dateF.startsWith("T")) {
+      return(
+      <span>Total</span>
+      );
+    }
+    const dateString = `${month}-${dateF}`;
     const date = new Date(dateString);
     const options = { day: "numeric" };
     const weekday = date.toLocaleString("en-US", { weekday: "short" });
@@ -126,7 +139,7 @@ const MealCountMonth = () => {
                 {Array.from(firstColumn).map(([key, count], index) => (
                   <TableRow className="even:bg-gray-50 odd:bg-white" key={index}>
                     <TableCell className="p-[0.3rem] text-center">
-                      {formatDate(`${month}-${key}`)}
+                      {formatDate(key)}
                     </TableCell>
                     <TableCell className="p-[0.3rem] text-center">{count}</TableCell>
                   </TableRow>

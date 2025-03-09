@@ -178,7 +178,8 @@ for (const [memberId, mealCount] of Object.entries(mealData)) {
       for (const [memberId, mealCount] of Object.entries(mealData)) {
         let meals = existingData.mealCounts[memberId] || []; // Get existing meals or initialize
 
-        const lastSum = meals.length > 0 ? meals[meals.length - 1]: 0;
+        const lastSum = meals.length > 0 ? parseInt(meals[meals.length - 1].split(" ")[1], 10) : 0;
+        
         // Remove the last index (previous sum)
         if (meals.length > 0) {
           meals.pop();
@@ -193,7 +194,8 @@ for (const [memberId, mealCount] of Object.entries(mealData)) {
         // Recalculate sum and add to the last index
         //const newSum = meals.reduce((acc, val) => acc + val, 0);
         const newSum = parseInt(lastSum, 10) + parseInt(mealCount, 10);
-        meals.push(newSum.toString());
+        console.log("New Sum:", newSum);
+        meals.push(`Total ${newSum.toString()}`);
     
         // Update the member's meal count array
         existingData.mealCounts[memberId] = meals;

@@ -1,14 +1,17 @@
+"use client"
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { db } from "@/firebase"; // Import Firestore config
-import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore"; // Firestore imports
+import { db } from "@/firebase";
+import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
 import SetIndividual from "./SetIndividual";
-import SingleMonthYearPicker from "../SingleMonthYearPicker"; // Import the MonthYearPicker component
+import SingleMonthYearPicker from "../SingleMonthYearPicker";
+import { useToast } from "@/hooks/use-toast";
 
 const SetPayables = () => {
-  const [formType, setFormType] = useState("apartment"); // Default is "apartment"
+  const [formType, setFormType] = useState("apartment");
   const [roomRent, setRoomRent] = useState("");
   const [diningRent, setDiningRent] = useState("");
   const [serviceCharge, setServiceCharge] = useState("");
@@ -16,18 +19,53 @@ const SetPayables = () => {
   const [utilityBill, setUtilityBill] = useState("");
   const [status, setStatus] = useState("Pending");
   const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toLocaleString("default", { month: "long", year: "numeric" }) // Default to current month
+    new Date().toLocaleString("default", { month: "long", year: "numeric" })
   );
 
-  // Handle month change from MonthYearPicker
+  const { toast } = useToast();
+
   const handleMonthChange = (newMonth) => {
     setSelectedMonth(newMonth);
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const errors = [];
+    const fields = {
+      roomRent,
+      diningRent,
+      serviceCharge,
+      khalasBill,
+      utilityBill,
+    };
+
+    Object.entries(fields).forEach(([fieldName, value]) => {
+      if (!value) {
+        errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()} is required`);
+      } else if (!/^\d+$/.test(value)) {
+        errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()} must be a number`);
+      }
+    });
+
+    if (errors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: errors.join(", "),
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true; // No errors
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Create the payables array
+    // Validate form before proceeding
+    if (!validateForm()) {
+      return;
+    }
+
     const payables = [
       { name: "Room Rent", amount: parseInt(roomRent) || 0 },
       { name: "Dining Rent", amount: parseInt(diningRent) || 0 },
@@ -36,84 +74,58 @@ const SetPayables = () => {
       { name: "Utility Bill", amount: parseInt(utilityBill) || 0 },
     ];
 
-    // Create the bills array
     const bills = [
-      {
-        id: 1, // You can dynamically generate this ID
-        name: "Abdul Halim Khan",
-        status: status,
-        payables: [...payables], // Copy the payables array for each member
-      },
-      {
-        id: 2,
-        name: "Shakil",
-        status: status,
-        payables: [...payables],
-      },
-      {
-        id: 3,
-        name: "Ahad",
-        status: status,
-        payables: [...payables],
-      },
-      {
-        id: 4,
-        name: "Mafi",
-        status: status,
-        payables: [...payables],
-      },
-      {
-        id: 5,
-        name: "Pran",
-        status: status,
-        payables: [...payables],
-      },
-      {
-        id: 6,
-        name: "Alhaz",
-        status: status,
-        payables: [...payables],
-      },
-      {
-        id: 7,
-        name: "Abdan",
-        status: status,
-        payables: [...payables],
-      },
-      {
-        id: 8,
-        name: "AbdKhan",
-        status: status,
-        payables: [...payables],
-      },
-      // Add other members here if needed
+      { id: 1, name: "Abdul Halim Khan", status: status, payables: [...payables] },
+      { id: 2, name: "Shakil", status: status, payables: [...payables] },
+      { id: 3, name: "Ahad", status: status, payables: [...payables] },
+      { id: 4, name: "Mafi", status: status, payables: [...payables] },
+      { id: 5, name: "Pran", status: status, payables: [...payables] },
+      { id: 6, name: "Alhaz", status: status, payables: [...payables] },
+      { id: 7, name: "Abdan", status: status, payables: [...payables] },
+      { id: 8, name: "AbdKhan", status: status, payables: [...payables] },
     ];
 
-    // Create the Firestore document
     const billData = {
-      month: selectedMonth, // Store the selected month
-      bills, // Store the bills array
+      month: selectedMonth,
+      bills,
     };
 
     try {
-      // Check if data already exists for the selected month
-      const billsCollectionRef = collection(db, "payables"); // Firestore collection
-      const q = query(billsCollectionRef, where("month", "==", selectedMonth)); // Query for the selected month
+      const billsCollectionRef = collection(db, "payables");
+      const q = query(billsCollectionRef, where("month", "==", selectedMonth));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // If data exists, update the existing document
-        const docId = querySnapshot.docs[0].id; // Get the document ID
-        const docRef = doc(db, "payables", docId); // Reference the document
-        await updateDoc(docRef, billData); // Update the document
-        console.log("Data updated successfully");
+        const docId = querySnapshot.docs[0].id;
+        const docRef = doc(db, "payables", docId);
+        await updateDoc(docRef, billData);
+        toast({
+          title: "Success!",
+          description: "Payables have been successfully updated.",
+          variant: "success",
+        });
       } else {
-        // If data does not exist, create a new document
-        await addDoc(billsCollectionRef, billData); // Add the document
-        console.log("Data uploaded successfully");
+        await addDoc(billsCollectionRef, billData);
+        toast({
+          title: "Success!",
+          description: "Payables have been successfully set.",
+          variant: "success",
+        });
       }
+
+      setRoomRent("");
+      setDiningRent("");
+      setServiceCharge("");
+      setKhalasBill("");
+      setUtilityBill("");
+      setStatus("Pending");
     } catch (error) {
       console.error("Error uploading/updating data: ", error);
+      toast({
+        title: "Error",
+        description: "Failed to set/update payables. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -124,10 +136,9 @@ const SetPayables = () => {
   return (
     <div className="max-w-lg mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">
-        Add payables for {selectedMonth} {/* Display selected month */}
+        Add payables for {selectedMonth}
       </h1>
 
-      {/* Month Selection */}
       <div className="mb-6">
         <Label htmlFor="monthPicker" className="block mb-1">
           Select Month
@@ -135,7 +146,6 @@ const SetPayables = () => {
         <SingleMonthYearPicker onChange={handleMonthChange} />
       </div>
 
-      {/* Radio Button for Form Type */}
       <div className="mb-6">
         <label className="mr-4">
           <input
@@ -162,7 +172,6 @@ const SetPayables = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {formType === "apartment" ? (
           <>
-            {/* Room rent and Dining rent in the same row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="roomRent" className="block mb-1">
@@ -192,7 +201,6 @@ const SetPayables = () => {
               </div>
             </div>
 
-            {/* Service charge */}
             <div>
               <Label htmlFor="serviceCharge" className="block mb-1">
                 Service Charge
@@ -207,7 +215,6 @@ const SetPayables = () => {
               />
             </div>
 
-            {/* Khala's bill */}
             <div>
               <Label htmlFor="khalasBill" className="block mb-1">
                 Khala's Bill
@@ -222,7 +229,6 @@ const SetPayables = () => {
               />
             </div>
 
-            {/* Utility bill */}
             <div>
               <Label htmlFor="utilityBill" className="block mb-1">
                 Utility Bill
@@ -237,7 +243,6 @@ const SetPayables = () => {
               />
             </div>
 
-            {/* Submit Button */}
             <div className="mt-6">
               <Button type="submit" className="w-full">
                 Submit

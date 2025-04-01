@@ -1,19 +1,24 @@
-import { membersData } from '@/membersData';
-import React, { useState } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { db } from "@/firebase"; // Import Firestore config
-import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore"; // Firestore imports
-import SingleMonthYearPicker from "../SingleMonthYearPicker"; // Import the MonthYearPicker component
+"use client"
+
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { db } from "@/firebase";
+import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import SingleMonthYearPicker from "../SingleMonthYearPicker";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { membersData } from "@/membersData";
 
 const SetIndividual = () => {
   const [individuals, setIndividuals] = useState([
     { member: "", fields: [{ title: "", amount: "" }] },
   ]);
   const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toLocaleString("default", { month: "long", year: "numeric" }) // Default to current month
+    new Date().toLocaleString("default", { month: "long", year: "numeric" })
   );
+
+  const { toast } = useToast(); // Initialize toast hook
 
   // Handle individual input changes
   const handleIndividualChange = (index, e) => {
@@ -39,7 +44,7 @@ const SetIndividual = () => {
   // Remove a field for a specific individual
   const handleRemoveField = (individualIndex, fieldIndex) => {
     const updatedIndividuals = [...individuals];
-    updatedIndividuals[individualIndex].fields.splice(fieldIndex, 1); // Remove the field
+    updatedIndividuals[individualIndex].fields.splice(fieldIndex, 1);
     setIndividuals(updatedIndividuals);
   };
 
@@ -48,26 +53,39 @@ const SetIndividual = () => {
     setSelectedMonth(newMonth);
   };
 
-
   // Handle form submission
   const handleSubmit = async () => {
     // Validate the form data
-    const isValid = individuals.every((individual) => {
-      return (
-        individual.member && // Member is selected
-        individual.fields.every((field) => field.title && field.amount) // All fields are filled
-      );
+    const validationErrors = [];
+    individuals.forEach((individual, index) => {
+      if (!individual.member) {
+        validationErrors.push(`Member ${index + 1} is not selected`);
+      }
+      individual.fields.forEach((field, fieldIndex) => {
+        if (!field.title) {
+          validationErrors.push(`Title for field ${fieldIndex + 1} of Member ${index + 1} is required`);
+        }
+        if (!field.amount) {
+          validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1} is required`);
+        } else if (!/^\d+$/.test(field.amount)) {
+          validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1} must be a number`);
+        }
+      });
     });
 
-    if (!isValid) {
-      alert("Please fill out all fields before submitting.");
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive",
+      });
       return;
     }
 
     // Format the data to match the shared bills structure
     const bills = individuals.map((individual) => ({
       name: individual.member,
-      status: "Pending", // Default status
+      status: "Pending",
       payables: individual.fields.map((field) => ({
         name: field.title,
         amount: parseInt(field.amount) || 0,
@@ -76,31 +94,42 @@ const SetIndividual = () => {
 
     // Create the Firestore document
     const billData = {
-      month: selectedMonth, // Include the selected month
-      bills, // Include the formatted bills array
+      month: selectedMonth,
+      bills,
     };
 
     try {
-      // Check if data already exists for the selected month
-      const billsCollectionRef = collection(db, "payables"); // Firestore collection
-      const q = query(billsCollectionRef, where("month", "==", selectedMonth)); // Query for the selected month
+      const billsCollectionRef = collection(db, "payables");
+      const q = query(billsCollectionRef, where("month", "==", selectedMonth));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // If data exists, update the existing document
-        const docId = querySnapshot.docs[0].id; // Get the document ID
-        const docRef = doc(db, "payables", docId); // Reference the document
-        await updateDoc(docRef, billData); // Update the document
-        console.log("Data updated successfully");
-        alert("Data updated successfully!");
+        const docId = querySnapshot.docs[0].id;
+        const docRef = doc(db, "payables", docId);
+        await updateDoc(docRef, billData);
+        toast({
+          title: "Success!",
+          description: "Individual payables have been successfully updated.",
+          variant: "success",
+        });
       } else {
-        // If data does not exist, create a new document
-        await addDoc(billsCollectionRef, billData); // Add the document
-        console.log("Data uploaded successfully");
-        alert("Form submitted successfully!");
+        await addDoc(billsCollectionRef, billData);
+        toast({
+          title: "Success!",
+          description: "Individual payables have been successfully set.",
+          variant: "success",
+        });
       }
+
+      // Reset form after successful submission
+      setIndividuals([{ member: "", fields: [{ title: "", amount: "" }] }]);
     } catch (error) {
       console.error("Error uploading/updating data: ", error);
+      toast({
+        title: "Error",
+        description: "Failed to set/update individual payables. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -169,7 +198,7 @@ const SetIndividual = () => {
                     value={field.amount}
                     onChange={(e) => handleFieldChange(index, fieldIndex, e)}
                     placeholder="Enter amount"
-                    className="w-full"
+                    className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
 
@@ -196,9 +225,11 @@ const SetIndividual = () => {
         </div>
       ))}
 
-      {/* Total Amount */}
+      {/* Total Amount (Placeholder - needs calculation logic) */}
       <div className="font-bold text-lg mt-6">
-        Total Amount: {} tk
+        Total Amount: {individuals.reduce((total, ind) => 
+          total + ind.fields.reduce((sum, field) => 
+            sum + (parseInt(field.amount) || 0), 0), 0)} tk
       </div>
 
       {/* Submit Button */}

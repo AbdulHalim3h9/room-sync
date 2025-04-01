@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,8 +8,7 @@ import { membersData } from "@/membersData";
 import { DatePick } from "./DatePick";
 import { db } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast"
-
+import { useToast } from "@/hooks/use-toast";
 
 const AddGrocerySpendings = () => {
   const [amountSpent, setAmountSpent] = useState("");
@@ -15,13 +16,50 @@ const AddGrocerySpendings = () => {
   const [expenseType, setExpenseType] = useState("groceries");
   const [expenseTitle, setExpenseTitle] = useState("");
   const [date, setDate] = useState(new Date());
-  const { toast } = useToast(); // Initialize toast
+
+  const { toast } = useToast();
+
+  // Validation function
+  const validateForm = () => {
+    const errors = [];
+
+    // Validate amountSpent
+    if (!amountSpent) {
+      errors.push("Amount Spent is required");
+    } else if (!/^\d+$/.test(amountSpent)) {
+      errors.push("Amount Spent must be a number");
+    }
+
+    // Validate based on expenseType
+    if (expenseType === "groceries" && !selectedShopper) {
+      errors.push("Shopper is required for groceries");
+    }
+
+    if (expenseType === "other" && !expenseTitle) {
+      errors.push("Expense Title is required for other expenses");
+    }
+
+    if (errors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: errors.join(", "),
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate form before proceeding
+    if (!validateForm()) {
+      return;
+    }
+
     const data = {
-      amountSpent,
+      amountSpent: parseInt(amountSpent), // Convert to number
       shopper: selectedShopper || null,
       expenseType,
       expenseTitle: expenseType === "other" ? expenseTitle : null,
@@ -30,11 +68,10 @@ const AddGrocerySpendings = () => {
 
     try {
       await addDoc(collection(db, "expenses"), data);
-      // Show success toast
       toast({
         title: "Success!",
         description: "Expense has been successfully added.",
-        variant: "success", // Optional: some shadcn setups support variants
+        variant: "success",
       });
       // Clear the form after submission
       setAmountSpent("");
@@ -44,11 +81,10 @@ const AddGrocerySpendings = () => {
       setDate(new Date());
     } catch (error) {
       console.error("Error adding document: ", error);
-      // Show error toast
       toast({
         title: "Error",
         description: "Failed to add expense. Please try again.",
-        variant: "destructive", // Optional: for error styling
+        variant: "destructive",
       });
     }
   };
@@ -99,7 +135,7 @@ const AddGrocerySpendings = () => {
             placeholder="Enter amount spent"
             value={amountSpent}
             onChange={(e) => setAmountSpent(e.target.value)}
-            className="w-full"
+            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </div>
 

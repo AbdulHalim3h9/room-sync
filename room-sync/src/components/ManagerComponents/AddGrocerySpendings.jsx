@@ -25,24 +25,24 @@ const AddGrocerySpendings = () => {
 
     // Validate amountSpent
     if (!amountSpent) {
-      errors.push("Amount Spent is required");
+      errors.push("Amount Spent");
     } else if (!/^\d+$/.test(amountSpent)) {
       errors.push("Amount Spent must be a number");
     }
 
     // Validate based on expenseType
     if (expenseType === "groceries" && !selectedShopper) {
-      errors.push("Shopper is required for groceries");
+      errors.push("Shopper");
     }
 
     if (expenseType === "other" && !expenseTitle) {
-      errors.push("Expense Title is required for other expenses");
+      errors.push("Expense Title");
     }
 
     if (errors.length > 0) {
       toast({
         title: "Validation Error",
-        description: errors.join(", "),
+        description: errors.join(", ") + " is required.",
         variant: "destructive",
       });
       return false;

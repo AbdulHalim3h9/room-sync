@@ -13,7 +13,7 @@ import AddMealFund from "./components/ManagerComponents/AddMealFund";
 import AddGrocerySpendings from "./components/ManagerComponents/AddGrocerySpendings";
 import SetDailyMealCount from "./components/ManagerComponents/SetDailyMealCount";
 import SetPayables from "./components/ManagerComponents/SetPayables";
-import ManageMembers from "./components/ManagerComponents/ManageMembers";
+import MembersList from "./components/AdminComponents/MembersList";
 import RegisterMember from "./components/AdminComponents/RegisterMember";
 import MemberDetails from "./components/AdminComponents/MemberDetails";
 
@@ -43,7 +43,7 @@ const App = () => {
           <Route path="/set-payables" element={<SetPayables />} />
           <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
           <Route path="/register-member" element={<RegisterMember />} />
-          <Route path="/members" element={<ManageMembers />} />
+          <Route path="/members" element={<MembersList />} />
           <Route path="/member-details" element={<MemberDetails />} />
         </Routes>
         <BottomNavigation />

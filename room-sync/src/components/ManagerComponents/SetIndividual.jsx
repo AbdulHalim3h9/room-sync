@@ -59,14 +59,14 @@ const SetIndividual = () => {
     const validationErrors = [];
     individuals.forEach((individual, index) => {
       if (!individual.member) {
-        validationErrors.push(`Member ${index + 1} is not selected`);
+        validationErrors.push(`Member ${index + 1}`);
       }
       individual.fields.forEach((field, fieldIndex) => {
         if (!field.title) {
-          validationErrors.push(`Title for field ${fieldIndex + 1} of Member ${index + 1} is required`);
+          validationErrors.push(`Title for field ${fieldIndex + 1} of Member ${index + 1}`);
         }
         if (!field.amount) {
-          validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1} is required`);
+          validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1}`);
         } else if (!/^\d+$/.test(field.amount)) {
           validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1} must be a number`);
         }
@@ -76,7 +76,7 @@ const SetIndividual = () => {
     if (validationErrors.length > 0) {
       toast({
         title: "Validation Error",
-        description: validationErrors.join(", "),
+        description: validationErrors.join(", ") + " is required.",
         variant: "destructive",
       });
       return;

@@ -41,7 +41,7 @@ const SetPayables = () => {
 
     Object.entries(fields).forEach(([fieldName, value]) => {
       if (!value) {
-        errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()} is required`);
+        errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()}`);
       } else if (!/^\d+$/.test(value)) {
         errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()} must be a number`);
       }
@@ -50,7 +50,7 @@ const SetPayables = () => {
     if (errors.length > 0) {
       toast({
         title: "Validation Error",
-        description: errors.join(", "),
+        description: errors.join(", ") + " is required.",
         variant: "destructive",
       });
       return false;

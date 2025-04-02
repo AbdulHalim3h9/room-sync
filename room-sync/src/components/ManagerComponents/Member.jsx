@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import AssignRoles from "../AdminComponents/AssignRoles";
 
 const Member = ({ user }) => {
   const [isApproved, setIsApproved] = useState(false);
@@ -24,19 +23,15 @@ const Member = ({ user }) => {
         </div>
       </div>
 
-      <div className="flex flex-row items-center justify-around gap-2">
-        {isApproved ? (
-          <AssignRoles memberName={user.member_name} />
-        ) : (
-          // <Button variant="secondary" disabled>Verified</Button>
-          <Button onClick={handleApprove} className="w-32 bg-green-400">
-            Approve
-          </Button>
-        )}
-        <Button className="w-32" variant="destructive">
-          Remove
-        </Button>
-      </div>
+<div className="relative">
+      <Button
+        variant="secondary"
+        id="view-details"
+        className="flex items-center gap-2 w-32 rounded bg-yellow-300 text-black hover:bg-yellow-400"
+      >
+        View Details
+      </Button>
+    </div>
     </div>
   );
 };

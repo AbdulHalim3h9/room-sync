@@ -14,6 +14,8 @@ import AddGrocerySpendings from "./components/ManagerComponents/AddGrocerySpendi
 import SetDailyMealCount from "./components/ManagerComponents/SetDailyMealCount";
 import SetPayables from "./components/ManagerComponents/SetPayables";
 import ManageMembers from "./components/ManagerComponents/ManageMembers";
+import RegisterMember from "./components/AdminComponents/RegisterMember";
+import MemberDetails from "./components/AdminComponents/MemberDetails";
 
 // Create the context
 const MonthContext = createContext();
@@ -40,7 +42,9 @@ const App = () => {
           <Route path="/add-meal-fund" element={<AddMealFund />} />
           <Route path="/set-payables" element={<SetPayables />} />
           <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
+          <Route path="/register-member" element={<RegisterMember />} />
           <Route path="/members" element={<ManageMembers />} />
+          <Route path="/member-details" element={<MemberDetails />} />
         </Routes>
         <BottomNavigation />
     </MonthContext.Provider>

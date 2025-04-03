@@ -76,7 +76,7 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
   const secondLastMeal = meals.length > 1 ? meals[meals.length - 2] : "";
   
   // Extract the first two characters of the second last element
-  starDate = meals.length == 0 ? 1 : parseInt(secondLastMeal.slice(0, 2));
+  starDate = meals.length == 0 ? 0 : parseInt(secondLastMeal.slice(0, 2));
 
   console.log(meals,secondLastMeal);
   console.log("StarDate:", starDate);  // Output the first two characters
@@ -90,7 +90,7 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
     const startDate = starDate;
     // setError(`Fill out from date ${startDate} first`); // Reset the error state
     console.log("Selected Date:", selectedDate.getDate());
-    if (selectedDate.getDate() - startDate != 1 || (selectedDate.getDate() == 1 && startDate == 1)) {
+    if (selectedDate.getDate() - startDate != 1) {
       setError(`Fill out from date ${startDate + 1} first`);
       return;
     }

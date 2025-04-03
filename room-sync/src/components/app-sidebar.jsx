@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { db } from "@/firebase";
 import { collection, getDocs, setDoc, doc, deleteDoc } from "firebase/firestore";
+import LoginDialog from "./LoginDialog";
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -230,6 +231,8 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        <LoginDialog />
       </SidebarContent>
     </Sidebar>
   );

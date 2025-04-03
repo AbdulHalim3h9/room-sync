@@ -1,36 +1,38 @@
 "use client"
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { membersData } from "@/membersData";
-import { DatePick } from "./DatePick";
 import { db } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import DatePickerMealCount from "./DatePickerMealCount";
 
 const AddGrocerySpendings = () => {
   const [amountSpent, setAmountSpent] = useState("");
   const [selectedShopper, setSelectedShopper] = useState("");
   const [expenseType, setExpenseType] = useState("groceries");
   const [expenseTitle, setExpenseTitle] = useState("");
-  const [date, setDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Renamed for clarity
+
+  
+  useEffect(() => {
+    console.log("Selected Date:", selectedDate);
+  }, [selectedDate]);
 
   const { toast } = useToast();
 
-  // Validation function
   const validateForm = () => {
     const errors = [];
 
-    // Validate amountSpent
     if (!amountSpent) {
       errors.push("Amount Spent");
     } else if (!/^\d+$/.test(amountSpent)) {
       errors.push("Amount Spent must be a number");
     }
 
-    // Validate based on expenseType
     if (expenseType === "groceries" && !selectedShopper) {
       errors.push("Shopper");
     }
@@ -50,20 +52,23 @@ const AddGrocerySpendings = () => {
     return true;
   };
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form before proceeding
     if (!validateForm()) {
       return;
     }
 
+    // Ensure the date is a fresh Date object based on the selectedDate
+    const formattedDate = new Date(selectedDate).toISOString();
+    console.log(formattedDate,selectedDate);
     const data = {
-      amountSpent: parseInt(amountSpent), // Convert to number
+      amountSpent: parseInt(amountSpent),
       shopper: selectedShopper || null,
       expenseType,
       expenseTitle: expenseType === "other" ? expenseTitle : null,
-      date: date.toISOString(),
+      date: formattedDate, // Use the dynamically selected date
     };
 
     try {
@@ -73,12 +78,12 @@ const AddGrocerySpendings = () => {
         description: "Expense has been successfully added.",
         variant: "success",
       });
-      // Clear the form after submission
+      // Reset form
       setAmountSpent("");
       setSelectedShopper("");
       setExpenseType("groceries");
       setExpenseTitle("");
-      setDate(new Date());
+      setSelectedDate(new Date()); // Reset to current date after submission
     } catch (error) {
       console.error("Error adding document: ", error);
       toast({
@@ -92,7 +97,7 @@ const AddGrocerySpendings = () => {
   return (
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">Add Grocery or Other Expense</h1>
-      <DatePick selectedDate={date} setSelectedDate={setDate} />
+      <DatePickerMealCount selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
 
       <div className="flex space-x-4 mb-6">
         <div>

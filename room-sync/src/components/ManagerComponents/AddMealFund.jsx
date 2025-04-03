@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 // Import the members data from the JSON file
 import { membersData } from "@/membersData";// Adjust the import path as needed
-import { DatePick } from "./DatePick";
+import DatePickerMealCount from "./DatePickerMealCount";
 
 const AddMealFund = () => {
   const [selectedDonor, setSelectedDonor] = useState(""); // State to hold selected donor
@@ -20,7 +20,7 @@ const AddMealFund = () => {
   return (
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">Donation Form</h1>
-      <DatePick /> {/* Date Picker Component */}
+      <DatePickerMealCount /> {/* Date Picker Component */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Donor Dropdown */}
         <div>

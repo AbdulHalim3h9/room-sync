@@ -16,7 +16,6 @@ const DailyMealCountForm = () => {
   const [isConfirmed, setIsConfirmed] = useState(false); // Confirmation state
   const [monthlyMealCount, setMonthlyMealCount] = useState({}); // Monthly meal counts
   const [error, setError] = useState(""); // State to hold validation error message
-  const [missingDates, setMissingDates] = useState([]); // State to hold missing dates
 
   useEffect(() => {
     setDailyMealCount((prev) => ({
@@ -48,12 +47,11 @@ const DailyMealCountForm = () => {
       setError("All fields must be filled out!");
       return;
     }
-
+    // if (error.length > 0) {
+    //   return; // Prevent submission if there's an error
+    // }
     // Check for missing dates
     const pickedMonth = format(selectedDate, "yyyy-MM");
-    const aggregatedDays = Object.values(monthlyMealCount).flatMap(memberData => {
-      return memberData[pickedMonth] ? Object.keys(memberData[pickedMonth]).map(Number) : [];
-    });
 
     let starDate = 1;
     //
@@ -69,17 +67,19 @@ const docSnap = await getDoc(docRef);
 let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
 // Extract meal data without the date
-const { date, ...mealData } = dailyMealCount;
-
+const mealData = dailyMealCount;// Log the meal data // Log the selected date
 // Update the meal counts
 for (const [memberId, mealCount] of Object.entries(mealData)) {
   let meals = existingData.mealCounts[memberId] || []; // Get existing meals or initialize
-
+  console.log("ExistingMealsData:", meals); // Log the meals array
   // Get the second last element from the meals array
+  // if (meals.length == 0) {
+  //   meals.push("00 0"); // Push a default value if the array is empty
+  // }
   const secondLastMeal = meals.length > 1 ? meals[meals.length - 2] : "";
   
   // Extract the first two characters of the second last element
-  starDate = parseInt(secondLastMeal.slice(0, 2));
+  starDate = meals.length == 0 ? 1 : parseInt(secondLastMeal.slice(0, 2));
 
   
   console.log("StarDate:", starDate);  // Output the first two characters
@@ -91,7 +91,12 @@ for (const [memberId, mealCount] of Object.entries(mealData)) {
     //
 
     const startDate = starDate;
-    setError(`Fill out from ${startDate} first`); // Reset the error state
+    // setError(`Fill out from date ${startDate} first`); // Reset the error state
+    console.log("Selected Date:", selectedDate.getDate());
+    if (selectedDate.getDate() > startDate) {
+      setError(`Fill out from date ${startDate} first`);
+      return;
+    }
     console.log("StarDate:", startDate);
     
 
@@ -146,19 +151,6 @@ for (const [memberId, mealCount] of Object.entries(mealData)) {
     alert("Meal counts submitted successfully!");
     console.log("Meal counts submitted:", dailyMealCount);
     console.log("Monthly meal count:", updatedMonthlyMealCount);
-
-    // try {
-    //   // Submit to Firebase Firestore
-    //   const docRef = await addDoc(collection(db, "mealCounts"), {
-    //     date: dailyMealCount.date,
-    //     dailyMealCount: dailyMealCount,
-    //   });
-    //   ////
-    //   console.log("Meal counts submitted:", dailyMealCount),
-    //   console.log("Document written with ID: ", docRef.id);
-    // } catch (e) {
-    //   console.error("Error adding document: ", e);
-    // }
 
     try {
       // Extract month (YYYY-MM format)

@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import MemberDetails from "./MemberDetails"; // Import the details component
+import { use } from "react";
 
 const Member = ({ user }) => {
   const [showDetails, setShowDetails] = useState(false); // State to toggle details
 
   const handleViewDetails = () => {
     setShowDetails(!showDetails); // Toggle visibility
+    console.log(user.id); // Log the user object
     console.log("View Details clicked"); // Log the click event
   };
 
   return (
-    <div className="my-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div>
+    <div className="my-4 flex gap-4 items-center justify-between">
       <div className="flex gap-x-6 items-center justify-around">
         <img
           className="w-12 h-12 overflow-hidden rounded-full"
@@ -35,6 +38,7 @@ const Member = ({ user }) => {
         >
           {showDetails ? "Hide Details" : "View Details"}
         </Button>
+      </div>
       </div>
 
       {/* Show MemberDetails when toggled */}

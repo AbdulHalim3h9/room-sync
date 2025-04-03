@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { format, eachDayOfInterval, startOfMonth } from "date-fns";
+import { format} from "date-fns";
 import { membersData as members } from "@/membersData";
 import DatePickerMealCount from "./DatePickerMealCount";  // Import DatePicker component
 import { db } from "@/firebase"; // Import Firebase configuration
-import { collection, addDoc } from "firebase/firestore";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const DailyMealCountForm = () => {
@@ -66,10 +65,8 @@ const docRef = doc(db, "individualMeals", month);
 const docSnap = await getDoc(docRef);
 let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
-// Extract meal data without the date
-const mealData = dailyMealCount;// Log the meal data // Log the selected date
 // Update the meal counts
-for (const [memberId, mealCount] of Object.entries(mealData)) {
+for (const [memberId] of Object.entries(dailyMealCount)) {
   let meals = existingData.mealCounts[memberId] || []; // Get existing meals or initialize
   console.log("ExistingMealsData:", meals); // Log the meals array
   // Get the second last element from the meals array
@@ -81,7 +78,7 @@ for (const [memberId, mealCount] of Object.entries(mealData)) {
   // Extract the first two characters of the second last element
   starDate = meals.length == 0 ? 1 : parseInt(secondLastMeal.slice(0, 2));
 
-  
+  console.log(meals,secondLastMeal);
   console.log("StarDate:", starDate);  // Output the first two characters
 }
 
@@ -93,8 +90,8 @@ for (const [memberId, mealCount] of Object.entries(mealData)) {
     const startDate = starDate;
     // setError(`Fill out from date ${startDate} first`); // Reset the error state
     console.log("Selected Date:", selectedDate.getDate());
-    if (selectedDate.getDate() > startDate) {
-      setError(`Fill out from date ${startDate} first`);
+    if (selectedDate.getDate() - startDate != 1) {
+      setError(`Fill out from date ${startDate + 1} first`);
       return;
     }
     console.log("StarDate:", startDate);

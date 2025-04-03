@@ -35,6 +35,7 @@ const App = () => {
     <MonthContext.Provider value={{ month, setMonth }}>
         <Layout />
         <Routes>
+          <Route path="*" element={<CreditConsumed />} />
           <Route path="/creditconsumed/*" element={<CreditConsumed />} />
           <Route path="/payables" element={<Payables />} />
           <Route path="/groceries_spendings" element={<Groceries_spendings />} />

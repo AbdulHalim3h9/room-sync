@@ -90,7 +90,7 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
     const startDate = starDate;
     // setError(`Fill out from date ${startDate} first`); // Reset the error state
     console.log("Selected Date:", selectedDate.getDate());
-    if (selectedDate.getDate() - startDate != 1) {
+    if (selectedDate.getDate() - startDate != 1 || (selectedDate.getDate() == 1 && startDate == 1)) {
       setError(`Fill out from date ${startDate + 1} first`);
       return;
     }

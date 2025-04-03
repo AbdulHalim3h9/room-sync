@@ -1,20 +1,24 @@
+"use client"
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { format} from "date-fns";
+import { format } from "date-fns";
 import { membersData as members } from "@/membersData";
-import DatePickerMealCount from "./DatePickerMealCount";  // Import DatePicker component
-import { db } from "@/firebase"; // Import Firebase configuration
+import DatePickerMealCount from "./DatePickerMealCount";
+import { db } from "@/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const DailyMealCountForm = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date()); // State for the date picked
-  const [dailyMealCount, setDailyMealCount] = useState({}); // State for meal counts
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
-  const [isConfirmed, setIsConfirmed] = useState(false); // Confirmation state
-  const [monthlyMealCount, setMonthlyMealCount] = useState({}); // Monthly meal counts
-  const [error, setError] = useState(""); // State to hold validation error message
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dailyMealCount, setDailyMealCount] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [monthlyMealCount, setMonthlyMealCount] = useState({});
+
+  const { toast } = useToast();
 
   useEffect(() => {
     setDailyMealCount((prev) => ({
@@ -24,9 +28,7 @@ const DailyMealCountForm = () => {
   }, []);
 
   useEffect(() => {
-    // Reset the form and error when the selected date changes
     setDailyMealCount(Object.fromEntries(members.map((member) => [member.member_id, ""])));
-    setError(""); // Reset the error state
   }, [selectedDate]);
 
   const handleInputChange = (e, member_id) => {
@@ -39,76 +41,56 @@ const DailyMealCountForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate meal counts
     const isValid = Object.values(dailyMealCount).every((count) => count !== "" && count !== null);
 
     if (!isValid) {
-      setError("All fields must be filled out!");
+      toast({
+        title: "Validation Error",
+        description: "All meal count fields must be filled out!",
+        variant: "destructive",
+      });
       return;
     }
-    // if (error.length > 0) {
-    //   return; // Prevent submission if there's an error
-    // }
-    // Check for missing dates
+
     const pickedMonth = format(selectedDate, "yyyy-MM");
-
     let starDate = 1;
-    //
+
     try {
-      // Extract month (YYYY-MM format)
-const month = pickedMonth//////////////////////////////////////////////////
-console.log("Month:", month);
-// Reference the monthly document in Firestore
-const docRef = doc(db, "individualMeals", month);
+      const month = pickedMonth;
+      const docRef = doc(db, "individualMeals", month);
+      const docSnap = await getDoc(docRef);
+      let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
-// Fetch existing data
-const docSnap = await getDoc(docRef);
-let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
-
-// Update the meal counts
-for (const [memberId] of Object.entries(dailyMealCount)) {
-  let meals = existingData.mealCounts[memberId] || []; // Get existing meals or initialize
-  console.log("ExistingMealsData:", meals); // Log the meals array
-  // Get the second last element from the meals array
-  // if (meals.length == 0) {
-  //   meals.push("00 0"); // Push a default value if the array is empty
-  // }
-  const secondLastMeal = meals.length > 1 ? meals[meals.length - 2] : "";
-  
-  // Extract the first two characters of the second last element
-  starDate = meals.length == 0 ? 0 : parseInt(secondLastMeal.slice(0, 2));
-
-  console.log(meals,secondLastMeal);
-  console.log("StarDate:", starDate);  // Output the first two characters
-}
-
+      for (const [memberId] of Object.entries(dailyMealCount)) {
+        let meals = existingData.mealCounts[memberId] || [];
+        const secondLastMeal = meals.length > 1 ? meals[meals.length - 2] : "";
+        starDate = meals.length === 0 ? 0 : parseInt(secondLastMeal.slice(0, 2));
+      }
     } catch (error) {
       console.log("Error fetching data:", error);
     }
-    //
 
     const startDate = starDate;
-    // setError(`Fill out from date ${startDate} first`); // Reset the error state
-    console.log("Selected Date:", selectedDate.getDate());
-    if (selectedDate.getDate() - startDate != 1) {
-      setError(`Fill out from date ${startDate + 1} first`);
+    if (selectedDate.getDate() - startDate !== 1) {
+      toast({
+        title: "Validation Error",
+        description: `Please fill out the meal count for date ${startDate + 1} first`,
+        variant: "destructive",
+      });
       return;
     }
-    console.log("StarDate:", startDate);
-    
 
     setDailyMealCount((prev) => ({
       ...prev,
       date: format(selectedDate, "yyyy-MM-dd"),
     }));
 
-    console.log("Submitted Meal Counts:", dailyMealCount);
-    setIsModalOpen(true); // Open modal when form is submitted
+    setIsModalOpen(true);
   };
 
   const handleReset = () => {
     setDailyMealCount(Object.fromEntries(members.map((member) => [member.member_id, ""])));
-    setSelectedDate(""); // Reset the date picker as well
+    setSelectedDate("");
   };
 
   const addDailyToMonthlyMealCount = (dailyMealCount, monthlyMealCount) => {
@@ -144,62 +126,48 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
 
     const updatedMonthlyMealCount = addDailyToMonthlyMealCount(dailyMealCount, monthlyMealCount);
 
-    setMonthlyMealCount(updatedMonthlyMealCount); // Update the state
-    alert("Meal counts submitted successfully!");
-    console.log("Meal counts submitted:", dailyMealCount);
-    console.log("Monthly meal count:", updatedMonthlyMealCount);
+    setMonthlyMealCount(updatedMonthlyMealCount);
 
     try {
-      // Extract month (YYYY-MM format)
-      const month = dailyMealCount.date.slice(0, 7); // "2025-03"
-    
-      // Reference the monthly document
+      const month = dailyMealCount.date.slice(0, 7);
       const docRef = doc(db, "individualMeals", month);
-    
-      // Fetch existing data
       const docSnap = await getDoc(docRef);
       let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
-    
-      // Extract meal data without the date
-      const { date, ...mealData } = dailyMealCount;
-    
-      // Update the meal counts
-      for (const [memberId, mealCount] of Object.entries(mealData)) {
-        let meals = existingData.mealCounts[memberId] || []; // Get existing meals or initialize
 
+      const { date, ...mealData } = dailyMealCount;
+
+      for (const [memberId, mealCount] of Object.entries(mealData)) {
+        let meals = existingData.mealCounts[memberId] || [];
         const lastSum = meals.length > 0 ? parseInt(meals[meals.length - 1].split(" ")[1], 10) : 0;
-        
-        // Remove the last index (previous sum)
+
         if (meals.length > 0) {
           meals.pop();
         }
-    
-        // Add new meal count
-        // meals.push(parseInt(mealCount, 10));
-        meals.push(`${dailyMealCount.date.slice(-2)} ` + parseInt(mealCount, 10));
-        // console.log(`${dailyMealCount.date.slice(-2)} ` + parseInt(mealCount, 10));
 
-    
-        // Recalculate sum and add to the last index
-        //const newSum = meals.reduce((acc, val) => acc + val, 0);
+        meals.push(`${dailyMealCount.date.slice(-2)} ${parseInt(mealCount, 10)}`);
         const newSum = parseInt(lastSum, 10) + parseInt(mealCount, 10);
-        console.log("New Sum:", newSum);
         meals.push(`Total ${newSum.toString()}`);
-    
-        // Update the member's meal count array
+
         existingData.mealCounts[memberId] = meals;
       }
-    
-      // Save updated data
+
       await setDoc(docRef, existingData, { merge: true });
-    
-      console.log("Meal counts updated successfully");
+
+      toast({
+        title: "Success!",
+        description: "Meal counts submitted successfully!",
+        variant: "success",
+      });
     } catch (e) {
       console.error("Error updating document: ", e);
+      toast({
+        title: "Error",
+        description: "Failed to submit meal counts. Please try again.",
+        variant: "destructive",
+      });
     }
-    
 
-    setIsConfirmed(false); // Reset confirmation state
+    setIsConfirmed(false);
   };
 
   const closeModal = () => {
@@ -215,7 +183,6 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
             <DatePickerMealCount selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
           </div>
 
-          {/* Meal Counts for Members */}
           {members.map((member) => (
             <div key={member.member_id} className="flex items-center space-x-12">
               <Label htmlFor={`member-${member.member_id}`} className="w-28">
@@ -232,10 +199,6 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
             </div>
           ))}
 
-          {/* Validation Error Message */}
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-
-          {/* Submit and Reset Buttons */}
           <div className="flex space-x-4">
             <Button onClick={handleReset} variant="secondary">
               Reset
@@ -244,7 +207,6 @@ for (const [memberId] of Object.entries(dailyMealCount)) {
           </div>
         </form>
 
-        {/* Modal for showing summary and confirming */}
         {isModalOpen && !isConfirmed && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg w-[250px]">

@@ -52,7 +52,6 @@ const RegisterMember = () => {
       phone: formData.phone,
       imageUrl: formData.imageUrl || "", // Store empty string if no URL provided
       status: formData.status,
-      memberSince: serverTimestamp(), // Use Firestore server timestamp
     };
 
     // Save to Firestore

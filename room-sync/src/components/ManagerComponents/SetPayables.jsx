@@ -1,11 +1,19 @@
-"use client"
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { db } from "@/firebase";
-import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import SetIndividual from "./SetIndividual";
 import SingleMonthYearPicker from "../SingleMonthYearPicker";
 import { useToast } from "@/hooks/use-toast";
@@ -21,14 +29,39 @@ const SetPayables = () => {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toLocaleString("default", { month: "long", year: "numeric" })
   );
+  const [activeMembers, setActiveMembers] = useState([]);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchActiveMembers = async () => {
+      try {
+        const membersCollectionRef = collection(db, "members");
+        const q = query(membersCollectionRef, where("status", "==", "active"));
+        const querySnapshot = await getDocs(q);
+        const membersList = querySnapshot.docs.map((doc) => ({
+          id: doc.data().id,
+          name: doc.data().fullname,
+          resident: doc.data().resident,
+        }));
+        setActiveMembers(membersList);
+      } catch (error) {
+        console.error("Error fetching active members: ", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch active members.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchActiveMembers();
+  }, [toast]);
 
   const handleMonthChange = (newMonth) => {
     setSelectedMonth(newMonth);
   };
 
-  // Validation function
   const validateForm = () => {
     const errors = [];
     const fields = {
@@ -41,9 +74,11 @@ const SetPayables = () => {
 
     Object.entries(fields).forEach(([fieldName, value]) => {
       if (!value) {
-        errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()}`);
+        errors.push(`${fieldName.replace(/([A-Z])/g, " $1").trim()}`);
       } else if (!/^\d+$/.test(value)) {
-        errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()} must be a number`);
+        errors.push(
+          `${fieldName.replace(/([A-Z])/g, " $1").trim()} must be a number`
+        );
       }
     });
 
@@ -55,18 +90,17 @@ const SetPayables = () => {
       });
       return false;
     }
-    return true; // No errors
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form before proceeding
     if (!validateForm()) {
       return;
     }
 
-    const payables = [
+    const sharedPayables = [
       { name: "Room Rent", amount: parseInt(roomRent) || 0 },
       { name: "Dining Rent", amount: parseInt(diningRent) || 0 },
       { name: "Service Charge", amount: parseInt(serviceCharge) || 0 },
@@ -74,26 +108,42 @@ const SetPayables = () => {
       { name: "Utility Bill", amount: parseInt(utilityBill) || 0 },
     ];
 
-    const bills = [
-      { id: 1, name: "Abdul Halim Khan", status: status, payables: [...payables] },
-      { id: 2, name: "Shakil", status: status, payables: [...payables] },
-      { id: 3, name: "Ahad", status: status, payables: [...payables] },
-      { id: 4, name: "Mafi", status: status, payables: [...payables] },
-      { id: 5, name: "Pran", status: status, payables: [...payables] },
-      { id: 6, name: "Alhaz", status: status, payables: [...payables] },
-      { id: 7, name: "Abdan", status: status, payables: [...payables] },
-      { id: 8, name: "AbdKhan", status: status, payables: [...payables] },
-    ];
-
-    const billData = {
-      month: selectedMonth,
-      bills,
-    };
-
     try {
       const billsCollectionRef = collection(db, "payables");
       const q = query(billsCollectionRef, where("month", "==", selectedMonth));
       const querySnapshot = await getDocs(q);
+      let existingBills = [];
+
+      if (!querySnapshot.empty) {
+        existingBills = querySnapshot.docs[0].data().bills || [];
+      }
+
+      const updatedBills = activeMembers.map((member) => {
+        const existingBill = existingBills.find((bill) => bill.id === member.id);
+        if (existingBill) {
+          return existingBill;
+        }
+
+        const filteredPayables = sharedPayables.filter((payable) => {
+          if (member.resident === "room" && payable.name === "Dining Rent")
+            return false;
+          if (member.resident === "dining" && payable.name === "Room Rent")
+            return false;
+          return true;
+        });
+
+        return {
+          id: member.id,
+          name: member.name,
+          status: status,
+          payables: filteredPayables,
+        };
+      });
+
+      const billData = {
+        month: selectedMonth,
+        bills: updatedBills,
+      };
 
       if (!querySnapshot.empty) {
         const docId = querySnapshot.docs[0].id;
@@ -101,14 +151,14 @@ const SetPayables = () => {
         await updateDoc(docRef, billData);
         toast({
           title: "Success!",
-          description: "Payables have been successfully updated.",
+          description: "Shared payables have been successfully updated.",
           variant: "success",
         });
       } else {
         await addDoc(billsCollectionRef, billData);
         toast({
           title: "Success!",
-          description: "Payables have been successfully set.",
+          description: "Shared payables have been successfully set.",
           variant: "success",
         });
       }
@@ -181,7 +231,7 @@ const SetPayables = () => {
                   id="roomRent"
                   type="number"
                   value={roomRent}
-                  onChange={(e) => setRoomRent(e.target.value)}
+                  onChange={(e) => setRoomRent(e.target.value)}
                   placeholder="Enter room rent"
                   className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
@@ -250,7 +300,7 @@ const SetPayables = () => {
             </div>
           </>
         ) : (
-          <SetIndividual />
+          <SetIndividual selectedMonth={selectedMonth} />
         )}
       </form>
     </div>

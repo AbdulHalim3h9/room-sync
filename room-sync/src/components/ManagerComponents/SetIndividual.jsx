@@ -1,61 +1,87 @@
-"use client"
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/firebase";
-import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
-import SingleMonthYearPicker from "../SingleMonthYearPicker";
-import { useToast } from "@/hooks/use-toast"; // Import useToast
-import { membersData } from "@/membersData";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
-const SetIndividual = () => {
+const SetIndividual = ({ selectedMonth }) => {
   const [individuals, setIndividuals] = useState([
     { member: "", fields: [{ title: "", amount: "" }] },
   ]);
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toLocaleString("default", { month: "long", year: "numeric" })
-  );
+  const [activeMembers, setActiveMembers] = useState([]);
 
-  const { toast } = useToast(); // Initialize toast hook
+  const { toast } = useToast();
 
-  // Handle individual input changes
+  useEffect(() => {
+    const fetchActiveMembers = async () => {
+      try {
+        const membersCollectionRef = collection(db, "members");
+        const q = query(membersCollectionRef, where("status", "==", "active"));
+        const querySnapshot = await getDocs(q);
+        const membersList = querySnapshot.docs.map((doc) => ({
+          id: doc.data().id,
+          name: doc.data().fullname,
+          resident: doc.data().resident,
+        }));
+        setActiveMembers(membersList);
+      } catch (error) {
+        console.error("Error fetching active members: ", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch active members.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchActiveMembers();
+  }, [toast]);
+
   const handleIndividualChange = (index, e) => {
     const updatedIndividuals = [...individuals];
     updatedIndividuals[index][e.target.name] = e.target.value;
     setIndividuals(updatedIndividuals);
   };
 
-  // Handle field changes (Title and Amount)
   const handleFieldChange = (individualIndex, fieldIndex, e) => {
     const updatedIndividuals = [...individuals];
-    updatedIndividuals[individualIndex].fields[fieldIndex][e.target.name] = e.target.value;
+    updatedIndividuals[individualIndex].fields[fieldIndex][e.target.name] =
+      e.target.value;
     setIndividuals(updatedIndividuals);
   };
 
-  // Add a new field (Title and Amount) for a specific individual
   const handleAddField = (index) => {
     const updatedIndividuals = [...individuals];
     updatedIndividuals[index].fields.push({ title: "", amount: "" });
     setIndividuals(updatedIndividuals);
   };
 
-  // Remove a field for a specific individual
   const handleRemoveField = (individualIndex, fieldIndex) => {
     const updatedIndividuals = [...individuals];
     updatedIndividuals[individualIndex].fields.splice(fieldIndex, 1);
     setIndividuals(updatedIndividuals);
   };
 
-  // Handle month change from MonthYearPicker
-  const handleMonthChange = (newMonth) => {
-    setSelectedMonth(newMonth);
+  const handleAddIndividual = () => {
+    setIndividuals([
+      ...individuals,
+      { member: "", fields: [{ title: "", amount: "" }] },
+    ]);
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
-    // Validate the form data
     const validationErrors = [];
     individuals.forEach((individual, index) => {
       if (!individual.member) {
@@ -63,12 +89,18 @@ const SetIndividual = () => {
       }
       individual.fields.forEach((field, fieldIndex) => {
         if (!field.title) {
-          validationErrors.push(`Title for field ${fieldIndex + 1} of Member ${index + 1}`);
+          validationErrors.push(
+            `Title for field ${fieldIndex + 1} of Member ${index + 1}`
+          );
         }
         if (!field.amount) {
-          validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1}`);
+          validationErrors.push(
+            `Amount for field ${fieldIndex + 1} of Member ${index + 1}`
+          );
         } else if (!/^\d+$/.test(field.amount)) {
-          validationErrors.push(`Amount for field ${fieldIndex + 1} of Member ${index + 1} must be a number`);
+          validationErrors.push(
+            `Amount for field ${fieldIndex + 1} of Member ${index + 1} must be a number`
+          );
         }
       });
     });
@@ -82,26 +114,52 @@ const SetIndividual = () => {
       return;
     }
 
-    // Format the data to match the shared bills structure
-    const bills = individuals.map((individual) => ({
-      name: individual.member,
-      status: "Pending",
-      payables: individual.fields.map((field) => ({
-        name: field.title,
-        amount: parseInt(field.amount) || 0,
-      })),
-    }));
-
-    // Create the Firestore document
-    const billData = {
-      month: selectedMonth,
-      bills,
-    };
-
     try {
       const billsCollectionRef = collection(db, "payables");
       const q = query(billsCollectionRef, where("month", "==", selectedMonth));
       const querySnapshot = await getDocs(q);
+      let existingBills = [];
+
+      if (!querySnapshot.empty) {
+        existingBills = querySnapshot.docs[0].data().bills || [];
+      }
+
+      const newIndividualBills = individuals.map((individual) => {
+        const selectedMember = activeMembers.find(
+          (member) => member.name === individual.member
+        );
+        return {
+          id: selectedMember?.id || "",
+          name: individual.member,
+          status: "Pending",
+          payables: individual.fields.map((field) => ({
+            name: field.title,
+            amount: parseInt(field.amount) || 0,
+          })),
+        };
+      });
+
+      const updatedBills = activeMembers.map((member) => {
+        const newBill = newIndividualBills.find(
+          (bill) => bill.id === member.id
+        );
+        if (newBill) {
+          return newBill;
+        }
+        return (
+          existingBills.find((bill) => bill.id === member.id) || {
+            id: member.id,
+            name: member.name,
+            status: "Pending",
+            payables: [],
+          }
+        );
+      });
+
+      const billData = {
+        month: selectedMonth,
+        bills: updatedBills,
+      };
 
       if (!querySnapshot.empty) {
         const docId = querySnapshot.docs[0].id;
@@ -121,7 +179,6 @@ const SetIndividual = () => {
         });
       }
 
-      // Reset form after successful submission
       setIndividuals([{ member: "", fields: [{ title: "", amount: "" }] }]);
     } catch (error) {
       console.error("Error uploading/updating data: ", error);
@@ -135,19 +192,12 @@ const SetIndividual = () => {
 
   return (
     <div className="max-w-lg mx-auto p-6">
-      <h1 className="text-xl font-bold mb-6">Set Payables for Individual</h1>
-
-      {/* Month Selection */}
-      <div className="mb-6">
-        <Label htmlFor="monthPicker" className="block mb-1">
-          Select Month
-        </Label>
-        <SingleMonthYearPicker onChange={handleMonthChange} />
-      </div>
+      <h1 className="text-xl font-bold mb-6">
+        Set Individual Payables for {selectedMonth}
+      </h1>
 
       {individuals.map((individual, index) => (
-        <div key={index} className="space-y-4">
-          {/* Member Dropdown */}
+        <div key={index} className="space-y-4 mb-6 border p-4 rounded-md">
           <div>
             <Label htmlFor={`member-${index}`} className="block mb-1">
               Member
@@ -160,25 +210,27 @@ const SetIndividual = () => {
               className="w-full border px-3 py-2 rounded-md"
             >
               <option value="">Select a member</option>
-              {membersData.map((member) => (
-                <option key={member.member_id} value={member.member_name}>
-                  {member.member_name}
+              {activeMembers.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Fields for Title and Amount */}
           {individual.fields.map((field, fieldIndex) => (
             <div key={fieldIndex} className="space-y-4">
               <div className="flex items-end gap-4">
                 <div className="flex-1">
                   <div>
-                    <Label htmlFor={`title-${fieldIndex}`} className="block mb-1">
+                    <Label
+                      htmlFor={`title-${index}-${fieldIndex}`}
+                      className="block mb-1"
+                    >
                       Title
                     </Label>
                     <Input
-                      id={`title-${fieldIndex}`}
+                      id={`title-${index}-${fieldIndex}`}
                       name="title"
                       type="text"
                       value={field.title}
@@ -188,11 +240,14 @@ const SetIndividual = () => {
                     />
                   </div>
 
-                  <Label htmlFor={`amount-${fieldIndex}`} className="block mb-1">
+                  <Label
+                    htmlFor={`amount-${index}-${fieldIndex}`}
+                    className="block mb-1"
+                  >
                     Amount
                   </Label>
                   <Input
-                    id={`amount-${fieldIndex}`}
+                    id={`amount-${index}-${fieldIndex}`}
                     name="amount"
                     type="number"
                     value={field.amount}
@@ -202,7 +257,6 @@ const SetIndividual = () => {
                   />
                 </div>
 
-                {/* Button to remove the field */}
                 <div>
                   <Button
                     type="button"
@@ -216,7 +270,6 @@ const SetIndividual = () => {
             </div>
           ))}
 
-          {/* Button to add more fields */}
           <div className="mt-4">
             <Button type="button" onClick={() => handleAddField(index)}>
               Add Field
@@ -225,14 +278,26 @@ const SetIndividual = () => {
         </div>
       ))}
 
-      {/* Total Amount (Placeholder - needs calculation logic) */}
-      <div className="font-bold text-lg mt-6">
-        Total Amount: {individuals.reduce((total, ind) => 
-          total + ind.fields.reduce((sum, field) => 
-            sum + (parseInt(field.amount) || 0), 0), 0)} tk
+      <div className="mt-4">
+        <Button type="button" onClick={handleAddIndividual} variant="outline">
+          Add Another Individual
+        </Button>
       </div>
 
-      {/* Submit Button */}
+      <div className="font-bold text-lg mt-6">
+        Total Amount:{" "}
+        {individuals.reduce(
+          (total, ind) =>
+            total +
+            ind.fields.reduce(
+              (sum, field) => sum + (parseInt(field.amount) || 0),
+              0
+            ),
+          0
+        )}{" "}
+        tk
+      </div>
+
       <div className="mt-6">
         <Button type="button" onClick={handleSubmit} className="w-full">
           Submit

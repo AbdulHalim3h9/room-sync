@@ -4,12 +4,14 @@ import React, { useState, useEffect } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
-import { useMonth } from "@/App"; // Assuming this is where useMonth is defined
+import { useMonth } from "@/App";
 
 const GroceriesSpendings = () => {
-  const { month, setMonth } = useMonth(
-    new Date().toLocaleString("default", { month: "long", year: "numeric" }) // Initialize with "Month YYYY"
-  );
+  const defaultMonth = new Date().toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  });
+  const { month, setMonth } = useMonth(defaultMonth); // Initialize with "Month YYYY"
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,9 +59,17 @@ const GroceriesSpendings = () => {
     }
   };
 
+  // Fetch expenses when month changes
   useEffect(() => {
-    fetchExpenses(month);
+    if (month) {
+      fetchExpenses(month);
+    }
   }, [month]);
+
+  // Fetch expenses on initial render with default month
+  useEffect(() => {
+    fetchExpenses(defaultMonth);
+  }, []); // Empty dependency array ensures it runs only once on mount
 
   const handleMonthChange = (newMonth) => {
     // Convert "YYYY-MM" to "Month YYYY"
@@ -86,14 +96,19 @@ const GroceriesSpendings = () => {
   return (
     <div className="container mx-auto mb-8 p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">Monthly Spendings List</h2>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">
+          Monthly Spendings List
+        </h2>
         <SingleMonthYearPicker onChange={handleMonthChange} />
       </div>
 
       <div className="space-y-4">
         {expenses.length > 0 ? (
           expenses.map((expense) => (
-            <div key={expense.id} className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 pb-2">
+            <div
+              key={expense.id}
+              className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 pb-2"
+            >
               <span className="text-sm sm:text-base">{formatDate(expense.date)}</span>
               <span className="text-sm sm:text-base">
                 {expense.expenseTitle || expense.expenseType}
@@ -101,11 +116,15 @@ const GroceriesSpendings = () => {
               <span className="text-sm sm:text-base">
                 {expense.shopper ? `by ${expense.shopper}` : ``}
               </span>
-              <span className="text-right text-sm sm:text-base">{expense.amountSpent}tk</span>
+              <span className="text-right text-sm sm:text-base">
+                {expense.amountSpent}tk
+              </span>
             </div>
           ))
         ) : (
-          <div className="text-center text-gray-500">No expenses found for this month</div>
+          <div className="text-center text-gray-500">
+            No expenses found for this month
+          </div>
         )}
 
         <div className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 border-t pb-2 font-semibold">
@@ -114,7 +133,9 @@ const GroceriesSpendings = () => {
             Groceries (x{expenses.length}) and others
           </span>
           <span></span>
-          <span className="text-right text-sm sm:text-base">total {totalSpending}tk</span>
+          <span className="text-right text-sm sm:text-base">
+            total {totalSpending}tk
+          </span>
         </div>
       </div>
     </div>

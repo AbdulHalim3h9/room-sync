@@ -1,22 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { db } from "@/firebase"; // Firebase import
-import { collection, addDoc } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast"; // Toast hook
+import { db } from "@/firebase";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 import { membersData } from "@/membersData";
 import SingleMonthYearPicker from "../SingleMonthYearPicker";
 
 const AddMealFund = () => {
-  const { toast } = useToast(); // Toast notification
+  const { toast } = useToast();
   const [selectedDonor, setSelectedDonor] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toLocaleString("default", { month: "long", year: "numeric" })
   );
+  const [previousAmount, setPreviousAmount] = useState(0); // Store previous donation
+
+  // Fetch previous donation amount
+  useEffect(() => {
+    if (!selectedDonor || !selectedMonth) return;
+
+    const fetchPreviousAmount = async () => {
+      const q = query(
+        collection(db, "meal_funds"),
+        where("donor", "==", selectedDonor),
+        where("month", "==", selectedMonth)
+      );
+
+      const querySnapshot = await getDocs(q);
+      let totalAmount = 0;
+
+      querySnapshot.forEach((doc) => {
+        totalAmount += doc.data().amount; // Sum up all previous donations
+      });
+
+      setPreviousAmount(totalAmount);
+    };
+
+    fetchPreviousAmount();
+  }, [selectedDonor, selectedMonth]);
 
   // Validate form inputs
   const validateForm = () => {
@@ -48,9 +73,12 @@ const AddMealFund = () => {
 
     if (!validateForm()) return;
 
+    const newAmount = Number(amount);
+    const totalAmount = previousAmount + newAmount; // Update total
+
     const data = {
       donor: selectedDonor,
-      amount: Number(amount),
+      amount: newAmount,
       month: selectedMonth,
       timestamp: new Date(),
     };
@@ -63,9 +91,9 @@ const AddMealFund = () => {
         variant: "success",
       });
 
-      // Reset form
-      setSelectedDonor("");
+      // Reset form but keep previousAmount updated
       setAmount("");
+      setPreviousAmount(totalAmount);
     } catch (error) {
       console.error("Error adding donation:", error);
       toast({
@@ -104,15 +132,22 @@ const AddMealFund = () => {
           </select>
         </div>
 
+        {/* Previous Donation Amount */}
+        {previousAmount > 0 && (
+          <div className="bg-gray-100 p-3 rounded-md">
+            <strong>Previously Added:</strong> {previousAmount} BDT
+          </div>
+        )}
+
         {/* Donation Amount */}
         <div>
           <Label htmlFor="amount" className="block mb-1">
-            Amount
+            Additional Amount
           </Label>
           <Input
             id="amount"
             type="number"
-            placeholder="Enter donation amount"
+            placeholder="Enter additional amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

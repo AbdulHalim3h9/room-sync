@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { membersData } from "@/membersData";
 import { db } from "@/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import DatePickerMealCount from "./DatePickerMealCount";
 
@@ -15,14 +22,75 @@ const AddGrocerySpendings = () => {
   const [selectedShopper, setSelectedShopper] = useState("");
   const [expenseType, setExpenseType] = useState("groceries");
   const [expenseTitle, setExpenseTitle] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date()); // Renamed for clarity
-
-  
-  useEffect(() => {
-    console.log("Selected Date:", selectedDate);
-  }, [selectedDate]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [existingDocId, setExistingDocId] = useState(null); // Track existing document ID
+  const [members, setMembers] = useState([]); // State for members from Firestore
 
   const { toast } = useToast();
+
+  // Fetch active members from Firestore on mount
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const membersRef = collection(db, "members");
+        const q = query(membersRef, where("status", "==", "active"));
+        const querySnapshot = await getDocs(q);
+        const membersData = querySnapshot.docs.map((doc) => ({
+          member_id: doc.data().id, // Assuming 'id' is the field in Firestore
+          member_name: doc.data().fullname, // Assuming 'fullname' is the field
+        }));
+        setMembers(membersData);
+        console.log("Fetched members:", membersData);
+      } catch (error) {
+        console.error("Error fetching members: ", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch members.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchMembers();
+  }, [toast]);
+
+  // Fetch existing expense data when the date changes
+  useEffect(() => {
+    const fetchExpense = async () => {
+      try {
+        const formattedDate = new Date(selectedDate).toISOString();
+        const expensesRef = collection(db, "expenses");
+        const q = query(expensesRef, where("date", "==", formattedDate));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const doc = querySnapshot.docs[0]; // Assume only one expense per date
+          const data = doc.data();
+          setExistingDocId(doc.id); // Store the document ID
+          setAmountSpent(data.amountSpent.toString());
+          setSelectedShopper(data.shopper || "");
+          setExpenseType(data.expenseType);
+          setExpenseTitle(data.expenseTitle || "");
+        } else {
+          // Reset fields if no data exists for the selected date
+          setExistingDocId(null);
+          setAmountSpent("");
+          setSelectedShopper("");
+          setExpenseType("groceries");
+          setExpenseTitle("");
+        }
+      } catch (error) {
+        console.error("Error fetching expense: ", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch existing expense data.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchExpense();
+  }, [selectedDate, toast]);
 
   const validateForm = () => {
     const errors = [];
@@ -52,7 +120,6 @@ const AddGrocerySpendings = () => {
     return true;
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -60,35 +127,48 @@ const AddGrocerySpendings = () => {
       return;
     }
 
-    // Ensure the date is a fresh Date object based on the selectedDate
     const formattedDate = new Date(selectedDate).toISOString();
-    console.log(formattedDate,selectedDate);
     const data = {
       amountSpent: parseInt(amountSpent),
       shopper: selectedShopper || null,
       expenseType,
       expenseTitle: expenseType === "other" ? expenseTitle : null,
-      date: formattedDate, // Use the dynamically selected date
+      date: formattedDate,
     };
 
     try {
-      await addDoc(collection(db, "expenses"), data);
-      toast({
-        title: "Success!",
-        description: "Expense has been successfully added.",
-        variant: "success",
-      });
-      // Reset form
-      setAmountSpent("");
-      setSelectedShopper("");
-      setExpenseType("groceries");
-      setExpenseTitle("");
-      setSelectedDate(new Date()); // Reset to current date after submission
+      if (existingDocId) {
+        // Update existing document
+        const docRef = doc(db, "expenses", existingDocId);
+        await updateDoc(docRef, data);
+        toast({
+          title: "Success!",
+          description: "Expense has been successfully updated.",
+          variant: "success",
+        });
+      } else {
+        // Add new document
+        await addDoc(collection(db, "expenses"), data);
+        toast({
+          title: "Success!",
+          description: "Expense has been successfully added.",
+          variant: "success",
+        });
+      }
+
+      // Reset form only if adding new (optional: keep data if editing)
+      if (!existingDocId) {
+        setAmountSpent("");
+        setSelectedShopper("");
+        setExpenseType("groceries");
+        setExpenseTitle("");
+        setSelectedDate(new Date());
+      }
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error adding/updating document: ", error);
       toast({
         title: "Error",
-        description: "Failed to add expense. Please try again.",
+        description: "Failed to add/update expense. Please try again.",
         variant: "destructive",
       });
     }
@@ -97,7 +177,10 @@ const AddGrocerySpendings = () => {
   return (
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">Add Grocery or Other Expense</h1>
-      <DatePickerMealCount selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+      <DatePickerMealCount
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
 
       <div className="flex space-x-4 mb-6">
         <div>
@@ -172,7 +255,7 @@ const AddGrocerySpendings = () => {
               className="w-full border px-3 py-2 rounded-md"
             >
               <option value="">Select a shopper</option>
-              {membersData.map((member) => (
+              {members.map((member) => (
                 <option key={member.member_id} value={member.member_name}>
                   {member.member_name}
                 </option>
@@ -183,7 +266,7 @@ const AddGrocerySpendings = () => {
 
         <div>
           <Button className="w-full" type="submit">
-            Submit
+            {existingDocId ? "Update" : "Submit"}
           </Button>
         </div>
       </form>

@@ -1,14 +1,13 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { membersData as members } from "@/membersData";
 import DatePickerMealCount from "./DatePickerMealCount";
 import { db } from "@/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const DailyMealCountForm = () => {
@@ -17,19 +16,86 @@ const DailyMealCountForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [monthlyMealCount, setMonthlyMealCount] = useState({});
+  const [members, setMembers] = useState([]); // State for members from Firestore
+  const [existingDocId, setExistingDocId] = useState(null); // Track existing document month
 
   const { toast } = useToast();
 
+  // Fetch active members from Firestore on mount
   useEffect(() => {
-    setDailyMealCount((prev) => ({
-      ...prev,
-      ...Object.fromEntries(members.map((member) => [member.member_id, ""])),
-    }));
-  }, []);
+    const fetchMembers = async () => {
+      try {
+        const membersRef = collection(db, "members");
+        const q = query(membersRef, where("status", "==", "active"));
+        const querySnapshot = await getDocs(q);
+        const membersData = querySnapshot.docs.map((doc) => ({
+          member_id: doc.data().id, // Assuming 'id' is the field
+          member_name: doc.data().fullname, // Assuming 'fullname' is the field
+        }));
+        setMembers(membersData);
+        console.log("Fetched members:", membersData);
 
+        // Initialize dailyMealCount with empty values for all members
+        setDailyMealCount(
+          Object.fromEntries(membersData.map((member) => [member.member_id, ""]))
+        );
+      } catch (error) {
+        console.error("Error fetching members: ", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch members.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchMembers();
+  }, [toast]);
+
+  // Fetch existing meal count data when the date changes
   useEffect(() => {
-    setDailyMealCount(Object.fromEntries(members.map((member) => [member.member_id, ""])));
-  }, [selectedDate]);
+    const fetchMealCount = async () => {
+      try {
+        const pickedMonth = format(selectedDate, "yyyy-MM");
+        const docRef = doc(db, "individualMeals", pickedMonth);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setExistingDocId(pickedMonth); // Store the month as the document ID
+          const dayKey = format(selectedDate, "dd");
+          const updatedDailyMealCount = {};
+
+          members.forEach((member) => {
+            const meals = data.mealCounts[member.member_id] || [];
+            const dayEntry = meals.find((entry) => entry.startsWith(dayKey));
+            updatedDailyMealCount[member.member_id] = dayEntry
+              ? dayEntry.split(" ")[1]
+              : "";
+          });
+
+          setDailyMealCount(updatedDailyMealCount);
+        } else {
+          // Reset fields if no data exists for the selected month
+          setExistingDocId(null);
+          setDailyMealCount(
+            Object.fromEntries(members.map((member) => [member.member_id, ""]))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching meal count: ", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch existing meal count data.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    if (members.length > 0) {
+      fetchMealCount();
+    }
+  }, [selectedDate, members, toast]);
 
   const handleInputChange = (e, member_id) => {
     const value = e.target.value;
@@ -41,7 +107,9 @@ const DailyMealCountForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const isValid = Object.values(dailyMealCount).every((count) => count !== "" && count !== null);
+    const isValid = Object.values(dailyMealCount).every(
+      (count) => count !== "" && count !== null
+    );
 
     if (!isValid) {
       toast({
@@ -56,8 +124,7 @@ const DailyMealCountForm = () => {
     let starDate = 1;
 
     try {
-      const month = pickedMonth;
-      const docRef = doc(db, "individualMeals", month);
+      const docRef = doc(db, "individualMeals", pickedMonth);
       const docSnap = await getDoc(docRef);
       let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
@@ -89,8 +156,10 @@ const DailyMealCountForm = () => {
   };
 
   const handleReset = () => {
-    setDailyMealCount(Object.fromEntries(members.map((member) => [member.member_id, ""])));
-    setSelectedDate("");
+    setDailyMealCount(
+      Object.fromEntries(members.map((member) => [member.member_id, ""]))
+    );
+    setSelectedDate(new Date());
   };
 
   const addDailyToMonthlyMealCount = (dailyMealCount, monthlyMealCount) => {
@@ -125,7 +194,6 @@ const DailyMealCountForm = () => {
     setIsModalOpen(false);
 
     const updatedMonthlyMealCount = addDailyToMonthlyMealCount(dailyMealCount, monthlyMealCount);
-
     setMonthlyMealCount(updatedMonthlyMealCount);
 
     try {
@@ -140,12 +208,14 @@ const DailyMealCountForm = () => {
         let meals = existingData.mealCounts[memberId] || [];
         const lastSum = meals.length > 0 ? parseInt(meals[meals.length - 1].split(" ")[1], 10) : 0;
 
-        if (meals.length > 0) {
-          meals.pop();
+        // Remove existing entry for this date if it exists
+        meals = meals.filter((entry) => !entry.startsWith(date.slice(-2)));
+        if (meals.length > 0 && meals[meals.length - 1].startsWith("Total")) {
+          meals.pop(); // Remove old total if it exists
         }
 
         meals.push(`${dailyMealCount.date.slice(-2)} ${parseInt(mealCount, 10)}`);
-        const newSum = parseInt(lastSum, 10) + parseInt(mealCount, 10);
+        const newSum = lastSum + parseInt(mealCount, 10) - (meals.length > 1 ? parseInt(meals[meals.length - 2].split(" ")[1], 10) : 0);
         meals.push(`Total ${newSum.toString()}`);
 
         existingData.mealCounts[memberId] = meals;
@@ -203,7 +273,7 @@ const DailyMealCountForm = () => {
             <Button onClick={handleReset} variant="secondary">
               Reset
             </Button>
-            <Button type="submit">Set Counts</Button>
+            <Button type="submit">{existingDocId ? "Update" : "Set"} Counts</Button>
           </div>
         </form>
 

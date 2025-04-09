@@ -8,32 +8,25 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      'firebase/app': 'firebase/app',
-      'firebase/auth': 'firebase/auth',
-      'firebase/firestore': 'firebase/firestore',
-      'firebase/storage': 'firebase/storage'
-    },
+      '@': path.resolve(__dirname, './src')
+    }
   },
   build: {
     target: 'esnext',
     minify: 'terser',
-    commonjsOptions: {
-      include: [/node_modules/],
-    },
     rollupOptions: {
-      external: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-label', '@radix-ui/react-popover', '@radix-ui/react-select', '@radix-ui/react-separator', '@radix-ui/react-slot', '@radix-ui/react-switch', '@radix-ui/react-tabs', '@radix-ui/react-toast', '@radix-ui/react-tooltip'],
-          'firebase-vendor': ['firebase'],
-        },
+          'chart-vendor': ['recharts'],
+          'date-vendor': ['date-fns', 'react-day-picker']
+        }
       }
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 2000
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'firebase'],
-  },
+    include: ['react', 'react-dom', 'react-router-dom', 'recharts', 'date-fns']
+  }
 })

@@ -6,7 +6,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,11 @@ export function LoginDialog({ onAuthChange }) {
             <DialogTitle className="text-center text-xl font-semibold">
               {isLoggedIn ? "Logout" : "Welcome Back!"}
             </DialogTitle>
+            <DialogDescription className="text-center">
+              {isLoggedIn 
+                ? "You are about to log out of your account. This will end your current session."
+                : "Please enter your PIN to access your account."}
+            </DialogDescription>
           </DialogHeader>
           {isLoggedIn ? (
             <div className="space-y-4 text-center">

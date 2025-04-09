@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -148,8 +149,8 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar className="fixed z-[999] w-64 bg-white border-r border-gray-200 shadow-sm">
-      <SidebarContent className="flex flex-col h-full">
+    <Sidebar className="fixed z-[999] w-64 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
+      <SidebarContent className="flex flex-col h-full bg-white">
         {/* Brand Section */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -215,6 +216,9 @@ export function AppSidebar() {
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Manage Phone Numbers</DialogTitle>
+                            <DialogDescription>
+                              Add, view, or remove phone numbers that can be used to call Khala.
+                            </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="flex space-x-2">
@@ -246,6 +250,9 @@ export function AppSidebar() {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Select a Number to Call</DialogTitle>
+                          <DialogDescription>
+                            Choose a phone number from the list below to initiate a call to Khala.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-2">
                           {phoneNumbers.map((phone) => (

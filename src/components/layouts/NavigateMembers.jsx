@@ -106,24 +106,24 @@ const NavigateMembers = ({ onMembersFetched }) => {
       <div className="relative">
         <Button
           className={cn(
-            "fixed top-1/2 bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg",
-            "transform -translate-y-1/2 transition-all duration-300",
-            isVisible ? "w-8 rounded-l-full right-[4.5rem]" : "w-12 rounded-full right-4",
-            "hover:bg-background/90 hover:shadow-xl"
+            "absolute top-1/2 -translate-y-1/2",
+            "transition-all duration-300",
+            isVisible ? "w-8 h-8 rounded-full right-[4.5rem]" : "w-12 h-12 rounded-full right-4",
+            "flex items-center justify-center p-0"
           )}
           onClick={toggleVisibility}
         >
-          {isVisible ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+          {isVisible ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </Button>
 
         <div
           className={cn(
-            "fixed right-2 top-1/2 transform -translate-y-1/2",
+            "absolute right-2 top-1/2 -translate-y-1/2",
             "flex flex-col gap-3 transition-all duration-300",
             isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
         >
-          <div className="bg-background/80 backdrop-blur-lg rounded-2xl p-4 border border-border/50 shadow-lg">
+          <div className="rounded-2xl p-4">
             <div className="flex flex-col gap-3">
               {members.map((member, index) => {
                 const isSelected = member.memberId === currentMemberId;
@@ -137,9 +137,9 @@ const NavigateMembers = ({ onMembersFetched }) => {
                     <Button
                       className={cn(
                         "p-0 overflow-hidden transition-all duration-300",
-                        "hover:scale-110 hover:shadow-lg",
+                        "hover:scale-110",
                         calculateSize(index),
-                        "rounded-2xl border border-border/50",
+                        "rounded-2xl",
                         isSelected && "ring-4 ring-primary"
                       )}
                       variant="ghost"

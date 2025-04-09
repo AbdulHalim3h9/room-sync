@@ -1,0 +1,146 @@
+{
+  "2025-01": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 4412, "given": 2953 },
+      { "name": "Shakil", "eaten": 2487, "given": 4360 },
+      { "name": "Ahad", "eaten": 2614, "given": 2387 },
+      { "name": "Alhazz", "eaten": 3043, "given": 2651 },
+      { "name": "Pran", "eaten": 3445, "given": 1517 },
+      { "name": "Sojib", "eaten": 2585, "given": 3485 },
+      { "name": "Mafi", "eaten": 3792, "given": 3463 },
+      { "name": "Reja", "eaten": 1633, "given": 4655 }
+    ]
+  },
+  "2024-12": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 3154, "given": 1433 },
+      { "name": "Shakil", "eaten": 2695, "given": 2500 },
+      { "name": "Ahad", "eaten": 3787, "given": 1468 },
+      { "name": "Alhazz", "eaten": 3142, "given": 2304 },
+      { "name": "Pran", "eaten": 1462, "given": 2842 },
+      { "name": "Sojib", "eaten": 2475, "given": 4430 },
+      { "name": "Mafi", "eaten": 1372, "given": 1854 },
+      { "name": "Reja", "eaten": 2124, "given": 3277 }
+    ]
+  },
+  "2024-11": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 2956, "given": 4365 },
+      { "name": "Shakil", "eaten": 2879, "given": 3463 },
+      { "name": "Ahad", "eaten": 2327, "given": 4298 },
+      { "name": "Alhazz", "eaten": 2724, "given": 2741 },
+      { "name": "Pran", "eaten": 3547, "given": 2573 },
+      { "name": "Sojib", "eaten": 3845, "given": 1787 },
+      { "name": "Mafi", "eaten": 3720, "given": 2134 },
+      { "name": "Reja", "eaten": 1372, "given": 3313 }
+    ]
+  },
+  "2024-10": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 2677, "given": 2852 },
+      { "name": "Shakil", "eaten": 2631, "given": 1514 },
+      { "name": "Ahad", "eaten": 4717, "given": 3838 },
+      { "name": "Alhazz", "eaten": 2139, "given": 2625 },
+      { "name": "Pran", "eaten": 4543, "given": 1910 },
+      { "name": "Sojib", "eaten": 3185, "given": 2634 },
+      { "name": "Mafi", "eaten": 2440, "given": 4354 },
+      { "name": "Reja", "eaten": 2071, "given": 3074 }
+    ]
+  },
+  "2024-09": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 3402, "given": 2978 },
+      { "name": "Shakil", "eaten": 3792, "given": 1537 },
+      { "name": "Ahad", "eaten": 2332, "given": 4700 },
+      { "name": "Alhazz", "eaten": 2479, "given": 3244 },
+      { "name": "Pran", "eaten": 3773, "given": 3379 },
+      { "name": "Sojib", "eaten": 2114, "given": 4539 },
+      { "name": "Mafi", "eaten": 2954, "given": 2239 },
+      { "name": "Reja", "eaten": 2212, "given": 3708 }
+    ]
+  },
+  "2024-08": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 4090, "given": 4437 },
+      { "name": "Shakil", "eaten": 1250, "given": 2782 },
+      { "name": "Ahad", "eaten": 2750, "given": 2085 },
+      { "name": "Alhazz", "eaten": 1817, "given": 4264 },
+      { "name": "Pran", "eaten": 3680, "given": 2309 },
+      { "name": "Sojib", "eaten": 1355, "given": 1629 },
+      { "name": "Mafi", "eaten": 1395, "given": 2045 },
+      { "name": "Reja", "eaten": 4814, "given": 4603 }
+    ]
+  },
+  "2024-07": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 3355, "given": 2984 },
+      { "name": "Shakil", "eaten": 2021, "given": 2674 },
+      { "name": "Ahad", "eaten": 1879, "given": 4201 },
+      { "name": "Alhazz", "eaten": 4000, "given": 2215 },
+      { "name": "Pran", "eaten": 3486, "given": 4404 },
+      { "name": "Sojib", "eaten": 2895, "given": 3703 },
+      { "name": "Mafi", "eaten": 4682, "given": 2772 },
+      { "name": "Reja", "eaten": 1463, "given": 4692 }
+    ]
+  },
+  "2024-06": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 2133, "given": 3515 },
+      { "name": "Shakil", "eaten": 2029, "given": 1285 },
+      { "name": "Ahad", "eaten": 1342, "given": 4605 },
+      { "name": "Alhazz", "eaten": 2871, "given": 2577 },
+      { "name": "Pran", "eaten": 2255, "given": 3157 },
+      { "name": "Sojib", "eaten": 2343, "given": 3500 },
+      { "name": "Mafi", "eaten": 3245, "given": 4340 },
+      { "name": "Reja", "eaten": 1843, "given": 2325 }
+    ]
+  },
+  "2024-05": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 4327, "given": 1937 },
+      { "name": "Shakil", "eaten": 3484, "given": 1409 },
+      { "name": "Ahad", "eaten": 4651, "given": 4735 },
+      { "name": "Alhazz", "eaten": 3019, "given": 1581 },
+      { "name": "Pran", "eaten": 4717, "given": 3220 },
+      { "name": "Sojib", "eaten": 3534, "given": 2797 },
+      { "name": "Mafi", "eaten": 2817, "given": 3681 },
+      { "name": "Reja", "eaten": 4424, "given": 4500 }
+    ]
+  },
+  "2024-04": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 4319, "given": 2854 },
+      { "name": "Shakil", "eaten": 3149, "given": 2439 },
+      { "name": "Ahad", "eaten": 2137, "given": 4718 },
+      { "name": "Alhazz", "eaten": 3362, "given": 2013 },
+      { "name": "Pran", "eaten": 2464, "given": 1986 },
+      { "name": "Sojib", "eaten": 4512, "given": 4691 },
+      { "name": "Mafi", "eaten": 3754, "given": 2398 },
+      { "name": "Reja", "eaten": 4517, "given": 1779 }
+    ]
+  },
+  "2024-03": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 4778, "given": 1783 },
+      { "name": "Shakil", "eaten": 2732, "given": 2745 },
+      { "name": "Ahad", "eaten": 1660, "given": 2144 },
+      { "name": "Alhazz", "eaten": 2259, "given": 1361 },
+      { "name": "Pran", "eaten": 2795, "given": 1920 },
+      { "name": "Sojib", "eaten": 4534, "given": 1896 },
+      { "name": "Mafi", "eaten": 2554, "given": 2498 },
+      { "name": "Reja", "eaten": 2338, "given": 1394 }
+    ]
+  },
+  "2024-02": {
+    "overview-members": [
+      { "name": "Halim", "eaten": 2231, "given": 1917 },
+      { "name": "Shakil", "eaten": 2574, "given": 2892 },
+      { "name": "Ahad", "eaten": 1674, "given": 3493 },
+      { "name": "Alhazz", "eaten": 3769, "given": 2778 },
+      { "name": "Pran", "eaten": 4135, "given": 3256 },
+      { "name": "Sojib", "eaten": 2689, "given": 3285 },
+      { "name": "Mafi", "eaten": 3705, "given": 2095 },
+      { "name": "Reja", "eaten": 4134, "given": 2914 }
+    ]
+  }
+}

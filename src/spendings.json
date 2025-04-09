@@ -1,0 +1,171 @@
+{
+      "2025-01": {
+        "spendings": [
+          {
+            "amount": 400,
+            "date": "2025-01-01",
+            "description": "Groceries",
+            "member": "Shakil"
+          },
+          {
+            "amount": 250,
+            "date": "2025-01-03",
+            "description": "Groceries",
+            "member": "Abdul Halim Khan"
+          }
+        ]
+      },
+      "2024-12": {
+        "spendings": [
+          {
+            "amount": 350,
+            "date": "2024-12-01",
+            "description": "Groceries",
+            "member": "John Doe"
+          },
+          {
+            "amount": 200,
+            "date": "2024-12-02",
+            "description": "Groceries",
+            "member": "Shakil"
+          }
+        ]
+      },
+      "2024-11": {
+        "spendings": [
+          {
+            "amount": 300,
+            "date": "2024-11-01",
+            "description": "Groceries",
+            "member": "Abdul Halim Khan"
+          },
+          {
+            "amount": 150,
+            "date": "2024-11-10",
+            "description": "Groceries",
+            "member": "John Doe"
+          }
+        ]
+      },
+      "2024-10": {
+        "spendings": [
+          {
+            "amount": 250,
+            "date": "2024-10-05",
+            "description": "Groceries",
+            "member": "Shakil"
+          },
+          {
+            "amount": 300,
+            "date": "2024-10-15",
+            "description": "Groceries",
+            "member": "Abdul Halim Khan"
+          }
+        ]
+      },
+      "2024-09": {
+        "spendings": [
+          {
+            "amount": 450,
+            "date": "2024-09-10",
+            "description": "Groceries",
+            "member": "John Doe"
+          },
+          {
+            "amount": 200,
+            "date": "2024-09-20",
+            "description": "Groceries",
+            "member": "Shakil"
+          }
+        ]
+      },
+      "2024-08": {
+        "spendings": [
+          {
+            "amount": 500,
+            "date": "2024-08-01",
+            "description": "Groceries",
+            "member": "Abdul Halim Khan"
+          },
+          {
+            "amount": 250,
+            "date": "2024-08-07",
+            "description": "Groceries",
+            "member": "Shakil"
+          }
+        ]
+      },
+      "2024-07": {
+        "spendings": [
+          {
+            "amount": 400,
+            "date": "2024-07-05",
+            "description": "Groceries",
+            "member": "John Doe"
+          }
+        ]
+      },
+      "2024-06": {
+        "spendings": [
+          {
+            "amount": 350,
+            "date": "2024-06-10",
+            "description": "Groceries",
+            "member": "Shakil"
+          },
+          {
+            "amount": 150,
+            "date": "2024-06-15",
+            "description": "Groceries",
+            "member": "Abdul Halim Khan"
+          }
+        ]
+      },
+      "2024-05": {
+        "spendings": [
+          {
+            "amount": 200,
+            "date": "2024-05-02",
+            "description": "Groceries",
+            "member": "John Doe"
+          }
+        ]
+      },
+      "2024-04": {
+        "spendings": [
+          {
+            "amount": 300,
+            "date": "2024-04-05",
+            "description": "Groceries",
+            "member": "Shakil"
+          }
+        ]
+      },
+      "2024-03": {
+        "spendings": [
+          {
+            "amount": 250,
+            "date": "2024-03-10",
+            "description": "Groceries",
+            "member": "Abdul Halim Khan"
+          }
+        ]
+      },
+      "2024-02": {
+        "spendings": [
+          {
+            "amount": 150,
+            "date": "2024-02-01",
+            "description": "Groceries",
+            "member": "John Doe"
+          },
+          {
+            "amount": 200,
+            "date": "2024-02-12",
+            "description": "Groceries",
+            "member": "Shakil"
+          }
+        ]
+      }
+    }
+    

@@ -21,11 +21,6 @@ const CreditConsumed = () => {
 
   return (
     <div>
-      <SingleMonthYearPicker
-        value={month}
-        onChange={handleMonthChange}
-        collections={["contributionConsumption", "individualMeals"]}
-      />
       <NavigateMembers onMembersFetched={handleMembersFetched} />
       <Routes>
         <Route path="/" element={<ResponsiveChartWrapper />} />

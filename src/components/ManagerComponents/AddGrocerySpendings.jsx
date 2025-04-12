@@ -27,12 +27,14 @@ const AddGrocerySpendings = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [existingDocId, setExistingDocId] = useState(null);
   const [members, setMembers] = useState([]);
+  const [datesWithData, setDatesWithData] = useState([]); // New state for dates with data
 
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchMembersAndDates = async () => {
       try {
+        // Fetch active members
         const membersRef = collection(db, "members");
         const q = query(membersRef, where("status", "==", "active"));
         const querySnapshot = await getDocs(q);
@@ -41,18 +43,35 @@ const AddGrocerySpendings = () => {
           member_name: doc.data().fullname,
         }));
         setMembers(membersData);
-        console.log("Fetched members:", membersData);
+
+        // Fetch dates with expense data
+        const expensesRef = collection(db, "expenses");
+        const expenseDocs = await getDocs(expensesRef);
+        const dates = [];
+
+        expenseDocs.forEach((doc) => {
+          const data = doc.data();
+          if (data.date) {
+            const expenseDate = new Date(data.date);
+            // Ensure the date is valid and not in the future
+            if (!isNaN(expenseDate.getTime()) && expenseDate <= new Date()) {
+              dates.push(new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate()));
+            }
+          }
+        });
+
+        setDatesWithData(dates);
       } catch (error) {
-        console.error("Error fetching members: ", error);
+        console.error("Error fetching data: ", error);
         toast({
           title: "Error",
-          description: "Failed to fetch members.",
+          description: "Failed to fetch members or expense data.",
           variant: "destructive",
         });
       }
     };
 
-    fetchMembers();
+    fetchMembersAndDates();
   }, [toast]);
 
   const generateDocumentId = (date) => {
@@ -64,9 +83,9 @@ const AddGrocerySpendings = () => {
   useEffect(() => {
     const fetchExpense = async () => {
       try {
-        const formattedDate = new Date(selectedDate).toISOString();
+        const formattedDate = new Date(selectedDate).toISOString().split("T")[0]; // Normalize to YYYY-MM-DD
         const expensesRef = collection(db, "expenses");
-        const q = query(expensesRef, where("date", "==", formattedDate));
+        const q = query(expensesRef, where("date", ">=", `${formattedDate}T00:00:00.000Z`), where("date", "<=", `${formattedDate}T23:59:59.999Z`));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
@@ -118,9 +137,8 @@ const AddGrocerySpendings = () => {
       const existingTotalSpendings = existingData.totalSpendings || 0;
       const existingTotalMeals = existingData.totalMealsAllMembers || 0;
 
-      const updatedTotalSpendings = existingTotalSpendings + newTotalSpendings;
+      const updatedTotalSpendings = newTotalSpendings; // Use new total to avoid accumulation issues
 
-      // Calculate meal rate if totalMealsAllMembers exists and is greater than 0
       const mealRate =
         existingTotalMeals > 0
           ? (updatedTotalSpendings / existingTotalMeals).toFixed(2)
@@ -130,23 +148,20 @@ const AddGrocerySpendings = () => {
         summaryRef,
         {
           totalSpendings: updatedTotalSpendings,
-          mealRate: parseFloat(mealRate), // Save as number
+          mealRate: parseFloat(mealRate),
           lastUpdated: new Date().toISOString(),
         },
         { merge: true }
       );
-
-      console.log(`Updated total spendings for ${month}: ${updatedTotalSpendings}`);
-      console.log(`Updated meal rate for ${month}: ${mealRate}`);
     } catch (error) {
-      console.error("Error saving total spendings:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save total spendings or meal rate.",
-        variant: "destructive",
-      });
-    }
-  };
+        console.error("Error saving total spendings:", error);
+        toast({
+          title: "Error",
+          description: "Failed to save total spendings or meal rate.",
+          variant: "destructive",
+        });
+      }
+    };
 
   const validateForm = () => {
     const errors = [];
@@ -196,7 +211,7 @@ const AddGrocerySpendings = () => {
       const customDocId = generateDocumentId(selectedDate);
 
       if (existingDocId) {
-        const docRef = doc(db, "expenses", customDocId);
+        const docRef = doc(db, "expenses", existingDocId);
         await updateDoc(docRef, data);
         toast({
           title: "Success!",
@@ -204,12 +219,22 @@ const AddGrocerySpendings = () => {
           variant: "success",
         });
       } else {
-        await setDoc(doc(db, "expenses", customDocId), data);
+        const docRef = await addDoc(collection(db, "expenses"), data);
+        setExistingDocId(docRef.id);
         toast({
           title: "Success!",
           description: "Expense has been successfully added.",
           variant: "success",
         });
+
+        // Update datesWithData
+        const newDate = new Date(formattedDate);
+        if (!datesWithData.some((d) => d.getTime() === newDate.getTime())) {
+          setDatesWithData((prev) => [
+            ...prev,
+            new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()),
+          ]);
+        }
       }
 
       await saveTotalSpendings(customDocId);
@@ -237,6 +262,7 @@ const AddGrocerySpendings = () => {
       <DatePickerMealCount
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        datesWithData={datesWithData} // Pass dates with data
       />
 
       <div className="flex space-x-4 mb-6">

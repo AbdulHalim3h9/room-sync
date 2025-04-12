@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import MonthYearPicker from "./SingleMonthYearPicker";
+import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { useMonth } from "@/App";
 
 const Payables = () => {
@@ -21,11 +21,10 @@ const Payables = () => {
     const today = new Date();
     const year = today.getFullYear();
     const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-    return `${year}-${monthNum}`; // e.g., "2025-04"
+    return `${year}-${monthNum}`;
   })();
 
   const handleDateChange = (newMonth) => {
-    console.log("Month changed to:", newMonth);
     setMonth(newMonth);
   };
 
@@ -102,7 +101,11 @@ const Payables = () => {
       <div className="container p-6">
         <h3 className="text-2xl text-center mb-8">Monthly Payables and Dues</h3>
         <div className="flex justify-end my-4">
-          <MonthYearPicker value={month || defaultMonth} onChange={handleDateChange} />
+          <SingleMonthYearPicker
+            value={month || defaultMonth}
+            onChange={handleDateChange}
+            collections={["payables"]}
+          />
         </div>
         <div className="mx-auto grid grid-cols-1 sm:gap-4 md:gap-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {bills.length > 0 ? (

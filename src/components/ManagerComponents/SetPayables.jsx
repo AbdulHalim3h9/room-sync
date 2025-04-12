@@ -175,10 +175,7 @@ const SetPayables = () => {
 
   return (
     <div className="max-w-lg mx-auto p-6">
-      <h1 className="text-xl font-bold mb-6">
-        Add payables for {selectedMonth}
-      </h1>
-
+      <h1 className="text-xl font-bold mb-6">Add payables for {selectedMonth}</h1>
       <div className="mb-6">
         <Label htmlFor="monthPicker" className="block mb-1">
           Select Month
@@ -186,6 +183,7 @@ const SetPayables = () => {
         <SingleMonthYearPicker
           value={selectedMonth}
           onChange={handleMonthChange}
+          collections={["payables"]}
         />
       </div>
 

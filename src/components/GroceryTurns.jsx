@@ -104,8 +104,14 @@ const GroceriesSpendings = () => {
   return (
     <div className="container mx-auto mb-8 p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">Monthly Spendings List</h2>
-        <SingleMonthYearPicker value={month} onChange={handleMonthChange} />
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">
+          Monthly Spendings List
+        </h2>
+        <SingleMonthYearPicker
+          value={month}
+          onChange={handleMonthChange}
+          collections={["expenses"]}
+        />
       </div>
 
       <div className="space-y-4">

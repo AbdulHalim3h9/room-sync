@@ -198,9 +198,12 @@ const AddMealFund = () => {
   return (
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">Add Meal Fund</h1>
-
       <div className="flex justify-end mr-4 md:mr-8 mb-10">
-        <SingleMonthYearPicker value={month} onChange={handleMonthChange} />
+        <SingleMonthYearPicker
+          value={month}
+          onChange={handleMonthChange}
+          collections={["meal_funds"]}
+        />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

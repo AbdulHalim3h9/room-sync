@@ -18,12 +18,14 @@ const DailyMealCountForm = () => {
   const [monthlyMealCount, setMonthlyMealCount] = useState({});
   const [members, setMembers] = useState([]);
   const [existingDocId, setExistingDocId] = useState(null);
+  const [datesWithData, setDatesWithData] = useState([]); // New state for dates with data
 
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchMembersAndDates = async () => {
       try {
+        // Fetch active members
         const membersRef = collection(db, "members");
         const q = query(membersRef, where("status", "==", "active"));
         const querySnapshot = await getDocs(q);
@@ -35,17 +37,38 @@ const DailyMealCountForm = () => {
         setDailyMealCount(
           Object.fromEntries(membersData.map((member) => [member.member_id, ""]))
         );
+
+        // Fetch dates with data from individualMeals
+        const individualMealsRef = collection(db, "individualMeals");
+        const mealDocs = await getDocs(individualMealsRef);
+        const dates = [];
+
+        mealDocs.forEach((doc) => {
+          const data = doc.data();
+          const month = doc.id; // e.g., "2025-04"
+          Object.values(data.mealCounts).forEach((meals) => {
+            meals.forEach((entry) => {
+              if (!entry.startsWith("Total")) {
+                const [day] = entry.split(" ");
+                const dateStr = `${month}-${day.padStart(2, "0")}`; // e.g., "2025-04-01"
+                dates.push(new Date(dateStr));
+              }
+            });
+          });
+        });
+
+        setDatesWithData(dates);
       } catch (error) {
-        console.error("Error fetching members: ", error);
+        console.error("Error fetching data: ", error);
         toast({
           title: "Error",
-          description: "Failed to fetch members.",
+          description: "Failed to fetch members or meal data.",
           variant: "destructive",
         });
       }
     };
 
-    fetchMembers();
+    fetchMembersAndDates();
   }, [toast]);
 
   useEffect(() => {
@@ -185,7 +208,6 @@ const DailyMealCountForm = () => {
 
   const saveMealSummariesAndConsumption = async (month, mealCounts) => {
     try {
-      // Calculate total meals for all members and per member
       const memberTotals = {};
       let totalMealsAllMembers = 0;
 
@@ -198,7 +220,6 @@ const DailyMealCountForm = () => {
         }
       }
 
-      // Update mealSummaries
       const summaryRef = doc(db, "mealSummaries", month);
       const summarySnap = await getDoc(summaryRef);
       const existingData = summarySnap.exists() ? summarySnap.data() : {};
@@ -221,14 +242,13 @@ const DailyMealCountForm = () => {
         { merge: true }
       );
 
-      // Save contribution and consumption for each member
       for (const member of members) {
         const memberId = member.member_id;
         const memberName = member.member_name;
         const totalMeals = memberTotals[memberId] || 0;
         const consumption = totalMeals * parseFloat(mealRate);
 
-        const contribConsumpDocId = `${month}-${memberName}`; // e.g., "2025-04-John"
+        const contribConsumpDocId = `${month}-${memberName}`;
         const contribConsumpRef = doc(db, "contributionConsumption", contribConsumpDocId);
         const contribConsumpSnap = await getDoc(contribConsumpRef);
         const existingContribData = contribConsumpSnap.exists() ? contribConsumpSnap.data() : {};
@@ -238,18 +258,13 @@ const DailyMealCountForm = () => {
           {
             member: memberName,
             month,
-            contribution: existingContribData.contribution || 0, // Preserve existing contribution
+            contribution: existingContribData.contribution || 0,
             consumption: consumption || 0,
             lastUpdated: new Date().toISOString(),
           },
           { merge: true }
         );
-
-        console.log(`Updated contributionConsumption for ${contribConsumpDocId}: contribution=${existingContribData.contribution || 0}, consumption=${consumption}`);
       }
-
-      console.log(`Updated total meals for ${month}: ${updatedTotalMeals}`);
-      console.log(`Updated meal rate for ${month}: ${mealRate}`);
     } catch (error) {
       console.error("Error saving meal summaries or consumption:", error);
       toast({
@@ -298,6 +313,12 @@ const DailyMealCountForm = () => {
 
       await saveMealSummariesAndConsumption(month, existingData.mealCounts);
 
+      // Update datesWithData after submission
+      const newDate = new Date(dailyMealCount.date);
+      if (!datesWithData.some((d) => d.getTime() === newDate.getTime())) {
+        setDatesWithData((prev) => [...prev, newDate]);
+      }
+
       toast({
         title: "Success!",
         description: "Meal counts submitted successfully!",
@@ -325,7 +346,11 @@ const DailyMealCountForm = () => {
         <h1 className="text-xl font-bold mb-4">Set Daily Meal Count</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex space-x-4">
-            <DatePickerMealCount selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+            <DatePickerMealCount
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              datesWithData={datesWithData} // Pass dates with data
+            />
           </div>
 
           {members.map((member) => (

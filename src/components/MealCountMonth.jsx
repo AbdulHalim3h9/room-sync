@@ -117,7 +117,9 @@ const MealCountMonth = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 md:mb-0">Monthly Meal Count</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 md:mb-0">
+          Monthly Meal Count
+        </h2>
         <SingleMonthYearPicker value={month} onChange={handleMonthChange} />
       </div>
 

@@ -1,9 +1,7 @@
-import React, { createContext, useState, useContext } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+"use client";
+
+import React, { createContext, useContext, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import Layout from "./components/layouts/layout";
 import BottomNavigation from "./components/layouts/BottomNavigation";
 import CreditConsumed from "./components/CreditConsumed";
@@ -18,24 +16,40 @@ import RegisterMember from "./components/AdminComponents/RegisterMember";
 import MemberDetails from "./components/AdminComponents/MemberDetails";
 import RegistrationForm from "./components/RegisterAdminManager";
 
-// Create the context
-const MonthContext = createContext();
+// ErrorBoundary component
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong. Please refresh the page.</h1>;
+    }
+    return this.props.children;
+  }
+}
 
-// Custom hook for accessing the context
+// MonthContext
+const MonthContext = createContext();
 export const useMonth = () => useContext(MonthContext);
 
 const App = () => {
   const [month, setMonth] = useState(() => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0"); // Ensure 2 digits
-    return `${year}-${month}`; // Format as "YYYY-MM"
+    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+    return `${year}-${monthNum}`;
   });
 
   return (
     <MonthContext.Provider value={{ month, setMonth }}>
+      <ErrorBoundary>
         <Layout />
-        <Routes>
+        <Routes key={month}>
           <Route path="*" element={<CreditConsumed />} />
           <Route path="/creditconsumed/*" element={<CreditConsumed />} />
           <Route path="/payables" element={<Payables />} />
@@ -47,9 +61,10 @@ const App = () => {
           <Route path="/register-member" element={<RegisterMember />} />
           <Route path="/members" element={<MembersList />} />
           <Route path="/member-details" element={<MemberDetails />} />
-          <Route path="/register" element={<RegistrationForm/>} />
+          <Route path="/register" element={<RegistrationForm />} />
         </Routes>
         <BottomNavigation />
+      </ErrorBoundary>
     </MonthContext.Provider>
   );
 };

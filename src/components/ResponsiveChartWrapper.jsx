@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -15,13 +17,15 @@ import { db } from "@/firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import StatusCard from './dashboard/status-card';
+import StatusCard from "./dashboard/status-card";
+
 
 const CustomizedDot = (props) => {
   const { cx, cy, value, payload } = props;
   const difference = payload.given - payload.eaten;
   const color = difference > 0 ? "hsl(var(--chart-1))" : "hsl(var(--chart-2))";
-  
+
+
   return (
     <svg
       x={cx - 10}
@@ -32,9 +36,13 @@ const CustomizedDot = (props) => {
       viewBox="0 0 1024 1024"
       className="transition-transform hover:scale-125"
     >
-      <path d={difference > 0 
-        ? "M512 1009.984c-274.912 0-497.76-222.848-497.76-497.76s222.848-497.76 497.76-497.76c274.912 0 497.76 222.848 497.76 497.76s-222.848 497.76-497.76 497.76zM340.768 295.936c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM686.176 296.704c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM772.928 555.392c-18.752-8.864-40.928-0.576-49.632 18.528-40.224 88.576-120.256 143.552-208.832 143.552-85.952 0-164.864-52.64-205.952-137.376-9.184-18.912-31.648-26.592-50.08-17.28-18.464 9.408-21.216 21.472-15.936 32.64 52.8 111.424 155.232 186.784 269.76 186.784 117.984 0 217.12-70.944 269.76-186.784 8.672-19.136 9.568-31.2-9.12-40.096z"
-        : "M517.12 53.248q95.232 0 179.2 36.352t145.92 98.304 98.304 145.92 36.352 179.2-36.352 179.2-98.304 145.92-145.92 98.304-179.2 36.352-179.2-36.352-145.92-98.304-98.304-145.92-36.352-179.2 36.352-179.2 98.304-145.92 145.92-98.304 179.2-36.352zM663.552 261.12q-15.36 0-28.16 6.656t-23.04 18.432-15.872 27.648-5.632 33.28q0 35.84 21.504 61.44t51.2 25.6 51.2-25.6 21.504-61.44q0-17.408-5.632-33.28t-15.872-27.648-23.04-18.432-28.16-6.656zM373.76 261.12q-29.696 0-50.688 25.088t-20.992 60.928 20.992 61.44 50.688 25.6 50.176-25.6 20.48-61.44-20.48-60.928-50.176-25.088zM520.192 602.112q-51.2 0-97.28 9.728t-82.944 27.648-62.464 41.472-35.84 51.2q-1.024 1.024-1.024 2.048-1.024 3.072-1.024 8.704t2.56 11.776 7.168 11.264 12.8 6.144q25.6-27.648 62.464-50.176 31.744-19.456 79.36-35.328t114.176-15.872q67.584 0 116.736 15.872t81.92 35.328q37.888 22.528 63.488 50.176 17.408-5.12 19.968-18.944t0.512-18.944-3.072-7.168-1.024-3.072q-26.624-55.296-100.352-88.576t-176.128-33.28z"} />
+      <path
+        d={
+          difference > 0
+            ? "M512 1009.984c-274.912 0-497.76-222.848-497.76-497.76s222.848-497.76 497.76-497.76c274.912 0 497.76 222.848 497.76 497.76s-222.848 497.76-497.76 497.76zM340.768 295.936c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM686.176 296.704c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM772.928 555.392c-18.752-8.864-40.928-0.576-49.632 18.528-40.224 88.576-120.256 143.552-208.832 143.552-85.952 0-164.864-52.64-205.952-137.376-9.184-18.912-31.648-26.592-50.08-17.28-18.464 9.408-21.216 21.472-15.936 32.64 52.8 111.424 155.232 186.784 269.76 186.784 117.984 0 217.12-70.944 269.76-186.784 8.672-19.136 9.568-31.2-9.12-40.096z" // Smiling face
+            : "M517.12 53.248q95.232 0 179.2 36.352t145.92 98.304 98.304 145.92 36.352 179.2-36.352 179.2-98.304 145.92-145.92 98.304-179.2 36.352-179.2-36.352-145.92-98.304-98.304-145.92-36.352-179.2 36.352-179.2 98.304-145.92 145.92-98.304 179.2-36.352zM663.552 261.12q-15.36 0-28.16 6.656t-23.04 18.432-15.872 27.648-5.632 33.28q0 35.84 21.504 61.44t51.2 25.6 51.2-25.6 21.504-61.44q0-17.408-5.632-33.28t-15.872-27.648-23.04-18.432-28.16-6.656zM373.76 261.12q-29.696 0-50.688 25.088t-20.992 60.928 20.992 61.44 50.688 25.6 50.176-25.6 20.48-61.44-20.48-60.928-50.176-25.088zM520.192 602.112q-51.2 0-97.28 9.728t-82.944 27.648-62.464 41.472-35.84 51.2q-1.024 1.024-1.024 2.048-1.024 3.072-1.024 8.704t2.56 11.776 7.168 11.264 12.8 6.144q25.6-27.648 62.464-50.176 31.744-19.456 79.36-35.328t114.176-15.872q67.584 0 116.736 15.872t81.92 35.328q37.888 22.528 63.488 50.176 17.408-5.12 19.968-18.944t0.512-18.944-3.072-7.168-1.024-3.072q-26.624-55.296-100.352-88.576t-176.128-33.28z" // Frowning face
+        }
+      />
     </svg>
   );
 };
@@ -54,8 +62,16 @@ const CustomTooltip = ({ active, payload, label }) => {
             <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
             <span>Consumption: {payload[1].value} tk</span>
           </div>
-          <div className={`flex items-center gap-2 ${difference >= 0 ? "text-green-500" : "text-red-500"}`}>
-            <span className={`w-3 h-3 rounded-full ${difference >= 0 ? "bg-green-500" : "bg-red-500"}`}></span>
+          <div
+            className={`flex items-center gap-2 ${
+              difference >= 0 ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            <span
+              className={`w-3 h-3 rounded-full ${
+                difference >= 0 ? "bg-green-500" : "bg-red-500"
+              }`}
+            ></span>
             <span>Balance: {difference} tk</span>
           </div>
         </div>
@@ -71,12 +87,65 @@ export default function ResponsiveChartWrapper() {
   const [mealRate, setMealRate] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  
+const handleMonthChange = (newMonth) => {
+  console.log("Selected new month in CreditChart:", newMonth);
+  setMonth(newMonth); // Update the context month
+};
+  // const [monthsWithData, setMonthsWithData] = useState([]);
+
+  // Fetch months with data from relevant collections
+  useEffect(() => {
+    const fetchMonthsWithData = async () => {
+      try {
+        const collections = [
+          "individualMeals",
+          "expenses",
+          "contributionConsumption",
+          "payables",
+          "meal_funds",
+        ];
+        const monthsSet = new Set();
+
+        for (const coll of collections) {
+          let months = [];
+          if (coll === "expenses" || coll === "contributionConsumption") {
+            // For collections with documents not keyed by month
+            const snapshot = await getDocs(collection(db, coll));
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              if (data.month) {
+                months.push(data.month); // e.g., "2025-04"
+              } else if (data.date) {
+                const date = new Date(data.date);
+                const year = date.getFullYear();
+                const monthNum = String(date.getMonth() + 1).padStart(2, "0");
+                months.push(`${year}-${monthNum}`);
+              }
+            });
+          } else {
+            // For collections with documents keyed by month (e.g., "2025-04")
+            const snapshot = await getDocs(collection(db, coll));
+            months = snapshot.docs.map((doc) => doc.id); // Document ID is the month
+          }
+          months.forEach((m) => monthsSet.add(m));
+        }
+
+        // setMonthsWithData([...monthsSet]);
+      } catch (error) {
+        console.error("Error fetching months with data:", error);
+      }
+    };
+
+    fetchMonthsWithData();
+  }, []);
+
   // Fetch meal rate from mealSummaries
   useEffect(() => {
     const fetchMealRate = async () => {
       setLoading(true);
       try {
-        const docRef = doc(db, "mealSummaries", month); // e.g., "2025-04"
+        const docRef = doc(db, "mealSummaries", month);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -132,13 +201,12 @@ export default function ResponsiveChartWrapper() {
 
         // Combine member data with contribution/consumption
         const chartData = membersData.map((member) => ({
-          name: member.shortname, // Use shortname for X-axis
-          given: contribData[member.fullname]?.contribution || 0, // Contribution as "given"
-          eaten: contribData[member.fullname]?.consumption || 0, // Consumption as "eaten"
+          name: member.shortname,
+          given: contribData[member.fullname]?.contribution || 0,
+          eaten: contribData[member.fullname]?.consumption || 0,
         }));
 
         setData(chartData);
-        console.log("Chart data:", chartData);
       } catch (error) {
         console.error("Error fetching data:", error);
         setData([]);
@@ -151,7 +219,6 @@ export default function ResponsiveChartWrapper() {
   }, [month]);
 
   const handleDateChange = (newMonth) => {
-    console.log("Selected new month:", newMonth);
     setMonth(newMonth);
   };
 
@@ -175,9 +242,15 @@ export default function ResponsiveChartWrapper() {
       <Card className="mb-8 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle className="text-lg sm:text-xl font-medium text-center sm:text-left">Monthly Summary</CardTitle>
+            <CardTitle className="text-lg sm:text-xl font-medium text-center sm:text-left">
+              Monthly Summary
+            </CardTitle>
             <div className="flex justify-center sm:justify-end">
-              <SingleMonthYearPicker value={month} onChange={handleDateChange} />
+              <SingleMonthYearPicker
+                value={month}
+                onChange={handleMonthChange}
+                collections={["contributionConsumption", "individualMeals"]}
+              />
             </div>
           </div>
         </CardHeader>
@@ -193,23 +266,27 @@ export default function ResponsiveChartWrapper() {
                   bottom: 80,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  angle={-45} 
-                  textAnchor="end" 
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                  opacity={0.3}
+                />
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
                   height={80}
                   tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
                   tickMargin={30}
                   interval={0}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
                   tickFormatter={(value) => `${value} tk`}
                   width={60}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
+                <Legend
                   wrapperStyle={{
                     paddingTop: "20px",
                   }}
@@ -239,10 +316,7 @@ export default function ResponsiveChartWrapper() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-2">
-            <StatusCard 
-              dueMembers={dueMembers}
-              mealRate={mealRate}
-            />
+            <StatusCard dueMembers={dueMembers} mealRate={mealRate} />
           </div>
         </CardContent>
       </Card>

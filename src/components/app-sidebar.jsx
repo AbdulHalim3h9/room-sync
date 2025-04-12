@@ -149,7 +149,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar className="fixed z-[999] w-64 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
+    <Sidebar className="fixed z-[999] w-68 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
       <SidebarContent className="flex flex-col h-full bg-white">
         {/* Brand Section */}
         <div className="p-6 border-b border-gray-200">
@@ -167,8 +167,8 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup className="flex-1">
-          <SidebarGroupContent className="p-4">
-            <SidebarMenu className="space-y-1">
+          <SidebarGroupContent className="p-0">
+            <SidebarMenu className="space-y-0">
               {isAuthenticated && menuItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild>
@@ -198,12 +198,12 @@ export function AppSidebar() {
                   <div className="flex items-center justify-between w-full">
                     <button
                       onClick={handleCallKhala}
-                      className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50"
+                      className="flex items-center w-full px-2 py-3 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50"
                     >
                       <div className="p-2 rounded-md bg-gray-100">
-                        <PhoneOutgoing className="h-4 w-4" />
+                        <PhoneOutgoing className="mr-2 h-4 w-4" />
                       </div>
-                      <span className="ml-3 font-medium">Call Khala</span>
+                      <span className="ml-5 font-medium">Call Khala</span>
                     </button>
 
                     {isAdmin && (

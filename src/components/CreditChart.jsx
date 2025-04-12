@@ -28,6 +28,7 @@ const CreditChart = ({ members }) => {
 
   useEffect(() => {
     const fetchCreditData = async () => {
+      console.log(month)
       if (!month || !memberId || !member) {
         console.log("Missing month, memberId, or member data, skipping fetch");
         setLoading(false);
@@ -42,7 +43,7 @@ const CreditChart = ({ members }) => {
         const docId = `${month}-${member.memberName}`; // e.g., "2025-04-Abdul Halim Khan"
         const docRef = doc(db, "contributionConsumption", docId);
         const docSnap = await getDoc(docRef);
-
+        console.log("docSnapData",docSnap.data())
         if (docSnap.exists()) {
           const data = docSnap.data();
           setChartData([
@@ -110,6 +111,7 @@ const CreditChart = ({ members }) => {
     return <div className="text-center text-red-500">{error}</div>;
   }
 
+  console.log("Chart data:", chartData);
   const contribution = chartData[0].contributed;
   const consumption = chartData[1].consumed;
   const balance = contribution - consumption;
@@ -127,7 +129,11 @@ const CreditChart = ({ members }) => {
             {member.memberName}
           </h3>
         </div>
-        <SingleMonthYearPicker value={month} onChange={handleMonthChange} />
+        <SingleMonthYearPicker
+            value={month || defaultMonth}
+            onChange={handleMonthChange}
+            collections={["contributionConsumption"]}
+          />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

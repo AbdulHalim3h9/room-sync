@@ -120,7 +120,11 @@ const MealCountMonth = () => {
         <h2 className="text-2xl font-semibold text-gray-800 mb-4 md:mb-0">
           Monthly Meal Count
         </h2>
-        <SingleMonthYearPicker value={month} onChange={handleMonthChange} />
+        <SingleMonthYearPicker
+            value={month}
+            onChange={handleMonthChange}
+            collections={["individualMeals"]}
+          />
       </div>
 
       {!member ? (

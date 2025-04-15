@@ -27,12 +27,6 @@ const CreditChart = () => {
     });
   const { memberId } = useParams();
   const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-    return `${year}-${monthNum}`;
-  });
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

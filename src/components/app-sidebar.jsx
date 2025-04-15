@@ -149,7 +149,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar className="fixed z-50 w-68 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
+    <Sidebar className="fixed z-[999] w-68 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
       <SidebarContent className="flex flex-col h-full bg-white">
         {/* Brand Section */}
         <div className="p-6 border-b border-gray-200">
@@ -296,4 +296,4 @@ export function AppSidebar() {
   );
 }
 
-export default AppSidebar;
+export default AppSidebar;  

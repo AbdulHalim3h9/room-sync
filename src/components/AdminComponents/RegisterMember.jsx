@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +11,11 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { db } from "@/firebase"; // Adjust the path to your Firebase config
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/firebase";
+import { collection, addDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/hooks/use-toast";
+import ActiveMemberMonthYearPicker from "@/components/ActiveMemberMonthYearPicker";
 
 const RegisterMember = () => {
   const [formData, setFormData] = useState({
@@ -19,10 +23,11 @@ const RegisterMember = () => {
     shortname: "",
     resident: "",
     phone: "",
-    imageUrl: "", // Changed from 'image' to 'imageUrl' for storing a link
-    status: "active", // Added status field as in previous versions
+    imageUrl: "",
+    activeFrom: "", // New field for activation month
   });
-  const [error, setError] = useState(""); // Added for error handling
+  const [error, setError] = useState("");
+  const { toast } = useToast();
 
   const handleChange = (e) => {
     setFormData({
@@ -38,47 +43,65 @@ const RegisterMember = () => {
     });
   };
 
+  const handleMonthChange = (value) => {
+    setFormData({
+      ...formData,
+      activeFrom: value,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const memberId = uuidv4();
 
-    // Prepare member data for Firestore
+    // Validate required fields
+    if (!formData.fullname || !formData.resident || !formData.activeFrom) {
+      setError("Full Name, Resident Type, and Active From are required.");
+      return;
+    }
+
+    const memberId = uuidv4();
     const newMember = {
       id: memberId,
       fullname: formData.fullname,
       shortname: formData.shortname,
       resident: formData.resident,
       phone: formData.phone,
-      imageUrl: formData.imageUrl || "", // Store empty string if no URL provided
-      status: formData.status,
+      imageUrl: formData.imageUrl || "",
+      activeFrom: formData.activeFrom,
+      archiveFrom: null, // Initialize as null
     };
 
-    // Save to Firestore
     try {
       await addDoc(collection(db, "members"), newMember);
-      // onRegister(newMember); // Call the callback with the new member data
-      console.log("Submitted Data:", newMember); // Log for debugging
+      toast({
+        title: "Member Registered",
+        description: `${formData.fullname} will be active from ${formData.activeFrom}.`,
+      });
+
+      // Reset form
+      setFormData({
+        fullname: "",
+        shortname: "",
+        resident: "",
+        phone: "",
+        imageUrl: "",
+        activeFrom: "",
+      });
     } catch (err) {
       console.error("Firestore Error:", err.message);
-      setError(`Failed to save member data: ${err.message}`);
-      return;
+      setError("Failed to register member.");
+      toast({
+        title: "Error",
+        description: "Failed to register member.",
+        variant: "destructive",
+      });
     }
-
-    // Reset form
-    setFormData({
-      fullname: "",
-      shortname: "",
-      resident: "",
-      phone: "",
-      imageUrl: "",
-      status: "active",
-    });
   };
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Register New Member</h2>
+      <h2 className="text-xl font-bold mb-6">Register New Member</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <Label>Full Name</Label>
@@ -121,6 +144,14 @@ const RegisterMember = () => {
             onChange={handleChange}
             placeholder="Enter phone number"
             type="tel"
+          />
+        </div>
+
+        <div>
+          <Label>Active From</Label>
+          <ActiveMemberMonthYearPicker
+            value={formData.activeFrom}
+            onChange={handleMonthChange}
           />
         </div>
 

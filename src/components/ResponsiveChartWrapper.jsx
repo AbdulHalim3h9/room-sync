@@ -22,7 +22,7 @@ import StatusCard from "./dashboard/status-card";
 const CustomizedDot = (props) => {
   const { cx, cy, value, payload } = props;
   const difference = payload.given - payload.eaten;
-  const color = difference > 0 ? "hsl(var(--chart-1))" : "hsl(var(--chart-2))";
+  const color = difference > 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-1))";
 
 
   return (

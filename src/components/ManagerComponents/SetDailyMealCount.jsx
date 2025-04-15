@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,208 +10,244 @@ import { db } from "@/firebase";
 import { doc, getDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
-const DailyMealCountForm = () => {
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, date, members, mealCounts }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-lg w-[250px]">
+        <h2 className="text-lg font-semibold">Meal Counts Summary</h2>
+        <h3 className="font-light mb-4">
+          {date ? format(date, "MMM dd, EEEE") : "No Date Selected"}
+        </h3>
+        <ul>
+          {members.map((member) => (
+            <li className="p-2 flex justify-between" key={member.id}>
+              <span>{member.name}:</span>
+              <span>{mealCounts[member.id]}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex justify-between">
+          <Button onClick={onClose} variant="secondary">
+            Close
+          </Button>
+          <Button onClick={onConfirm}>Confirm Submit</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MemberMealInput = ({ member, mealCount, onChange }) => (
+  <div className="flex items-center space-x-12">
+    <Label htmlFor={`member-${member.id}`} className="w-28">
+      {member.name}
+    </Label>
+    <Input
+      id={`member-${member.id}`}
+      type="text"
+      value={mealCount || ""}
+      onChange={(e) => onChange(e, member.id)}
+      placeholder=""
+      className="w-[6ch] text-center appearance-none"
+    />
+  </div>
+);
+
+const DailyMealForm = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [dailyMealCount, setDailyMealCount] = useState({});
+  const [mealCounts, setMealCounts] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [monthlyMealCount, setMonthlyMealCount] = useState({});
   const [members, setMembers] = useState([]);
   const [existingDocId, setExistingDocId] = useState(null);
-  const [datesWithData, setDatesWithData] = useState([]); // New state for dates with data
-
+  const [datesWithData, setDatesWithData] = useState([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchMembersAndDates = async () => {
-      try {
-        // Fetch active members
-        const membersRef = collection(db, "members");
-        const q = query(membersRef, where("status", "==", "active"));
-        const querySnapshot = await getDocs(q);
-        const membersData = querySnapshot.docs.map((doc) => ({
-          member_id: doc.data().id,
-          member_name: doc.data().fullname,
-        }));
-        setMembers(membersData);
-        setDailyMealCount(
-          Object.fromEntries(membersData.map((member) => [member.member_id, ""]))
-        );
+  const fetchMembersAndDates = useCallback(async () => {
+    try {
+      const membersRef = collection(db, "members");
+      const q = query(membersRef, where("status", "==", "active"));
+      const querySnapshot = await getDocs(q);
+      const membersData = querySnapshot.docs.map((doc) => ({
+        id: doc.data().id,
+        name: doc.data().fullname,
+      }));
 
-        // Fetch dates with data from individualMeals
-        const individualMealsRef = collection(db, "individualMeals");
-        const mealDocs = await getDocs(individualMealsRef);
-        const dates = [];
+      setMembers(membersData);
+      setMealCounts(
+        Object.fromEntries(membersData.map((member) => [member.id, ""]))
+      );
 
-        mealDocs.forEach((doc) => {
-          const data = doc.data();
-          const month = doc.id; // e.g., "2025-04"
-          Object.values(data.mealCounts).forEach((meals) => {
-            meals.forEach((entry) => {
-              if (!entry.startsWith("Total")) {
-                const [day] = entry.split(" ");
-                const dateStr = `${month}-${day.padStart(2, "0")}`; // e.g., "2025-04-01"
-                dates.push(new Date(dateStr));
-              }
-            });
+      const individualMealsRef = collection(db, "individualMeals");
+      const mealDocs = await getDocs(individualMealsRef);
+      const dates = [];
+
+      mealDocs.forEach((doc) => {
+        const data = doc.data();
+        const month = doc.id;
+        Object.values(data.mealCounts).forEach((meals) => {
+          meals.forEach((entry) => {
+            if (!entry.startsWith("Total")) {
+              const [day] = entry.split(" ");
+              const dateStr = `${month}-${day.padStart(2, "0")}`;
+              dates.push(new Date(dateStr));
+            }
           });
         });
+      });
 
-        setDatesWithData(dates);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch members or meal data.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchMembersAndDates();
+      setDatesWithData(dates);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch members or meal data.",
+        variant: "destructive",
+      });
+    }
   }, [toast]);
 
-  useEffect(() => {
-    const fetchMealCount = async () => {
-      try {
-        const pickedMonth = format(selectedDate, "yyyy-MM");
-        const docRef = doc(db, "individualMeals", pickedMonth);
-        const docSnap = await getDoc(docRef);
+  const fetchMealCounts = useCallback(async () => {
+    try {
+      const monthKey = format(selectedDate, "yyyy-MM");
+      const docRef = doc(db, "individualMeals", monthKey);
+      const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setExistingDocId(pickedMonth);
-          const dayKey = format(selectedDate, "dd");
-          const updatedDailyMealCount = {};
+      if (docSnap.exists()) {
+        setExistingDocId(monthKey);
+        const data = docSnap.data();
+        const dayKey = format(selectedDate, "dd");
+        const updatedMealCounts = {};
 
-          members.forEach((member) => {
-            const meals = data.mealCounts[member.member_id] || [];
-            const dayEntry = meals.find((entry) => entry.startsWith(dayKey));
-            updatedDailyMealCount[member.member_id] = dayEntry
-              ? dayEntry.split(" ")[1]
-              : "";
-          });
-
-          setDailyMealCount(updatedDailyMealCount);
-        } else {
-          setExistingDocId(null);
-          setDailyMealCount(
-            Object.fromEntries(members.map((member) => [member.member_id, ""]))
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching meal count: ", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch existing meal count data.",
-          variant: "destructive",
+        members.forEach((member) => {
+          const meals = data.mealCounts[member.id] || [];
+          const dayEntry = meals.find((entry) => entry.startsWith(dayKey));
+          updatedMealCounts[member.id] = dayEntry ? dayEntry.split(" ")[1] : "";
         });
-      }
-    };
 
-    if (members.length > 0) {
-      fetchMealCount();
+        setMealCounts(updatedMealCounts);
+      } else {
+        setExistingDocId(null);
+        setMealCounts(
+          Object.fromEntries(members.map((member) => [member.id, ""]))
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching meal counts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch meal count data.",
+        variant: "destructive",
+      });
     }
   }, [selectedDate, members, toast]);
 
-  const handleInputChange = (e, member_id) => {
+  useEffect(() => {
+    fetchMembersAndDates();
+  }, [fetchMembersAndDates]);
+
+  useEffect(() => {
+    if (members.length > 0) {
+      fetchMealCounts();
+    }
+  }, [fetchMealCounts, members]);
+
+  const handleInputChange = (e, memberId) => {
     const value = e.target.value;
     if (!isNaN(value) && parseInt(value) >= 0) {
-      setDailyMealCount({ ...dailyMealCount, [member_id]: value });
+      setMealCounts((prev) => ({ ...prev, [memberId]: value }));
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const isValid = Object.values(dailyMealCount).every(
-      (count) => count !== "" && count !== null
-    );
-
-    if (!isValid) {
+  const validateSubmission = async () => {
+    if (!Object.values(mealCounts).every((count) => count !== "" && count !== null)) {
       toast({
         title: "Validation Error",
         description: "All meal count fields must be filled out!",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    const pickedMonth = format(selectedDate, "yyyy-MM");
-    let starDate = 1;
+    const month = format(selectedDate, "yyyy-MM");
+    let startDay = 1;
 
     try {
-      const docRef = doc(db, "individualMeals", pickedMonth);
+      const docRef = doc(db, "individualMeals", month);
       const docSnap = await getDoc(docRef);
-      let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
+      const existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
-      for (const [memberId] of Object.entries(dailyMealCount)) {
-        let meals = existingData.mealCounts[memberId] || [];
+      for (const [memberId] of Object.entries(mealCounts)) {
+        const meals = existingData.mealCounts[memberId] || [];
         const secondLastMeal = meals.length > 1 ? meals[meals.length - 2] : "";
-        starDate = meals.length === 0 ? 0 : parseInt(secondLastMeal.slice(0, 2));
+        startDay = meals.length === 0 ? 0 : parseInt(secondLastMeal.slice(0, 2));
       }
     } catch (error) {
-      console.log("Error fetching data:", error);
+      console.error("Error validating data:", error);
+      return false;
     }
 
-    const startDate = starDate;
-    if (selectedDate.getDate() - startDate !== 1 && selectedDate.getDate() > startDate) {
+    if (selectedDate.getDate() - startDay !== 1 && selectedDate.getDate() > startDay) {
       toast({
         title: "Validation Error",
-        description: `Please fill out the meal count for date ${startDate + 1} first`,
+        description: `Please fill out the meal count for date ${startDay + 1} first`,
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    setDailyMealCount((prev) => ({
-      ...prev,
-      date: format(selectedDate, "yyyy-MM-dd"),
-    }));
+    return true;
+  };
 
-    setIsModalOpen(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const isValid = await validateSubmission();
+    if (isValid) {
+      setMealCounts((prev) => ({
+        ...prev,
+        date: format(selectedDate, "yyyy-MM-dd"),
+      }));
+      setIsModalOpen(true);
+    }
   };
 
   const handleReset = () => {
-    setDailyMealCount(
-      Object.fromEntries(members.map((member) => [member.member_id, ""]))
+    setMealCounts(
+      Object.fromEntries(members.map((member) => [member.id, ""]))
     );
     setSelectedDate(new Date());
   };
 
-  const addDailyToMonthlyMealCount = (dailyMealCount, monthlyMealCount) => {
-    const { date, ...counts } = dailyMealCount;
+  const updateMonthlyMealCounts = (dailyCounts) => {
+    const { date, ...counts } = dailyCounts;
     const [year, month, day] = date.split("-");
     const monthKey = `${year}-${month}`;
     const dayKey = parseInt(day, 10);
 
-    const updatedMonthlyMealCount = { ...monthlyMealCount };
-
+    const updatedCounts = {};
     Object.entries(counts).forEach(([memberId, count]) => {
       if (count) {
         const memberKey = `memberid_${memberId}`;
-
-        if (!updatedMonthlyMealCount[memberKey]) {
-          updatedMonthlyMealCount[memberKey] = {};
-        }
-
-        if (!updatedMonthlyMealCount[memberKey][monthKey]) {
-          updatedMonthlyMealCount[memberKey][monthKey] = {};
-        }
-
-        updatedMonthlyMealCount[memberKey][monthKey][dayKey] = parseInt(count, 10);
+        updatedCounts[memberKey] = {
+          ...updatedCounts[memberKey],
+          [monthKey]: {
+            ...updatedCounts[memberKey]?.[monthKey],
+            [dayKey]: parseInt(count, 10),
+          },
+        };
       }
     });
 
-    return updatedMonthlyMealCount;
+    return updatedCounts;
   };
 
-  const saveMealSummariesAndConsumption = async (month, mealCounts) => {
+  const saveSummariesAndConsumption = async (month, mealCountsData) => {
     try {
       const memberTotals = {};
       let totalMealsAllMembers = 0;
 
-      for (const [memberId, meals] of Object.entries(mealCounts)) {
+      for (const [memberId, meals] of Object.entries(mealCountsData)) {
         const totalEntry = meals.find((meal) => meal.startsWith("Total"));
         if (totalEntry) {
           const total = parseInt(totalEntry.split(" ")[1]) || 0;
@@ -243,8 +279,8 @@ const DailyMealCountForm = () => {
       );
 
       for (const member of members) {
-        const memberId = member.member_id;
-        const memberName = member.member_name;
+        const memberId = member.id;
+        const memberName = member.name;
         const totalMeals = memberTotals[memberId] || 0;
         const consumption = totalMeals * parseFloat(mealRate);
 
@@ -266,7 +302,7 @@ const DailyMealCountForm = () => {
         );
       }
     } catch (error) {
-      console.error("Error saving meal summaries or consumption:", error);
+      console.error("Error saving summaries or consumption:", error);
       toast({
         title: "Error",
         description: "Failed to save meal summaries or consumption.",
@@ -276,28 +312,23 @@ const DailyMealCountForm = () => {
   };
 
   const handleConfirmSubmit = async () => {
-    setIsConfirmed(true);
     setIsModalOpen(false);
-
-    const updatedMonthlyMealCount = addDailyToMonthlyMealCount(dailyMealCount, monthlyMealCount);
-    setMonthlyMealCount(updatedMonthlyMealCount);
+    const month = mealCounts.date.slice(0, 7);
+    const updatedMonthlyCounts = updateMonthlyMealCounts(mealCounts);
 
     try {
-      const month = dailyMealCount.date.slice(0, 7);
       const docRef = doc(db, "individualMeals", month);
       const docSnap = await getDoc(docRef);
       let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
-      const { date, ...mealData } = dailyMealCount;
+      const { date, ...mealData } = mealCounts;
 
       for (const [memberId, mealCount] of Object.entries(mealData)) {
         let meals = existingData.mealCounts[memberId] || [];
-
         meals = meals.filter(
           (entry) =>
             !entry.startsWith(date.slice(-2)) && !entry.startsWith("Total")
         );
-
         meals.push(`${date.slice(-2)} ${parseInt(mealCount, 10)}`);
 
         const newSum = meals.reduce((sum, entry) => {
@@ -310,11 +341,9 @@ const DailyMealCountForm = () => {
       }
 
       await setDoc(docRef, existingData, { merge: true });
+      await saveSummariesAndConsumption(month, existingData.mealCounts);
 
-      await saveMealSummariesAndConsumption(month, existingData.mealCounts);
-
-      // Update datesWithData after submission
-      const newDate = new Date(dailyMealCount.date);
+      const newDate = new Date(mealCounts.date);
       if (!datesWithData.some((d) => d.getTime() === newDate.getTime())) {
         setDatesWithData((prev) => [...prev, newDate]);
       }
@@ -324,20 +353,14 @@ const DailyMealCountForm = () => {
         description: "Meal counts submitted successfully!",
         variant: "success",
       });
-    } catch (e) {
-      console.error("Error updating document: ", e);
+    } catch (error) {
+      console.error("Error updating document:", error);
       toast({
         title: "Error",
         description: "Failed to submit meal counts. Please try again.",
         variant: "destructive",
       });
     }
-
-    setIsConfirmed(false);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
   };
 
   return (
@@ -345,30 +368,19 @@ const DailyMealCountForm = () => {
       <div className="max-w-md mx-auto p-4 mb-8">
         <h1 className="text-xl font-bold mb-4">Set Daily Meal Count</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex space-x-4">
-            <DatePickerMealCount
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              datesWithData={datesWithData} // Pass dates with data
-            />
-          </div>
-
+          <DatePickerMealCount
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            datesWithData={datesWithData}
+          />
           {members.map((member) => (
-            <div key={member.member_id} className="flex items-center space-x-12">
-              <Label htmlFor={`member-${member.member_id}`} className="w-28">
-                {member.member_name}
-              </Label>
-              <Input
-                id={`member-${member.member_id}`}
-                type="text"
-                value={dailyMealCount[member.member_id] || ""}
-                onChange={(e) => handleInputChange(e, member.member_id)}
-                placeholder=""
-                className="w-[6ch] text-center appearance-none"
-              />
-            </div>
+            <MemberMealInput
+              key={member.id}
+              member={member}
+              mealCount={mealCounts[member.id]}
+              onChange={handleInputChange}
+            />
           ))}
-
           <div className="flex space-x-4">
             <Button onClick={handleReset} variant="secondary">
               Reset
@@ -376,36 +388,17 @@ const DailyMealCountForm = () => {
             <Button type="submit">{existingDocId ? "Update" : "Set"} Counts</Button>
           </div>
         </form>
-
-        {isModalOpen && !isConfirmed && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg w-[250px]">
-              <h2 className="text-lg font-semibold">Meal Counts Summary </h2>
-              <h3 className="font-light mb-4">
-                {selectedDate
-                  ? format(selectedDate, "MMM dd, EEEE")
-                  : "No Date Selected"}
-              </h3>
-              <ul>
-                {members.map((member) => (
-                  <li className="p-2 flex justify-between" key={member.member_id}>
-                    <span>{member.member_name}:</span>{" "}
-                    <span>{dailyMealCount[member.member_id]}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 flex justify-between">
-                <Button onClick={closeModal} variant="secondary">
-                  Close
-                </Button>
-                <Button onClick={handleConfirmSubmit}>Confirm Submit</Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onConfirm={handleConfirmSubmit}
+          date={selectedDate}
+          members={members}
+          mealCounts={mealCounts}
+        />
       </div>
     </div>
   );
 };
 
-export default DailyMealCountForm;
+export default DailyMealForm;

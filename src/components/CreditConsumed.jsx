@@ -1,27 +1,24 @@
-import React, { useState } from "react";
+import React from "react";
 import NavigateMembers from "./layouts/NavigateMembers";
 import { Routes, Route } from "react-router-dom";
 import TabSwitcherMealChart from "./layouts/TabSwitcherMealChart";
 import ResponsiveChartWrapper from "./ResponsiveChartWrapper";
-import { useMonth } from "@/App";
-import SingleMonthYearPicker from "./SingleMonthYearPicker";
+import { MembersContext } from "@/contexts/MembersContext";
 
 const CreditConsumed = () => {
-  const { month, setMonth } = useMonth();
-  const [members, setMembers] = useState([]);
+  const { members, loading, error } = React.useContext(MembersContext);
 
-  const handleMembersFetched = (fetchedMembers) => {
-    setMembers(fetchedMembers);
-  };
+  if (loading) {
+    return <div className="text-center text-gray-600">Loading members...</div>;
+  }
 
-  const handleMonthChange = (newMonth) => {
-    console.log("Month changed to:", newMonth);
-    setMonth(newMonth); // Update the context with "YYYY-MM" format
-  };
+  if (error) {
+    return <div className="text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div>
-      <NavigateMembers onMembersFetched={handleMembersFetched} />
+      <NavigateMembers />
       <Routes>
         <Route path="/" element={<ResponsiveChartWrapper />} />
         <Route

@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { db } from "@/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { MembersContext } from "@/contexts/MembersContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const getInitials = (name) => {
   return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 };
@@ -30,60 +29,40 @@ const Avatar = ({ name, imageUrl, className }) => {
 
   const initials = getInitials(name);
   const colors = [
-    'bg-red-500',
-    'bg-blue-500',
-    'bg-green-500',
-    'bg-yellow-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-indigo-500',
-    'bg-teal-500',
+    "bg-red-500",
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-yellow-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-teal-500",
   ];
   const colorIndex = initials.charCodeAt(0) % colors.length;
   const bgColor = colors[colorIndex];
 
   return (
-    <div className={cn(
-      "w-full h-full flex items-center justify-center",
-      "text-white font-semibold",
-      bgColor,
-      className
-    )}>
+    <div
+      className={cn(
+        "w-full h-full flex items-center justify-center",
+        "text-white font-semibold",
+        bgColor,
+        className
+      )}
+    >
       {initials}
     </div>
   );
 };
 
-const NavigateMembers = ({ onMembersFetched }) => {
+const NavigateMembers = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const [members, setMembers] = useState([]);
   const [hoveredMember, setHoveredMember] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { members, loading, error } = React.useContext(MembersContext);
 
-  // Extract memberId from the current URL path
-  const currentMemberId = location.pathname.split('/').pop();
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const membersRef = collection(db, "members");
-        const q = query(membersRef, where("status", "==", "active"));
-        const querySnapshot = await getDocs(q);
-        const fetchedMembers = querySnapshot.docs.map((doc) => ({
-          memberId: doc.data().uuid || doc.data().id,
-          memberName: doc.data().fullname,
-          imgSrc: doc.data().imageUrl,
-        }));
-        setMembers(fetchedMembers);
-        if (onMembersFetched) onMembersFetched(fetchedMembers);
-      } catch (error) {
-        console.error("Error fetching members:", error);
-      }
-    };
-
-    fetchMembers();
-  }, []);
+  const currentMemberId = location.pathname.split("/").pop();
 
   const toggleVisibility = () => {
     setIsVisible((prev) => !prev);
@@ -100,6 +79,22 @@ const NavigateMembers = ({ onMembersFetched }) => {
     if (distance === 1) return "w-14 h-14";
     return "w-12 h-12";
   };
+
+  if (loading) {
+    return (
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 text-gray-600">
+        Loading members...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
@@ -119,7 +114,7 @@ const NavigateMembers = ({ onMembersFetched }) => {
         <div
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2",
-            "flex flex-col gap-3 transition-all duration-300",
+            "flex flex-col gap-3Lua error: attempt to index a nil value transition-all duration-300",
             isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
         >

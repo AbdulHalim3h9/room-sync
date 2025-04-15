@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/layouts/layout";
 import BottomNavigation from "./components/layouts/BottomNavigation";
@@ -15,6 +15,7 @@ import MembersList from "./components/AdminComponents/MembersList";
 import RegisterMember from "./components/AdminComponents/RegisterMember";
 import MemberDetails from "./components/AdminComponents/MemberDetails";
 import RegistrationForm from "./components/RegisterAdminManager";
+import { MembersProvider } from "./contexts/MembersContext";
 
 // ErrorBoundary component
 class ErrorBoundary extends React.Component {
@@ -33,23 +34,12 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// MonthContext
-const MonthContext = createContext();
-export const useMonth = () => useContext(MonthContext);
-
 const App = () => {
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-    return `${year}-${monthNum}`;
-  });
-
   return (
-    <MonthContext.Provider value={{ month, setMonth }}>
+    <MembersProvider>
       <ErrorBoundary>
         <Layout />
-        <Routes key={month}>
+        <Routes>
           <Route path="*" element={<CreditConsumed />} />
           <Route path="/creditconsumed/*" element={<CreditConsumed />} />
           <Route path="/payables" element={<Payables />} />
@@ -65,7 +55,7 @@ const App = () => {
         </Routes>
         <BottomNavigation />
       </ErrorBoundary>
-    </MonthContext.Provider>
+    </MembersProvider>
   );
 };
 

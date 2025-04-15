@@ -9,12 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMonth } from "@/App";
 import { db } from "@/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
-import { debounce } from "lodash"; // Install lodash if not present: npm install lodash
+import { debounce } from "lodash";
 
-// Cache to store fetched months
 const monthCache = new Map();
 
 export const updateMonthCache = (collection, month) => {
@@ -26,15 +24,10 @@ export const updateMonthCache = (collection, month) => {
 };
 
 const SingleMonthYearPicker = ({ value, onChange, collections = [] }) => {
-  const { month } = useMonth();
   const [monthsWithData, setMonthsWithData] = useState([]);
 
-  // Debounced state update to reduce re-renders
   const debouncedSetMonths = useMemo(
-    () =>
-      debounce((months) => {
-        setMonthsWithData(months);
-      }, 100),
+    () => debounce((months) => setMonthsWithData(months), 100),
     []
   );
 
@@ -89,7 +82,7 @@ const SingleMonthYearPicker = ({ value, onChange, collections = [] }) => {
 
     return () => {
       unsubscribes.forEach((unsub) => unsub());
-      debouncedSetMonths.cancel(); // Cleanup debounce
+      debouncedSetMonths.cancel();
     };
   }, [collections, debouncedSetMonths]);
 
@@ -110,14 +103,14 @@ const SingleMonthYearPicker = ({ value, onChange, collections = [] }) => {
   }, []);
 
   const handleChange = (newValue) => {
-    if (onChange) {
+    if (onChange && newValue !== value) {
       onChange(newValue);
     }
   };
 
   return (
     <div className="w-max">
-      <Select value={value || month} onValueChange={handleChange}>
+      <Select value={value} onValueChange={handleChange}>
         <SelectTrigger>
           <SelectValue placeholder="Select Month and Year" />
         </SelectTrigger>

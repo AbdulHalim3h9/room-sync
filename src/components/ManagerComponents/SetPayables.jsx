@@ -18,6 +18,13 @@ import SingleMonthYearPicker from "../SingleMonthYearPicker";
 import { useToast } from "@/hooks/use-toast";
 
 const SetPayables = () => {
+  
+    const [month, setMonth] = useState(() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+      return `${year}-${monthNum}`;
+    });
   const [formType, setFormType] = useState("apartment");
   const [roomRent, setRoomRent] = useState("");
   const [diningRent, setDiningRent] = useState("");
@@ -182,7 +189,7 @@ const SetPayables = () => {
         </Label>
         <SingleMonthYearPicker
           value={selectedMonth}
-          onChange={handleMonthChange}
+          onChange={(newMonth) => setMonth(newMonth)}
           collections={["payables"]}
         />
       </div>

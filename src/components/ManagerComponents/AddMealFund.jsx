@@ -7,12 +7,17 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/firebase";
 import { collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useMonth } from "@/App";
 import SingleMonthYearPicker from "../SingleMonthYearPicker";
 
 const AddMealFund = () => {
+  
+    const [month, setMonth] = useState(() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+      return `${year}-${monthNum}`;
+    });
   const { toast } = useToast();
-  const { month, setMonth } = useMonth(); // month is "YYYY-MM" (e.g., "2025-04")
   const [selectedDonor, setSelectedDonor] = useState("");
   const [amount, setAmount] = useState("");
   const [previousAmount, setPreviousAmount] = useState(0);
@@ -201,7 +206,7 @@ const AddMealFund = () => {
       <div className="flex justify-end mr-4 md:mr-8 mb-10">
         <SingleMonthYearPicker
           value={month}
-          onChange={handleMonthChange}
+          onChange={(newMonth) => setMonth(newMonth)}
           collections={["meal_funds"]}
         />
       </div>

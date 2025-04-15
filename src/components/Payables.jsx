@@ -10,10 +10,15 @@ import {
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
-import { useMonth } from "@/App";
 
 const Payables = () => {
-  const { month, setMonth } = useMonth();
+  
+    const [month, setMonth] = useState(() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+      return `${year}-${monthNum}`;
+    });
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +108,7 @@ const Payables = () => {
         <div className="flex justify-end my-4">
           <SingleMonthYearPicker
             value={month || defaultMonth}
-            onChange={handleDateChange}
+            onChange={(newMonth) => setMonth(newMonth)}
             collections={["payables"]}
           />
         </div>

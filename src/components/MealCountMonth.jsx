@@ -11,17 +11,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
-import { useMonth } from "@/App";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 
 const MealCountMonth = () => {
+  
+    const [month, setMonth] = useState(() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+      return `${year}-${monthNum}`;
+    });
   const [isLoading, setIsLoading] = useState(false);
   const [mealData, setMealData] = useState([]);
   const { memberId } = useParams();
-  const { month, setMonth } = useMonth();
 
   const fetchMealData = async (selectedMonth) => {
+    console.log("Fetching meal data for month:", selectedMonth);
     if (!selectedMonth) {
       console.log("No month provided, skipping fetch");
       return;
@@ -122,7 +128,7 @@ const MealCountMonth = () => {
         </h2>
         <SingleMonthYearPicker
             value={month}
-            onChange={handleMonthChange}
+            onChange={(newMonth) => setMonth(newMonth)}
             collections={["individualMeals"]}
           />
       </div>

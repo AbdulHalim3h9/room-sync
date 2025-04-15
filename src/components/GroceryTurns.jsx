@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
-import { useMonth } from "@/App";
 
 const GroceriesSpendings = () => {
-  const { month, setMonth } = useMonth();
+  const [month, setMonth] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+    return `${year}-${monthNum}`;
+  });
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +60,7 @@ const GroceriesSpendings = () => {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     console.log("Fetching expenses for month:", month);
     fetchExpenses(month);
@@ -109,7 +113,7 @@ const GroceriesSpendings = () => {
         </h2>
         <SingleMonthYearPicker
           value={month}
-          onChange={handleMonthChange}
+          onChange={(newMonth) => setMonth(newMonth)}
           collections={["expenses"]}
         />
       </div>

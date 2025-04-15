@@ -1,9 +1,14 @@
-import React from "react";
+import React, { useEffect, useContext } from "react";
+import { MembersContext } from "../../contexts/MembersContext"; // Adjust the path as necessary
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreditChart from "../CreditChart";
 import MealCountMonth from "../MealCountMonth";
 
-const TabSwitcherMealChart = ({ members }) => {
+const TabSwitcherMealChart = () => {
+  const { members, loading, error } = React.useContext(MembersContext);
+  useEffect(() => {
+    console.log("Members in TabSwitcherMealChart:", members);
+  }, [members]);
   return (
     <div>
       <Tabs defaultValue="chart">

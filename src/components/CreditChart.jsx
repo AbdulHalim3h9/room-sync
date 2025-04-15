@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
   BarChart,
@@ -12,25 +12,52 @@ import {
   CartesianGrid,
 } from "recharts";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/firebase"; // Adjust path as per your project structure
-import { useMonth } from "@/App"; // Import MonthContext hook
-import SingleMonthYearPicker from "./SingleMonthYearPicker"; // Adjust path as needed
+import { db } from "@/firebase";
+import { MembersContext } from "@/contexts/MembersContext"; // Adjust path as needed
+import SingleMonthYearPicker from "./SingleMonthYearPicker";
+import { debounce } from "lodash";
 
-const CreditChart = ({ members }) => {
-  const { memberId } = useParams(); // URL param for member ID
-  const { month, setMonth } = useMonth(); // Get month and setMonth from context
+const CreditChart = () => {
+  
+    const [month, setMonth] = useState(() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+      return `${year}-${monthNum}`;
+    });
+  const { memberId } = useParams();
+  const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
+  const [month, setMonth] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+    return `${year}-${monthNum}`;
+  });
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Find member by memberId from the members prop
-  const member = members.find((m) => m.memberId === memberId);
+  const member = Array.isArray(members)
+    ? members.find((m) => m.memberId === memberId)
+    : null;
+
+  const handleMonthChange = useCallback(
+    debounce((newMonth) => {
+      console.log("Selected new month in CreditChart:", newMonth);
+      setMonth(newMonth);
+    }, 300),
+    []
+  );
 
   useEffect(() => {
     const fetchCreditData = async () => {
-      console.log(month)
-      if (!month || !memberId || !member) {
-        console.log("Missing month, memberId, or member data, skipping fetch");
+      console.log("Month:", month, "MemberId:", memberId, "Members:", members);
+      if (!month || !memberId || !member || !Array.isArray(members)) {
+        console.log("Missing required data, skipping fetch");
+        setChartData([
+          { name: "Contribution", contributed: 0 },
+          { name: "Consumption", consumed: 0 },
+        ]);
         setLoading(false);
         return;
       }
@@ -39,11 +66,10 @@ const CreditChart = ({ members }) => {
       setError(null);
 
       try {
-        // Use member's fullname to match contributionConsumption document
-        const docId = `${month}-${member.memberName}`; // e.g., "2025-04-Abdul Halim Khan"
+        const docId = `${month}-${member.memberName}`;
         const docRef = doc(db, "contributionConsumption", docId);
         const docSnap = await getDoc(docRef);
-        console.log("docSnapData",docSnap.data())
+        console.log("docSnapData", docSnap.data());
         if (docSnap.exists()) {
           const data = docSnap.data();
           setChartData([
@@ -77,15 +103,44 @@ const CreditChart = ({ members }) => {
     };
 
     fetchCreditData();
-  }, [month, memberId, member]); // Re-fetch when month, memberId, or member changes
+  }, [month, memberId, members]);
 
-  const handleMonthChange = (newMonth) => {
-    console.log("Selected new month in CreditChart:", newMonth);
-    setMonth(newMonth); // Update the context month
-  };
+  useEffect(() => {
+    return () => {
+      handleMonthChange.cancel();
+    };
+  }, [handleMonthChange]);
+
+  if (membersLoading) {
+    return (
+      <div className="text-center text-gray-600">
+        Loading members data...
+      </div>
+    );
+  }
+
+  if (membersError) {
+    return (
+      <div className="text-center text-red-500">
+        {membersError}
+      </div>
+    );
+  }
+
+  if (!members || !Array.isArray(members)) {
+    return (
+      <div className="text-center text-gray-600">
+        No members data available.
+      </div>
+    );
+  }
 
   if (!member) {
-    return <div className="text-center text-gray-600">Loading member data...</div>;
+    return (
+      <div className="text-center text-gray-600">
+        Member not found.
+      </div>
+    );
   }
 
   if (loading) {
@@ -112,8 +167,8 @@ const CreditChart = ({ members }) => {
   }
 
   console.log("Chart data:", chartData);
-  const contribution = chartData[0].contributed;
-  const consumption = chartData[1].consumed;
+  const contribution = chartData[0]?.contributed || 0;
+  const consumption = chartData[1]?.consumed || 0;
   const balance = contribution - consumption;
 
   return (
@@ -130,10 +185,10 @@ const CreditChart = ({ members }) => {
           </h3>
         </div>
         <SingleMonthYearPicker
-            value={month || defaultMonth}
-            onChange={handleMonthChange}
-            collections={["contributionConsumption"]}
-          />
+          value={month}
+          onChange={(newMonth) => setMonth(newMonth)}
+          collections={["contributionConsumption"]}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -144,36 +199,36 @@ const CreditChart = ({ members }) => {
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fill: '#4B5563' }}
-                axisLine={{ stroke: '#E5E7EB' }}
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "#4B5563" }}
+                axisLine={{ stroke: "#E5E7EB" }}
               />
               <YAxis
-                tick={{ fill: '#4B5563' }}
-                axisLine={{ stroke: '#E5E7EB' }}
+                tick={{ fill: "#4B5563" }}
+                axisLine={{ stroke: "#E5E7EB" }}
                 tickFormatter={(value) => `${value} tk`}
               />
-              <Tooltip 
-                formatter={(value) => [`${value} tk`, '']}
+              <Tooltip
+                formatter={(value) => [`${value} tk`, ""]}
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  border: "1px solid #E5E7EB",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
               />
               <Legend />
               <ReferenceLine y={0} stroke="#E5E7EB" />
-              <Bar 
-                dataKey="contributed" 
-                fill="#4F46E5" 
+              <Bar
+                dataKey="contributed"
+                fill="#4F46E5"
                 radius={[4, 4, 0, 0]}
                 name="Contribution"
               />
-              <Bar 
-                dataKey="consumed" 
-                fill="#10B981" 
+              <Bar
+                dataKey="consumed"
+                fill="#10B981"
                 radius={[4, 4, 0, 0]}
                 name="Consumption"
               />
@@ -198,7 +253,11 @@ const CreditChart = ({ members }) => {
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Balance</span>
-                <span className={`text-xl font-semibold ${balance >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
+                <span
+                  className={`text-xl font-semibold ${
+                    balance >= 0 ? "text-indigo-600" : "text-red-500"
+                  }`}
+                >
                   {balance} tk
                 </span>
               </div>

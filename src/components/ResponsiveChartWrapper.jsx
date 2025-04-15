@@ -12,7 +12,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
-import { useMonth } from "@/App";
 import { db } from "@/firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,7 +81,13 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function ResponsiveChartWrapper() {
-  const { month, setMonth } = useMonth();
+  
+    const [month, setMonth] = useState(() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
+      return `${year}-${monthNum}`;
+    });
   const [data, setData] = useState([]);
   const [mealRate, setMealRate] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -248,7 +253,7 @@ const handleMonthChange = (newMonth) => {
             <div className="flex justify-center sm:justify-end">
               <SingleMonthYearPicker
                 value={month}
-                onChange={handleMonthChange}
+                onChange={(newMonth) => setMonth(newMonth)}
                 collections={["contributionConsumption", "individualMeals"]}
               />
             </div>

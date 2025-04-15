@@ -119,37 +119,37 @@ export function AppSidebar() {
     {
       label: "Add Grocery Spendings",
       path: "/add-grocery-spendings",
-      icon: <ShoppingBasket className="mr-2 h-4 w-4" />,
+      icon: <ShoppingBasket className="mr-2 h-6 w-6" />,
     },
     {
       label: "Add Meal Fund",
       path: "/add-meal-fund",
-      icon: <HandHelping className="mr-2 h-4 w-4" />,
+      icon: <HandHelping className="mr-2 h-6 w-6" />,
     },
     {
       label: "Set Payables",
       path: "/set-payables",
-      icon: <Banknote className="mr-2 h-4 w-4" />,
+      icon: <Banknote className="mr-2 h-6 w-6" />,
     },
     {
       label: "Set Daily Meal Count",
       path: "/set-daily-meal-count",
-      icon: <UserRoundPen className="mr-2 h-4 w-4" />,
+      icon: <UserRoundPen className="mr-2 h-6 w-6" />,
     },
     {
       label: "Manage Members",
       path: "/members",
-      icon: <UsersRound className="mr-2 h-4 w-4" />,
+      icon: <UsersRound className="mr-2 h-6 w-6" />,
     },
     ...(isAdmin ? [{
       label: "Register Member",
       path: "/register-member",
-      icon: <UsersRound className="mr-2 h-4 w-4" />,
+      icon: <UsersRound className="mr-2 h-6 w-6" />,
     }] : []),
   ];
 
   return (
-    <Sidebar className="fixed z-[999] w-68 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
+    <Sidebar className="fixed z-50 w-68 bg-white border-r border-gray-200 shadow-sm [&>div]:bg-white">
       <SidebarContent className="flex flex-col h-full bg-white">
         {/* Brand Section */}
         <div className="p-6 border-b border-gray-200">
@@ -174,17 +174,13 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <button
                       onClick={() => handleNavigate(item.path)}
-                      className={`flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200 ${
+                      className={`flex items-center w-full px-4 py-6 rounded-lg transition-all duration-200 ${
                         location.pathname === item.path
                           ? "bg-blue-50 text-blue-600"
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`p-2 rounded-md ${
-                        location.pathname === item.path
-                          ? "bg-blue-100"
-                          : "bg-gray-100"
-                      }`}>
+                      <div>
                         {item.icon}
                       </div>
                       <span className="ml-3 font-medium">{item.label}</span>
@@ -198,11 +194,9 @@ export function AppSidebar() {
                   <div className="flex items-center justify-between w-full">
                     <button
                       onClick={handleCallKhala}
-                      className="flex items-center w-full px-2 py-3 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50"
+                      className="flex items-center w-full px-2 py-6 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50"
                     >
-                      <div className="p-2 rounded-md bg-gray-100">
-                        <PhoneOutgoing className="mr-2 h-4 w-4" />
-                      </div>
+                        <PhoneOutgoing className="mr-2 h-6 w-6" />
                       <span className="ml-5 font-medium">Call Khala</span>
                     </button>
 

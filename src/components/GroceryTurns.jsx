@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 
 const GroceriesSpendings = () => {
@@ -26,50 +26,51 @@ const GroceriesSpendings = () => {
   };
 
   const fetchExpenses = async (monthString) => {
-    if (!monthString) {
-      console.log("No month provided, skipping fetch");
+    if (!monthString || !/^\d{4}-\d{2}$/.test(monthString)) {
+      console.log("Invalid month format, skipping fetch");
+      setExpenses([]);
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      const expensesCollection = collection(db, "expenses");
-      const snapshot = await getDocs(expensesCollection);
-      const allExpenses = snapshot.docs.map((doc) => ({
+      const expensesRef = collection(db, "expenses", monthString, "expenses");
+      const snapshot = await getDocs(expensesRef);
+      const expensesData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      const [year, monthNum] = monthString.split("-");
-      const monthIndex = parseInt(monthNum) - 1; // Convert to 0-based index
-      const monthDate = new Date(parseInt(year), monthIndex, 1);
+      // Fetch shopper full names
+      const expensesWithShopperNames = await Promise.all(
+        expensesData.map(async (expense) => {
+          if (expense.shopper) {
+            const memberRef = doc(db, "members", expense.shopper);
+            const memberDoc = await getDoc(memberRef);
+            return {
+              ...expense,
+              shopperName: memberDoc.exists() ? memberDoc.data().fullname : "Unknown",
+            };
+          }
+          return { ...expense, shopperName: null };
+        })
+      );
 
-      const filteredExpenses = allExpenses.filter((expense) => {
-        const expenseDate = new Date(expense.date);
-        return (
-          expenseDate.getMonth() === monthDate.getMonth() &&
-          expenseDate.getFullYear() === monthDate.getFullYear()
-        );
-      });
-      setExpenses(filteredExpenses);
-      console.log("Fetched expenses for", monthString, ":", filteredExpenses);
-      setLoading(false);
+      setExpenses(expensesWithShopperNames);
+      console.log("Fetched expenses for", monthString, ":", expensesWithShopperNames);
     } catch (error) {
       console.error("Error fetching expenses:", error);
+      setExpenses([]);
+    } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     console.log("Fetching expenses for month:", month);
     fetchExpenses(month);
   }, [month]);
-
-  const handleMonthChange = (newMonth) => {
-    console.log("Month changed to:", newMonth);
-    setMonth(newMonth); // Update the context with "YYYY-MM" format
-  };
 
   const totalSpending = expenses.reduce(
     (total, expense) => total + parseFloat(expense.amountSpent || 0),
@@ -113,7 +114,7 @@ const GroceriesSpendings = () => {
         </h2>
         <SingleMonthYearPicker
           value={month}
-          onChange={(newMonth) => setMonth(newMonth)}
+          onChange={setMonth}
           collections={["expenses"]}
         />
       </div>
@@ -127,7 +128,7 @@ const GroceriesSpendings = () => {
                 {expense.expenseTitle || expense.expenseType}
               </span>
               <span className="text-sm sm:text-base">
-                {expense.shopper ? `by ${expense.shopper}` : ``}
+                {expense.shopperName ? `by ${expense.shopperName}` : ``}
               </span>
               <span className="text-right text-sm sm:text-base">{expense.amountSpent}tk</span>
             </div>

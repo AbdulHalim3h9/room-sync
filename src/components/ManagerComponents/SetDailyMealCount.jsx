@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import DatePickerMealCount from "./DatePickerMealCount";
 import { db } from "@/firebase";
-import { doc, getDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, date, members, mealCounts }) => {
@@ -66,13 +66,43 @@ const DailyMealForm = () => {
 
   const fetchMembersAndDates = useCallback(async () => {
     try {
+      const selectedMonth = format(selectedDate, "yyyy-MM");
       const membersRef = collection(db, "members");
-      const q = query(membersRef, where("status", "==", "active"));
-      const querySnapshot = await getDocs(q);
-      const membersData = querySnapshot.docs.map((doc) => ({
-        id: doc.data().id,
-        name: doc.data().fullname,
-      }));
+      const querySnapshot = await getDocs(membersRef);
+      const membersData = querySnapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          if (!data.id || !data.fullname) {
+            console.warn(`Invalid member data in doc ${doc.id}:`, data);
+            return null;
+          }
+          return {
+            id: data.id,
+            name: data.fullname,
+            activeFrom: data.activeFrom,
+            archiveFrom: data.archiveFrom,
+          };
+        })
+        .filter((member) => {
+          if (!member || !member.activeFrom) return false;
+          const activeFromDate = new Date(member.activeFrom + "-01");
+          const selectedMonthDate = new Date(selectedMonth + "-01");
+          if (activeFromDate > selectedMonthDate) return false;
+          if (member.archiveFrom) {
+            const archiveFromDate = new Date(member.archiveFrom + "-01");
+            return selectedMonthDate < archiveFromDate;
+          }
+          return true;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (membersData.length === 0) {
+        toast({
+          title: "No Active Members",
+          description: `No members are active for ${selectedMonth}.`,
+          variant: "destructive",
+        });
+      }
 
       setMembers(membersData);
       setMealCounts(
@@ -81,23 +111,30 @@ const DailyMealForm = () => {
 
       const individualMealsRef = collection(db, "individualMeals");
       const mealDocs = await getDocs(individualMealsRef);
-      const dates = [];
+      const dates = new Set();
 
-      mealDocs.forEach((doc) => {
-        const data = doc.data();
-        const month = doc.id;
-        Object.values(data.mealCounts).forEach((meals) => {
+      for (const monthDoc of mealDocs.docs) {
+        const month = monthDoc.id;
+        if (!/^\d{4}-\d{2}$/.test(month)) {
+          console.log(`Skipping invalid month: ${month}`);
+          continue;
+        }
+        const data = monthDoc.data();
+        Object.values(data.mealCounts || {}).forEach((meals) => {
           meals.forEach((entry) => {
             if (!entry.startsWith("Total")) {
               const [day] = entry.split(" ");
               const dateStr = `${month}-${day.padStart(2, "0")}`;
-              dates.push(new Date(dateStr));
+              const date = new Date(dateStr);
+              if (!isNaN(date.getTime())) {
+                dates.add(date.getTime());
+              }
             }
           });
         });
-      });
+      }
 
-      setDatesWithData(dates);
+      setDatesWithData(Array.from(dates).map((time) => new Date(time)));
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -106,7 +143,7 @@ const DailyMealForm = () => {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [selectedDate, toast]);
 
   const fetchMealCounts = useCallback(async () => {
     try {
@@ -155,7 +192,7 @@ const DailyMealForm = () => {
 
   const handleInputChange = (e, memberId) => {
     const value = e.target.value;
-    if (!isNaN(value) && parseInt(value) >= 0) {
+    if (value === "" || (!isNaN(value) && parseInt(value) >= 0)) {
       setMealCounts((prev) => ({ ...prev, [memberId]: value }));
     }
   };
@@ -283,6 +320,7 @@ const DailyMealForm = () => {
         const memberName = member.name;
         const totalMeals = memberTotals[memberId] || 0;
         const consumption = totalMeals * parseFloat(mealRate);
+        console.log("consumption",consumption);
 
         const contribConsumpDocId = `${month}-${memberName}`;
         const contribConsumpRef = doc(db, "contributionConsumption", contribConsumpDocId);

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -13,20 +15,17 @@ import {
 } from "recharts";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
-import { MembersContext } from "@/contexts/MembersContext"; // Adjust path as needed
+import { MembersContext } from "@/contexts/MembersContext";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { debounce } from "lodash";
 
 const CreditChart = () => {
-  
-    const [month, setMonth] = useState(() => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-      return `${year}-${monthNum}`;
-    });
   const { memberId } = useParams();
   const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
+  const [month, setMonth] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,67 +36,87 @@ const CreditChart = () => {
 
   const handleMonthChange = useCallback(
     debounce((newMonth) => {
-      console.log("Selected new month in CreditChart:", newMonth);
       setMonth(newMonth);
     }, 300),
     []
   );
 
-  useEffect(() => {
-    const fetchCreditData = async () => {
-      console.log("Month:", month, "MemberId:", memberId, "Members:", members);
-      if (!month || !memberId || !member || !Array.isArray(members)) {
-        console.log("Missing required data, skipping fetch");
+  const fetchCreditData = useCallback(async () => {
+    if (!month || !memberId || !member || !Array.isArray(members)) {
+      setChartData([
+        { name: "Contribution", contributed: 0 },
+        { name: "Consumption", consumed: 0 },
+      ]);
+      setLoading(false);
+      return;
+    }
+
+    // Verify member is active for the selected month
+    const activeFromDate = new Date(member.activeFrom + "-01");
+    const selectedMonthDate = new Date(month + "-01");
+    if (activeFromDate > selectedMonthDate) {
+      setChartData([
+        { name: "Contribution", contributed: 0 },
+        { name: "Consumption", consumed: 0 },
+      ]);
+      setError(`Member not active in ${month}.`);
+      setLoading(false);
+      return;
+    }
+    if (member.archiveFrom) {
+      const archiveFromDate = new Date(member.archiveFrom + "-01");
+      if (selectedMonthDate >= archiveFromDate) {
         setChartData([
           { name: "Contribution", contributed: 0 },
           { name: "Consumption", consumed: 0 },
         ]);
+        setError(`Member archived in ${month}.`);
         setLoading(false);
         return;
       }
+    }
 
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        const docId = `${month}-${member.memberName}`;
-        const docRef = doc(db, "contributionConsumption", docId);
-        const docSnap = await getDoc(docRef);
-        console.log("docSnapData", docSnap.data());
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setChartData([
-            {
-              name: "Contribution",
-              contributed: data.contribution || 0,
-            },
-            {
-              name: "Consumption",
-              consumed: data.consumption || 0,
-            },
-          ]);
-          console.log("Fetched credit data:", data);
-        } else {
-          setChartData([
-            { name: "Contribution", contributed: 0 },
-            { name: "Consumption", consumed: 0 },
-          ]);
-          console.log("No contribution/consumption data found for:", docId);
-        }
-      } catch (err) {
-        console.error("Error fetching credit data:", err);
-        setError("Failed to load credit data.");
+    try {
+      const docId = `${month}-${member.memberName}`;
+      const docRef = doc(db, "contributionConsumption", docId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setChartData([
+          {
+            name: "Contribution",
+            contributed: data.contribution || 0,
+          },
+          {
+            name: "Consumption",
+            consumed: data.consumption || 0,
+          },
+        ]);
+      } else {
         setChartData([
           { name: "Contribution", contributed: 0 },
           { name: "Consumption", consumed: 0 },
         ]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching credit data:", err);
+      setError("Failed to load credit data.");
+      setChartData([
+        { name: "Contribution", contributed: 0 },
+        { name: "Consumption", consumed: 0 },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [month, memberId, member, members]);
 
+  useEffect(() => {
+    console.log("chartdata" + chartData[1]?.consumed);
     fetchCreditData();
-  }, [month, memberId, members]);
+  }, [fetchCreditData]);
 
   useEffect(() => {
     return () => {
@@ -160,7 +179,6 @@ const CreditChart = () => {
     return <div className="text-center text-red-500">{error}</div>;
   }
 
-  console.log("Chart data:", chartData);
   const contribution = chartData[0]?.contributed || 0;
   const consumption = chartData[1]?.consumed || 0;
   const balance = contribution - consumption;
@@ -180,7 +198,7 @@ const CreditChart = () => {
         </div>
         <SingleMonthYearPicker
           value={month}
-          onChange={(newMonth) => setMonth(newMonth)}
+          onChange={handleMonthChange}
           collections={["contributionConsumption"]}
         />
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -13,17 +13,17 @@ import {
 } from "recharts";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { db } from "@/firebase";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatusCard from "./dashboard/status-card";
-
+import { MembersContext } from "@/contexts/MembersContext";
+import { MonthContext } from "@/contexts/MonthContext";
 
 const CustomizedDot = (props) => {
   const { cx, cy, value, payload } = props;
   const difference = payload.given - payload.eaten;
   const color = difference > 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-1))";
-
 
   return (
     <svg
@@ -38,8 +38,8 @@ const CustomizedDot = (props) => {
       <path
         d={
           difference > 0
-            ? "M512 1009.984c-274.912 0-497.76-222.848-497.76-497.76s222.848-497.76 497.76-497.76c274.912 0 497.76 222.848 497.76 497.76s-222.848 497.76-497.76 497.76zM340.768 295.936c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM686.176 296.704c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM772.928 555.392c-18.752-8.864-40.928-0.576-49.632 18.528-40.224 88.576-120.256 143.552-208.832 143.552-85.952 0-164.864-52.64-205.952-137.376-9.184-18.912-31.648-26.592-50.08-17.28-18.464 9.408-21.216 21.472-15.936 32.64 52.8 111.424 155.232 186.784 269.76 186.784 117.984 0 217.12-70.944 269.76-186.784 8.672-19.136 9.568-31.2-9.12-40.096z" // Smiling face
-            : "M517.12 53.248q95.232 0 179.2 36.352t145.92 98.304 98.304 145.92 36.352 179.2-36.352 179.2-98.304 145.92-145.92 98.304-179.2 36.352-179.2-36.352-145.92-98.304-98.304-145.92-36.352-179.2 36.352-179.2 98.304-145.92 145.92-98.304 179.2-36.352zM663.552 261.12q-15.36 0-28.16 6.656t-23.04 18.432-15.872 27.648-5.632 33.28q0 35.84 21.504 61.44t51.2 25.6 51.2-25.6 21.504-61.44q0-17.408-5.632-33.28t-15.872-27.648-23.04-18.432-28.16-6.656zM373.76 261.12q-29.696 0-50.688 25.088t-20.992 60.928 20.992 61.44 50.688 25.6 50.176-25.6 20.48-61.44-20.48-60.928-50.176-25.088zM520.192 602.112q-51.2 0-97.28 9.728t-82.944 27.648-62.464 41.472-35.84 51.2q-1.024 1.024-1.024 2.048-1.024 3.072-1.024 8.704t2.56 11.776 7.168 11.264 12.8 6.144q25.6-27.648 62.464-50.176 31.744-19.456 79.36-35.328t114.176-15.872q67.584 0 116.736 15.872t81.92 35.328q37.888 22.528 63.488 50.176 17.408-5.12 19.968-18.944t0.512-18.944-3.072-7.168-1.024-3.072q-26.624-55.296-100.352-88.576t-176.128-33.28z" // Frowning face
+            ? "M512 1009.984c-274.912 0-497.76-222.848-497.76-497.76s222.848-497.76 497.76-497.76c274.912 0 497.76 222.848 497.76 497.76s-222.848 497.76-497.76 497.76zM340.768 295.936c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM686.176 296.704c-39.488 0-71.52 32.8-71.52 73.248s32.032 73.248 71.52 73.248c39.488 0 71.52-32.8 71.52-73.248s-32.032-73.248-71.52-73.248zM772.928 555.392c-18.752-8.864-40.928-0.576-49.632 18.528-40.224 88.576-120.256 143.552-208.832 143.552-85.952 0-164.864-52.64-205.952-137.376-9.184-18.912-31.648-26.592-50.08-17.28-18.464 9.408-21.216 21.472-15.936 32.64 52.8 111.424 155.232 186.784 269.76 186.784 117.984 0 217.12-70.944 269.76-186.784 8.672-19.136 9.568-31.2-9.12-40.096z"
+            : "M517.12 53.248q95.232 0 179.2 36.352t145.92 98.304 98.304 145.92 36.352 179.2-36.352 179.2-98.304 145.92-145.92 98.304-179.2 36.352-179.2-36.352-145.92-98.304-98.304-145.92-36.352-179.2 36.352-179.2 98.304-145.92 145.92-98.304 179.2-36.352zM663.552 261.12q-15.36 0-28.16 6.656t-23.04 18.432-15.872 27.648-5.632 33.28q0 35.84 21.504 61.44t51.2 25.6 51.2-25.6 21.504-61.44q0-17.408-5.632-33.28t-15.872-27.648-23.04-18.432-28.16-6.656zM373.76 261.12q-29.696 0-50.688 25.088t-20.992 60.928 20.992 61.44 50.688 25.6 50.176-25.6 20.48-61.44-20.48-60.928-50.176-25.088zM520.192 602.112q-51.2 0-97.28 9.728t-82.944 27.648-62.464 41.472-35.84 51.2q-1.024 1.024-1.024 2.048-1.024 3.072-1.024 8.704t2.56 11.776 7.168 11.264 12.8 6.144q25.6-27.648 62.464-50.176 31.744-19.456 79.36-35.328t114.176-15.872q67.584 0 116.736 15.872t81.92 35.328q37.888 22.528 63.488 50.176 17.408-5.12 19.968-18.944t0.512-18.944-3.072-7.168-1.024-3.072q-26.624-55.296-100.352-88.576t-176.128-33.28z"
         }
       />
     </svg>
@@ -81,70 +81,27 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function ResponsiveChartWrapper() {
-  
-    const [month, setMonth] = useState(() => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-      return `${year}-${monthNum}`;
-    });
+  const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
+  const { month, setMonth } = React.useContext(MonthContext);
   const [data, setData] = useState([]);
   const [mealRate, setMealRate] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  
-const handleMonthChange = (newMonth) => {
-  console.log("Selected new month in CreditChart:", newMonth);
-  setMonth(newMonth); // Update the context month
-};
-  // const [monthsWithData, setMonthsWithData] = useState([]);
-
-  // Fetch months with data from relevant collections
-  useEffect(() => {
-    const fetchMonthsWithData = async () => {
-      try {
-        const collections = [
-          "individualMeals",
-          "expenses",
-          "contributionConsumption",
-          "payables",
-          "meal_funds",
-        ];
-        const monthsSet = new Set();
-
-        for (const coll of collections) {
-          let months = [];
-          if (coll === "expenses" || coll === "contributionConsumption") {
-            // For collections with documents not keyed by month
-            const snapshot = await getDocs(collection(db, coll));
-            snapshot.forEach((doc) => {
-              const data = doc.data();
-              if (data.month) {
-                months.push(data.month); // e.g., "2025-04"
-              } else if (data.date) {
-                const date = new Date(data.date);
-                const year = date.getFullYear();
-                const monthNum = String(date.getMonth() + 1).padStart(2, "0");
-                months.push(`${year}-${monthNum}`);
-              }
-            });
-          } else {
-            // For collections with documents keyed by month (e.g., "2025-04")
-            const snapshot = await getDocs(collection(db, coll));
-            months = snapshot.docs.map((doc) => doc.id); // Document ID is the month
-          }
-          months.forEach((m) => monthsSet.add(m));
-        }
-
-        // setMonthsWithData([...monthsSet]);
-      } catch (error) {
-        console.error("Error fetching months with data:", error);
+  // Filter active members for the selected month
+  const activeMembers = useMemo(() => {
+    return members.filter((member) => {
+      if (!member.activeFrom) return false;
+      const activeFromDate = new Date(member.activeFrom + "-01");
+      const selectedMonthDate = new Date(month + "-01");
+      if (activeFromDate > selectedMonthDate) return false;
+      if (member.archiveFrom) {
+        const archiveFromDate = new Date(member.archiveFrom + "-01");
+        return selectedMonthDate < archiveFromDate;
       }
-    };
-
-    fetchMonthsWithData();
-  }, []);
-
+      return true;
+    });
+  }, [members, month]);
+  
   // Fetch meal rate from mealSummaries
   useEffect(() => {
     const fetchMealRate = async () => {
@@ -175,40 +132,29 @@ const handleMonthChange = (newMonth) => {
     fetchMealRate();
   }, [month]);
 
-  // Fetch members and contribution/consumption data
+  // Fetch contribution/consumption data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch active members
-        const membersRef = collection(db, "members");
-        const qMembers = query(membersRef, where("status", "==", "active"));
-        const membersSnapshot = await getDocs(qMembers);
-        const membersData = membersSnapshot.docs.map((doc) => ({
-          id: doc.data().id,
-          shortname: doc.data().shortname,
-          fullname: doc.data().fullname,
-        }));
-
-        // Fetch contribution and consumption data
         const contribConsumpRef = collection(db, "contributionConsumption");
-        const qContrib = query(contribConsumpRef, where("month", "==", month));
-        const contribSnapshot = await getDocs(qContrib);
+        const contribSnapshot = await getDocs(contribConsumpRef);
 
         const contribData = {};
         contribSnapshot.forEach((doc) => {
           const data = doc.data();
-          contribData[data.member] = {
-            contribution: data.contribution || 0,
-            consumption: data.consumption || 0,
-          };
+          if (data.month === month) {
+            contribData[data.member] = {
+              contribution: data.contribution || 0,
+              consumption: data.consumption || 0,
+            };
+          }
         });
 
-        // Combine member data with contribution/consumption
-        const chartData = membersData.map((member) => ({
+        const chartData = activeMembers.map((member) => ({
           name: member.shortname,
-          given: contribData[member.fullname]?.contribution || 0,
-          eaten: contribData[member.fullname]?.consumption || 0,
+          given: contribData[member.memberName]?.contribution || 0,
+          eaten: contribData[member.memberName]?.consumption || 0,
         }));
 
         setData(chartData);
@@ -220,16 +166,14 @@ const handleMonthChange = (newMonth) => {
       }
     };
 
-    fetchData();
-  }, [month]);
-
-  const handleDateChange = (newMonth) => {
-    setMonth(newMonth);
-  };
+    if (activeMembers.length > 0) {
+      fetchData();
+    }
+  }, [month, activeMembers]);
 
   const dueMembers = data.filter((item) => item.given - item.eaten <= 0);
 
-  if (loading) {
+  if (loading || membersLoading) {
     return (
       <div className="container mx-auto p-6 max-w-7xl">
         <Skeleton className="h-8 w-48 mx-auto mb-8" />
@@ -238,6 +182,14 @@ const handleMonthChange = (newMonth) => {
         </div>
         <Skeleton className="h-[40vh] w-full mb-8" />
         <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  if (membersError) {
+    return (
+      <div className="container mx-auto p-6 max-w-7xl text-center text-red-500">
+        {membersError}
       </div>
     );
   }
@@ -253,7 +205,7 @@ const handleMonthChange = (newMonth) => {
             <div className="flex justify-center sm:justify-end">
               <SingleMonthYearPicker
                 value={month}
-                onChange={(newMonth) => setMonth(newMonth)}
+                onChange={setMonth}
                 collections={["contributionConsumption", "individualMeals"]}
               />
             </div>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MembersContext } from "@/contexts/MembersContext";
+import { MonthContext } from "@/contexts/MonthContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,8 +62,22 @@ const NavigateMembers = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { members, loading, error } = React.useContext(MembersContext);
+  const { month } = React.useContext(MonthContext);
 
   const currentMemberId = location.pathname.split("/").pop();
+
+  // Filter active members for the selected month
+  const activeMembers = members.filter((member) => {
+    if (!member.activeFrom) return false;
+    const activeFromDate = new Date(member.activeFrom + "-01");
+    const selectedMonthDate = new Date(month + "-01");
+    if (activeFromDate > selectedMonthDate) return false;
+    if (member.archiveFrom) {
+      const archiveFromDate = new Date(member.archiveFrom + "-01");
+      return selectedMonthDate < archiveFromDate;
+    }
+    return true;
+  });
 
   const toggleVisibility = () => {
     setIsVisible((prev) => !prev);
@@ -114,13 +129,13 @@ const NavigateMembers = () => {
         <div
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2",
-            "flex flex-col gap-3Lua error: attempt to index a nil value transition-all duration-300",
+            "flex flex-col gap-3 transition-all duration-300",
             isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
         >
-          <div className="rounded-2xl p-4">
+          <div className="rounded-2xl p-4 bg-white shadow-lg">
             <div className="flex flex-col gap-3">
-              {members.map((member, index) => {
+              {activeMembers.map((member, index) => {
                 const isSelected = member.memberId === currentMemberId;
                 return (
                   <div

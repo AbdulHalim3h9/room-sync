@@ -1,9 +1,12 @@
+"use client";
+
 import React from "react";
 import NavigateMembers from "./layouts/NavigateMembers";
 import { Routes, Route } from "react-router-dom";
 import TabSwitcherMealChart from "./layouts/TabSwitcherMealChart";
 import ResponsiveChartWrapper from "./ResponsiveChartWrapper";
 import { MembersContext } from "@/contexts/MembersContext";
+import { MonthProvider } from "@/contexts/MonthContext";
 
 const CreditConsumed = () => {
   const { members, loading, error } = React.useContext(MembersContext);
@@ -17,17 +20,19 @@ const CreditConsumed = () => {
   }
 
   return (
-    <div>
-      <NavigateMembers />
-      <Routes>
-        <Route path="/" element={<ResponsiveChartWrapper />} />
-        <Route
-          path=":memberId"
-          element={<TabSwitcherMealChart members={members} />}
-        />
-      </Routes>
-    </div>
+    <MonthProvider>
+      <div>
+        <NavigateMembers />
+        <Routes>
+          <Route path="/" element={<ResponsiveChartWrapper />} />
+          <Route
+            path=":memberId"
+            element={<TabSwitcherMealChart members={members} />}
+          />
+        </Routes>
+      </div>
+    </MonthProvider>
   );
 };
 
-export default CreditConsumed;
+export default CreditConsumed;  

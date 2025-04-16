@@ -13,26 +13,22 @@ import {
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
+import { MembersContext } from "@/contexts/MembersContext";
 
 const MealCountMonth = () => {
-  
-    const [month, setMonth] = useState(() => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-      return `${year}-${monthNum}`;
-    });
+  const { memberId } = useParams();
+  const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
+  const [month, setMonth] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [mealData, setMealData] = useState([]);
-  const { memberId } = useParams();
 
   const fetchMealData = async (selectedMonth) => {
-    console.log("Fetching meal data for month:", selectedMonth);
     if (!selectedMonth) {
-      console.log("No month provided, skipping fetch");
       return;
     }
-    console.log("Fetching data for month:", selectedMonth);
     setIsLoading(true);
     try {
       const docRef = doc(db, "individualMeals", selectedMonth);
@@ -45,10 +41,8 @@ const MealCountMonth = () => {
           meals,
         }));
         setMealData(formattedData);
-        console.log("Fetched meal data:", formattedData);
       } else {
         setMealData([]);
-        console.log("No meal data found for:", selectedMonth);
       }
     } catch (error) {
       console.error("Error fetching meal data:", error);
@@ -58,17 +52,10 @@ const MealCountMonth = () => {
   };
 
   useEffect(() => {
-    console.log("Month in MealCountMonth:", month);
     if (month) fetchMealData(month);
   }, [month]);
 
-  const handleMonthChange = (newMonth) => {
-    console.log("Selected new month:", newMonth);
-    setMonth(newMonth);
-  };
-
   const member = mealData.find((m) => m.memberId === memberId) || mealData[0];
-  console.log("Selected member:", member);
 
   const mealsMap = new Map();
   if (member?.meals) {
@@ -80,7 +67,6 @@ const MealCountMonth = () => {
       }
     });
   }
-  console.log("Meals map:", Object.fromEntries(mealsMap));
 
   const firstHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) <= 16 || day === "Total"));
   const secondHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) > 16));
@@ -101,7 +87,7 @@ const MealCountMonth = () => {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || membersLoading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
@@ -120,6 +106,14 @@ const MealCountMonth = () => {
     );
   }
 
+  if (membersError) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 text-center text-red-500">
+        {membersError}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
@@ -127,10 +121,10 @@ const MealCountMonth = () => {
           Monthly Meal Count
         </h2>
         <SingleMonthYearPicker
-            value={month}
-            onChange={(newMonth) => setMonth(newMonth)}
-            collections={["individualMeals"]}
-          />
+          value={month}
+          onChange={setMonth}
+          collections={["individualMeals"]}
+        />
       </div>
 
       {!member ? (

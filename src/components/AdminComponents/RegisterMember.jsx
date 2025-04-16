@@ -12,8 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { db } from "@/firebase";
-import { collection, addDoc } from "firebase/firestore";
-import { v4 as uuidv4 } from "uuid";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import ActiveMemberMonthYearPicker from "@/components/ActiveMemberMonthYearPicker";
 
@@ -24,7 +23,7 @@ const RegisterMember = () => {
     resident: "",
     phone: "",
     imageUrl: "",
-    activeFrom: "", // New field for activation month
+    activeFrom: "",
   });
   const [error, setError] = useState("");
   const { toast } = useToast();
@@ -55,25 +54,43 @@ const RegisterMember = () => {
     setError("");
 
     // Validate required fields
-    if (!formData.fullname || !formData.resident || !formData.activeFrom) {
-      setError("Full Name, Resident Type, and Active From are required.");
+    if (!formData.fullname || !formData.shortname || !formData.resident || !formData.activeFrom) {
+      setError("Full Name, Short Name, Resident Type, and Active From are required.");
+      toast({
+        title: "Validation Error",
+        description: "Full Name, Short Name, Resident Type, and Active From are required.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const memberId = uuidv4();
-    const newMember = {
-      id: memberId,
-      fullname: formData.fullname,
-      shortname: formData.shortname,
-      resident: formData.resident,
-      phone: formData.phone,
-      imageUrl: formData.imageUrl || "",
-      activeFrom: formData.activeFrom,
-      archiveFrom: null, // Initialize as null
-    };
-
+    // Check if shortname is already taken
     try {
-      await addDoc(collection(db, "members"), newMember);
+      const memberDocRef = doc(db, "members", formData.shortname);
+      const memberDoc = await getDoc(memberDocRef);
+
+      if (memberDoc.exists()) {
+        setError("Short Name is already taken. Please choose a different one.");
+        toast({
+          title: "Error",
+          description: "Short Name is already taken. Please choose a different one.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newMember = {
+        id: formData.shortname,
+        fullname: formData.fullname,
+        shortname: formData.shortname,
+        resident: formData.resident,
+        phone: formData.phone,
+        imageUrl: formData.imageUrl || "",
+        activeFrom: formData.activeFrom,
+        archiveFrom: null,
+      };
+
+      await setDoc(memberDocRef, newMember);
       toast({
         title: "Member Registered",
         description: `${formData.fullname} will be active from ${formData.activeFrom}.`,
@@ -119,7 +136,7 @@ const RegisterMember = () => {
             name="shortname"
             value={formData.shortname}
             onChange={handleChange}
-            placeholder="Enter short name"
+            placeholder="Enter short name (must be unique)"
           />
         </div>
 

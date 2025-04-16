@@ -199,7 +199,7 @@ const AddGrocerySpendings = () => {
     const docId = generateDocumentId(selectedDate);
     const expenseData = {
       amountSpent: parseInt(amountSpent),
-      shopper: selectedShopper || null,
+      shopperId: selectedShopper || null,
       expenseType,
       expenseTitle: expenseType === "other" ? expenseTitle : null,
       date: formattedDate,
@@ -337,7 +337,7 @@ const AddGrocerySpendings = () => {
               <SelectContent>
                 {members.length > 0 ? (
                   members.map((member) => (
-                    <SelectItem key={member.member_id} value={member.member_name}>
+                    <SelectItem key={member.member_id} value={member.member_id}>
                       {member.member_name}
                     </SelectItem>
                   ))

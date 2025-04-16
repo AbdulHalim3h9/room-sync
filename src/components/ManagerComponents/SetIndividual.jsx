@@ -4,16 +4,20 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { db } from "@/firebase";
 import {
   collection,
   getDoc,
   setDoc,
   doc,
-  query,
-  where,
   getDocs,
-  updateDoc,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,7 +25,7 @@ const PayableField = ({ field, fieldIndex, individualIndex, onChange, onRemove }
   <div className="flex items-end gap-4">
     <div className="flex-1 space-y-4">
       <div>
-        <Label htmlFor={`title-${individualIndex}-${fieldIndex}`} className="block mb-1">
+        <Label htmlFor={`title-${individualIndex}-${fieldIndex}`} className="block mb-2 text-sm font-medium text-gray-700">
           Title
         </Label>
         <Input
@@ -31,10 +35,11 @@ const PayableField = ({ field, fieldIndex, individualIndex, onChange, onRemove }
           value={field.title}
           onChange={(e) => onChange(e, fieldIndex)}
           placeholder="Enter title"
+          className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500"
         />
       </div>
       <div>
-        <Label htmlFor={`amount-${individualIndex}-${fieldIndex}`} className="block mb-1">
+        <Label htmlFor={`amount-${individualIndex}-${fieldIndex}`} className="block mb-2 text-sm font-medium text-gray-700">
           Amount
         </Label>
         <Input
@@ -43,8 +48,8 @@ const PayableField = ({ field, fieldIndex, individualIndex, onChange, onRemove }
           type="number"
           value={field.amount}
           onChange={(e) => onChange(e, fieldIndex)}
-          placeholder="Enter amount"
-          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="Enter amount (BDT)"
+          className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </div>
     </div>
@@ -52,6 +57,7 @@ const PayableField = ({ field, fieldIndex, individualIndex, onChange, onRemove }
       type="button"
       onClick={() => onRemove(fieldIndex)}
       variant="destructive"
+      className="rounded-md"
     >
       Remove
     </Button>
@@ -59,25 +65,35 @@ const PayableField = ({ field, fieldIndex, individualIndex, onChange, onRemove }
 );
 
 const IndividualSection = ({ individual, index, activeMembers, onChange, onAddField, onRemoveField }) => (
-  <div className="space-y-4 mb-6 border p-4 rounded-md">
+  <div className="space-y-4 mb-6 border p-4 rounded-md bg-gray-50">
     <div>
-      <Label htmlFor={`member-${index}`} className="block mb-1">
+      <Label htmlFor={`member-${index}`} className="block mb-2 text-sm font-medium text-gray-700">
         Member
       </Label>
-      <select
-        id={`member-${index}`}
-        name="member"
+      <Select
         value={individual.member}
-        onChange={(e) => onChange(e, index)}
-        className="w-full border px-3 py-2 rounded-md"
+        onValueChange={(value) => onChange({ target: { name: "member", value } }, index)}
       >
-        <option value="">Select a member</option>
-        {activeMembers.map((member) => (
-          <option key={member.id} value={member.name}>
-            {member.name}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger
+          id={`member-${index}`}
+          className="w-full rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500"
+        >
+          <SelectValue placeholder="Select a member" />
+        </SelectTrigger>
+        <SelectContent>
+          {activeMembers.length > 0 ? (
+            activeMembers.map((member) => (
+              <SelectItem key={member.id} value={member.name}>
+                {member.name}
+              </SelectItem>
+            ))
+          ) : (
+            <div className="px-4 py-2 text-sm text-gray-500">
+              No active members for this month
+            </div>
+          )}
+        </SelectContent>
+      </Select>
     </div>
     {individual.fields.map((field, fieldIndex) => (
       <PayableField
@@ -88,12 +104,16 @@ const IndividualSection = ({ individual, index, activeMembers, onChange, onAddFi
         onChange={(e, idx) => {
           const updatedIndividuals = [...individual.fields];
           updatedIndividuals[idx][e.target.name] = e.target.value;
-          onChange({ target: { name: 'fields', value: updatedIndividuals } }, index);
+          onChange({ target: { name: "fields", value: updatedIndividuals } }, index);
         }}
         onRemove={(idx) => onRemoveField(index, idx)}
       />
     ))}
-    <Button type="button" onClick={() => onAddField(index)}>
+    <Button
+      type="button"
+      onClick={() => onAddField(index)}
+      className="bg-blue-500 text-white hover:bg-blue-600 rounded-md"
+    >
       Add Field
     </Button>
   </div>
@@ -109,23 +129,47 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
   const fetchActiveMembers = useCallback(async () => {
     try {
       const membersCollectionRef = collection(db, "members");
-      const q = query(membersCollectionRef, where("status", "==", "active"));
-      const querySnapshot = await getDocs(q);
-      const membersList = querySnapshot.docs.map((doc) => ({
-        id: doc.data().id,
-        name: doc.data().fullname,
-        resident: doc.data().resident,
-      }));
+      const querySnapshot = await getDocs(membersCollectionRef);
+      const membersList = querySnapshot.docs
+        .map((doc) => ({
+          id: doc.data().id,
+          name: doc.data().fullname,
+          resident: doc.data().resident,
+          activeFrom: doc.data().activeFrom,
+          archiveFrom: doc.data().archiveFrom,
+        }))
+        .filter((member) => {
+          if (!member.activeFrom) return false;
+          const activeFromDate = new Date(member.activeFrom + "-01");
+          const selectedMonthDate = new Date(selectedMonth + "-01");
+          if (activeFromDate > selectedMonthDate) return false;
+          if (member.archiveFrom) {
+            const archiveFromDate = new Date(member.archiveFrom + "-01");
+            return selectedMonthDate < archiveFromDate;
+          }
+          return true;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
       setActiveMembers(membersList);
+      console.log("Fetched active members for", selectedMonth, ":", membersList);
+      if (membersList.length === 0) {
+        toast({
+          title: "No Active Members",
+          description: `No members are active for ${selectedMonth}.`,
+          variant: "destructive",
+          className: "z-[1002]",
+        });
+      }
     } catch (error) {
       console.error("Error fetching active members:", error);
       toast({
         title: "Error",
         description: "Failed to fetch active members.",
         variant: "destructive",
+        className: "z-[1002]",
       });
     }
-  }, [toast]);
+  }, [selectedMonth, toast]);
 
   useEffect(() => {
     fetchActiveMembers();
@@ -133,7 +177,7 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
 
   const handleIndividualChange = (e, index) => {
     const updatedIndividuals = [...individuals];
-    updatedIndividuals[index][ e.target.name] = e.target.value;
+    updatedIndividuals[index][e.target.name] = e.target.value;
     setIndividuals(updatedIndividuals);
   };
 
@@ -193,6 +237,7 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
         title: "Validation Error",
         description: validationErrors.join(", ") + " is required.",
         variant: "destructive",
+        className: "z-[1002]",
       });
       return;
     }
@@ -230,9 +275,9 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
       await setDoc(docRef, { bills: updatedBills }, { merge: true });
 
       toast({
-        title: "Success!",
-        description: "Individual payables have been successfully set/updated.",
-        variant: "success",
+        title: "Success",
+        description: `Individual payables for ${selectedMonth} have been set.`,
+        className: "z-[1002]",
       });
 
       setIndividuals([{ member: "", fields: [{ title: "", amount: "" }] }]);
@@ -240,15 +285,16 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
       console.error("Error uploading/updating data:", error);
       toast({
         title: "Error",
-        description: "Failed to set/update individual payables. Please try again.",
+        description: "Failed to set individual payables. Please try again.",
         variant: "destructive",
+        className: "z-[1002]",
       });
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6">
-      <h1 className="text-xl font-bold mb-6">
+    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">
         Set Individual Payables for {selectedMonth}
       </h1>
       {individuals.map((individual, index) => (
@@ -263,15 +309,25 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
         />
       ))}
       <div className="mt-4">
-        <Button type="button" onClick={handleAddIndividual} variant="outline">
+        <Button
+          type="button"
+          onClick={handleAddIndividual}
+          variant="outline"
+          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md"
+        >
           Add Another Individual
         </Button>
       </div>
-      <div className="font-bold text-lg mt-6">
-        Total Amount: {calculateTotalAmount()} tk
+      <div className="font-bold text-lg mt-6 text-gray-900">
+        Total Amount: {calculateTotalAmount()} BDT
       </div>
       <div className="mt-6">
-        <Button type="button" onClick={handleSubmit} className="w-full">
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-md"
+          disabled={activeMembers.length === 0}
+        >
           Submit
         </Button>
       </div>

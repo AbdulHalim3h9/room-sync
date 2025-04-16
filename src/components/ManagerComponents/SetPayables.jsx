@@ -4,15 +4,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+// Note: Add @/components/ui/radio-group if available (e.g., via Shadcn UI)
+// import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { db } from "@/firebase";
 import {
   collection,
   getDoc,
   setDoc,
-  query,
-  where,
   getDocs,
-  updateDoc,
   doc,
 } from "firebase/firestore";
 import IndividualPayablesForm from "./SetIndividual";
@@ -23,7 +22,7 @@ const SharedPayablesInputs = ({ formData, onChange }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <Label htmlFor="roomRent" className="block mb-1">
+        <Label htmlFor="roomRent" className="block mb-2 text-sm font-medium text-gray-700">
           Room Rent
         </Label>
         <Input
@@ -31,12 +30,12 @@ const SharedPayablesInputs = ({ formData, onChange }) => (
           type="number"
           value={formData.roomRent}
           onChange={(e) => onChange("roomRent", e.target.value)}
-          placeholder="Enter room rent"
-          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="Enter room rent (BDT)"
+          className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </div>
       <div>
-        <Label htmlFor="diningRent" className="block mb-1">
+        <Label htmlFor="diningRent" className="block mb-2 text-sm font-medium text-gray-700">
           Dining Rent
         </Label>
         <Input
@@ -44,13 +43,13 @@ const SharedPayablesInputs = ({ formData, onChange }) => (
           type="number"
           value={formData.diningRent}
           onChange={(e) => onChange("diningRent", e.target.value)}
-          placeholder="Enter dining rent"
-          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="Enter dining rent (BDT)"
+          className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </div>
     </div>
     <div>
-      <Label htmlFor="serviceCharge" className="block mb-1">
+      <Label htmlFor="serviceCharge" className="block mb-2 text-sm font-medium text-gray-700">
         Service Charge
       </Label>
       <Input
@@ -58,12 +57,12 @@ const SharedPayablesInputs = ({ formData, onChange }) => (
         type="number"
         value={formData.serviceCharge}
         onChange={(e) => onChange("serviceCharge", e.target.value)}
-        placeholder="Enter service charge"
-        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        placeholder="Enter service charge (BDT)"
+        className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
     </div>
     <div>
-      <Label htmlFor="khalasBill" className="block mb-1">
+      <Label htmlFor="khalasBill" className="block mb-2 text-sm font-medium text-gray-700">
         Khala's Bill
       </Label>
       <Input
@@ -71,12 +70,12 @@ const SharedPayablesInputs = ({ formData, onChange }) => (
         type="number"
         value={formData.khalasBill}
         onChange={(e) => onChange("khalasBill", e.target.value)}
-        placeholder="Enter Khala's bill"
-        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        placeholder="Enter Khala's bill (BDT)"
+        className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
     </div>
     <div>
-      <Label htmlFor="utilityBill" className="block mb-1">
+      <Label htmlFor="utilityBill" className="block mb-2 text-sm font-medium text-gray-700">
         Utility Bill
       </Label>
       <Input
@@ -84,8 +83,8 @@ const SharedPayablesInputs = ({ formData, onChange }) => (
         type="number"
         value={formData.utilityBill}
         onChange={(e) => onChange("utilityBill", e.target.value)}
-        placeholder="Enter utility bill"
-        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        placeholder="Enter utility bill (BDT)"
+        className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
     </div>
   </div>
@@ -111,23 +110,47 @@ const PayablesForm = () => {
   const fetchActiveMembers = useCallback(async () => {
     try {
       const membersCollectionRef = collection(db, "members");
-      const q = query(membersCollectionRef, where("status", "==", "active"));
-      const querySnapshot = await getDocs(q);
-      const membersList = querySnapshot.docs.map((doc) => ({
-        id: doc.data().id,
-        name: doc.data().fullname,
-        resident: doc.data().resident,
-      }));
+      const querySnapshot = await getDocs(membersCollectionRef);
+      const membersList = querySnapshot.docs
+        .map((doc) => ({
+          id: doc.data().id,
+          name: doc.data().fullname,
+          resident: doc.data().resident,
+          activeFrom: doc.data().activeFrom,
+          archiveFrom: doc.data().archiveFrom,
+        }))
+        .filter((member) => {
+          if (!member.activeFrom) return false;
+          const activeFromDate = new Date(member.activeFrom + "-01");
+          const selectedMonthDate = new Date(selectedMonth + "-01");
+          if (activeFromDate > selectedMonthDate) return false;
+          if (member.archiveFrom) {
+            const archiveFromDate = new Date(member.archiveFrom + "-01");
+            return selectedMonthDate < archiveFromDate;
+          }
+          return true;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
       setActiveMembers(membersList);
+      console.log("Fetched active members for", selectedMonth, ":", membersList);
+      if (membersList.length === 0) {
+        toast({
+          title: "No Active Members",
+          description: `No members are active for ${selectedMonth}.`,
+          variant: "destructive",
+          className: "z-[1002]",
+        });
+      }
     } catch (error) {
       console.error("Error fetching active members:", error);
       toast({
         title: "Error",
         description: "Failed to fetch active members.",
         variant: "destructive",
+        className: "z-[1002]",
       });
     }
-  }, [toast]);
+  }, [selectedMonth, toast]);
 
   useEffect(() => {
     fetchActiveMembers();
@@ -161,6 +184,7 @@ const PayablesForm = () => {
         title: "Validation Error",
         description: errors.join(", ") + " is required.",
         variant: "destructive",
+        className: "z-[1002]",
       });
       return false;
     }
@@ -210,9 +234,9 @@ const PayablesForm = () => {
       await setDoc(docRef, { bills: updatedBills }, { merge: true });
 
       toast({
-        title: "Success!",
-        description: `Shared payables for ${selectedMonth} have been successfully set/updated.`,
-        variant: "success",
+        title: "Success",
+        description: `Shared payables for ${selectedMonth} have been set.`,
+        className: "z-[1002]",
       });
 
       setFormData({
@@ -227,17 +251,18 @@ const PayablesForm = () => {
       console.error("Error uploading/updating data:", error);
       toast({
         title: "Error",
-        description: "Failed to set/update payables. Please try again.",
+        description: "Failed to set payables. Please try again.",
         variant: "destructive",
+        className: "z-[1002]",
       });
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6">
-      <h1 className="text-xl font-bold mb-6">Add Payables for {selectedMonth}</h1>
+    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">Add Payables for {selectedMonth}</h1>
       <div className="mb-6">
-        <Label htmlFor="monthPicker" className="block mb-1">
+        <Label htmlFor="monthPicker" className="block mb-2 text-sm font-medium text-gray-700">
           Select Month
         </Label>
         <SingleMonthYearPicker
@@ -247,26 +272,28 @@ const PayablesForm = () => {
         />
       </div>
       <div className="mb-6">
-        <label className="mr-4">
-          <input
-            type="radio"
-            value="shared"
-            checked={formType === "shared"}
-            onChange={() => setFormType("shared")}
-            className="mr-2"
-          />
-          Shared Bill
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="individual"
-            checked={formType === "individual"}
-            onChange={() => setFormType("individual")}
-            className="mr-2"
-          />
-          Individual Payables
-        </label>
+        <div className="flex space-x-6">
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              value="shared"
+              checked={formType === "shared"}
+              onChange={() => setFormType("shared")}
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-700">Shared Bill</span>
+          </label>
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              value="individual"
+              checked={formType === "individual"}
+              onChange={() => setFormType("individual")}
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-700">Individual Payables</span>
+          </label>
+        </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         {formType === "shared" ? (
@@ -275,7 +302,11 @@ const PayablesForm = () => {
               formData={formData}
               onChange={handleInputChange}
             />
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-md"
+              disabled={activeMembers.length === 0}
+            >
               Submit
             </Button>
           </>

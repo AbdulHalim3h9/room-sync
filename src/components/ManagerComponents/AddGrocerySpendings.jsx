@@ -4,17 +4,22 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { db } from "@/firebase";
 import {
   collection,
-  addDoc,
   getDocs,
-  query,
-  where,
-  updateDoc,
   doc,
   getDoc,
   setDoc,
+  addDoc,
+  setDoc as firestoreSetDoc,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import DatePickerMealCount from "./DatePickerMealCount";
@@ -25,54 +30,89 @@ const AddGrocerySpendings = () => {
   const [expenseType, setExpenseType] = useState("groceries");
   const [expenseTitle, setExpenseTitle] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [existingDocId, setExistingDocId] = useState(null);
   const [members, setMembers] = useState([]);
-  const [datesWithData, setDatesWithData] = useState([]); // New state for dates with data
-
+  const [datesWithData, setDatesWithData] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchMembersAndDates = async () => {
       try {
-        // Fetch active members
+        // Fetch members active on selectedDate
         const membersRef = collection(db, "members");
-        const q = query(membersRef, where("status", "==", "active"));
-        const querySnapshot = await getDocs(q);
-        const membersData = querySnapshot.docs.map((doc) => ({
-          member_id: doc.data().id,
-          member_name: doc.data().fullname,
-        }));
+        const querySnapshot = await getDocs(membersRef);
+        const membersData = querySnapshot.docs
+          .map((doc) => ({
+            member_id: doc.data().id,
+            member_name: doc.data().fullname,
+            activeFrom: doc.data().activeFrom,
+            archiveFrom: doc.data().archiveFrom,
+          }))
+          .filter((member) => {
+            if (!member.activeFrom) return false;
+            const activeFromDate = new Date(member.activeFrom + "-01");
+            const selectedDateStart = new Date(
+              selectedDate.getFullYear(),
+              selectedDate.getMonth(),
+              selectedDate.getDate()
+            );
+            if (activeFromDate > selectedDateStart) return false;
+            if (member.archiveFrom) {
+              const archiveFromDate = new Date(member.archiveFrom + "-01");
+              return selectedDateStart < archiveFromDate;
+            }
+            return true;
+          })
+          .sort((a, b) => a.member_name.localeCompare(b.member_name));
         setMembers(membersData);
+        console.log("Fetched active members for", selectedDate.toISOString().split("T")[0], ":", membersData);
+        if (membersData.length === 0 && expenseType === "groceries") {
+          toast({
+            title: "No Active Members",
+            description: `No members are active for ${selectedDate.toLocaleDateString()}.`,
+            variant: "destructive",
+            className: "z-[1002]",
+          });
+        }
 
         // Fetch dates with expense data
         const expensesRef = collection(db, "expenses");
         const expenseDocs = await getDocs(expensesRef);
-        const dates = [];
-
-        expenseDocs.forEach((doc) => {
-          const data = doc.data();
-          if (data.date) {
-            const expenseDate = new Date(data.date);
-            // Ensure the date is valid and not in the future
-            if (!isNaN(expenseDate.getTime()) && expenseDate <= new Date()) {
-              dates.push(new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate()));
-            }
+        const dates = new Set();
+        for (const monthDoc of expenseDocs.docs) {
+          const monthId = monthDoc.id; // e.g., "2025-04"
+          // Validate monthId format (YYYY-MM)
+          if (!/^\d{4}-\d{2}$/.test(monthId)) {
+            console.log(`Skipping invalid monthId: ${monthId}`);
+            continue;
           }
-        });
-
-        setDatesWithData(dates);
+          const monthExpensesRef = collection(db, "expenses", monthId, "expenses");
+          const monthDocs = await getDocs(monthExpensesRef);
+          monthDocs.forEach((doc) => {
+            const data = doc.data();
+            if (data.date) {
+              const expenseDate = new Date(data.date);
+              if (!isNaN(expenseDate.getTime()) && expenseDate <= new Date()) {
+                dates.add(
+                  new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate()).getTime()
+                );
+              }
+            }
+          });
+        }
+        setDatesWithData(Array.from(dates).map((time) => new Date(time)));
       } catch (error) {
         console.error("Error fetching data: ", error);
         toast({
           title: "Error",
           description: "Failed to fetch members or expense data.",
           variant: "destructive",
+          className: "z-[1002]",
         });
       }
     };
 
     fetchMembersAndDates();
-  }, [toast]);
+  }, [selectedDate, expenseType, toast]);
 
   const generateDocumentId = (date) => {
     const year = date.getFullYear();
@@ -80,52 +120,10 @@ const AddGrocerySpendings = () => {
     return `${year}-${month}`;
   };
 
-  useEffect(() => {
-    const fetchExpense = async () => {
-      try {
-        const formattedDate = new Date(selectedDate).toISOString().split("T")[0]; // Normalize to YYYY-MM-DD
-        const expensesRef = collection(db, "expenses");
-        const q = query(expensesRef, where("date", ">=", `${formattedDate}T00:00:00.000Z`), where("date", "<=", `${formattedDate}T23:59:59.999Z`));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const doc = querySnapshot.docs[0];
-          const data = doc.data();
-          setExistingDocId(doc.id);
-          setAmountSpent(data.amountSpent.toString());
-          setSelectedShopper(data.shopper || "");
-          setExpenseType(data.expenseType);
-          setExpenseTitle(data.expenseTitle || "");
-        } else {
-          setExistingDocId(null);
-          setAmountSpent("");
-          setSelectedShopper("");
-          setExpenseType("groceries");
-          setExpenseTitle("");
-        }
-      } catch (error) {
-        console.error("Error fetching expense: ", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch existing expense data.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchExpense();
-  }, [selectedDate, toast]);
-
   const saveTotalSpendings = async (month) => {
     try {
-      const expensesRef = collection(db, "expenses");
-      const q = query(
-        expensesRef,
-        where("date", ">=", `${month}-01T00:00:00.000Z`),
-        where("date", "<=", `${month}-31T23:59:59.999Z`)
-      );
-      const querySnapshot = await getDocs(q);
-
+      const expensesRef = collection(db, "expenses", month, "expenses");
+      const querySnapshot = await getDocs(expensesRef);
       const newTotalSpendings = querySnapshot.docs.reduce((sum, doc) => {
         const data = doc.data();
         return sum + (parseInt(data.amountSpent) || 0);
@@ -134,34 +132,32 @@ const AddGrocerySpendings = () => {
       const summaryRef = doc(db, "mealSummaries", month);
       const summarySnap = await getDoc(summaryRef);
       const existingData = summarySnap.exists() ? summarySnap.data() : {};
-      const existingTotalSpendings = existingData.totalSpendings || 0;
       const existingTotalMeals = existingData.totalMealsAllMembers || 0;
-
-      const updatedTotalSpendings = newTotalSpendings; // Use new total to avoid accumulation issues
 
       const mealRate =
         existingTotalMeals > 0
-          ? (updatedTotalSpendings / existingTotalMeals).toFixed(2)
+          ? (newTotalSpendings / existingTotalMeals).toFixed(2)
           : 0;
 
-      await setDoc(
+      await firestoreSetDoc(
         summaryRef,
         {
-          totalSpendings: updatedTotalSpendings,
+          totalSpendings: newTotalSpendings,
           mealRate: parseFloat(mealRate),
           lastUpdated: new Date().toISOString(),
         },
         { merge: true }
       );
     } catch (error) {
-        console.error("Error saving total spendings:", error);
-        toast({
-          title: "Error",
-          description: "Failed to save total spendings or meal rate.",
-          variant: "destructive",
-        });
-      }
-    };
+      console.error("Error saving total spendings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save total spendings or meal rate.",
+        variant: "destructive",
+        className: "z-[1002]",
+      });
+    }
+  };
 
   const validateForm = () => {
     const errors = [];
@@ -185,6 +181,7 @@ const AddGrocerySpendings = () => {
         title: "Validation Error",
         description: errors.join(", ") + " is required.",
         variant: "destructive",
+        className: "z-[1002]",
       });
       return false;
     }
@@ -199,7 +196,8 @@ const AddGrocerySpendings = () => {
     }
 
     const formattedDate = new Date(selectedDate).toISOString();
-    const data = {
+    const docId = generateDocumentId(selectedDate);
+    const expenseData = {
       amountSpent: parseInt(amountSpent),
       shopper: selectedShopper || null,
       expenseType,
@@ -208,65 +206,62 @@ const AddGrocerySpendings = () => {
     };
 
     try {
-      const customDocId = generateDocumentId(selectedDate);
+      // Ensure the parent document exists
+      const monthDocRef = doc(db, "expenses", docId);
+      await firestoreSetDoc(monthDocRef, { createdAt: new Date().toISOString() }, { merge: true });
 
-      if (existingDocId) {
-        const docRef = doc(db, "expenses", existingDocId);
-        await updateDoc(docRef, data);
-        toast({
-          title: "Success!",
-          description: "Expense has been successfully updated.",
-          variant: "success",
-        });
-      } else {
-        const docRef = await addDoc(collection(db, "expenses"), data);
-        setExistingDocId(docRef.id);
-        toast({
-          title: "Success!",
-          description: "Expense has been successfully added.",
-          variant: "success",
-        });
+      const expensesRef = collection(db, "expenses", docId, "expenses");
+      await addDoc(expensesRef, expenseData);
 
-        // Update datesWithData
-        const newDate = new Date(formattedDate);
-        if (!datesWithData.some((d) => d.getTime() === newDate.getTime())) {
-          setDatesWithData((prev) => [
-            ...prev,
-            new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()),
-          ]);
-        }
-      }
+      toast({
+        title: "Success",
+        description: "Expense added successfully.",
+        className: "z-[1002]",
+      });
 
-      await saveTotalSpendings(customDocId);
+      await saveTotalSpendings(docId);
 
-      if (!existingDocId) {
-        setAmountSpent("");
-        setSelectedShopper("");
-        setExpenseType("groceries");
-        setExpenseTitle("");
-        setSelectedDate(new Date());
+      setAmountSpent("");
+      setSelectedShopper("");
+      setExpenseType("groceries");
+      setExpenseTitle("");
+      setSelectedDate(new Date());
+
+      // Update datesWithData
+      const newDate = new Date(formattedDate);
+      if (!datesWithData.some((d) => d.getTime() === newDate.getTime())) {
+        setDatesWithData((prev) => [
+          ...prev,
+          new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()),
+        ]);
       }
     } catch (error) {
-      console.error("Error adding/updating document: ", error);
+      console.error("Error adding document: ", error);
       toast({
         title: "Error",
-        description: "Failed to add/update expense. Please try again.",
+        description: "Failed to add expense. Please try again.",
         variant: "destructive",
+        className: "z-[1002]",
       });
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h1 className="text-xl font-bold mb-6">Add Grocery or Other Expense</h1>
-      <DatePickerMealCount
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        datesWithData={datesWithData} // Pass dates with data
-      />
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">Add Grocery or Other Expense</h1>
+      <div className="mb-6">
+        <Label className="block mb-2 text-sm font-medium text-gray-700">
+          Select Date
+        </Label>
+        <DatePickerMealCount
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          datesWithData={datesWithData}
+        />
+      </div>
 
-      <div className="flex space-x-4 mb-6">
-        <div>
+      <div className="flex space-x-6 mb-6">
+        <label className="flex items-center space-x-2">
           <input
             type="radio"
             id="groceries"
@@ -274,13 +269,13 @@ const AddGrocerySpendings = () => {
             value="groceries"
             checked={expenseType === "groceries"}
             onChange={() => setExpenseType("groceries")}
+            className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
           />
-          <Label htmlFor="groceries" className="ml-2">
+          <Label htmlFor="groceries" className="text-sm font-medium text-gray-700">
             Groceries
           </Label>
-        </div>
-
-        <div>
+        </label>
+        <label className="flex items-center space-x-2">
           <input
             type="radio"
             id="other"
@@ -288,31 +283,32 @@ const AddGrocerySpendings = () => {
             value="other"
             checked={expenseType === "other"}
             onChange={() => setExpenseType("other")}
+            className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
           />
-          <Label htmlFor="other" className="ml-2">
+          <Label htmlFor="other" className="text-sm font-medium text-gray-700">
             Other
           </Label>
-        </div>
+        </label>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <Label htmlFor="amount" className="block mb-1">
+          <Label htmlFor="amount" className="block mb-2 text-sm font-medium text-gray-700">
             Amount Spent
           </Label>
           <Input
             id="amount"
             type="number"
-            placeholder="Enter amount spent"
+            placeholder="Enter amount spent (BDT)"
             value={amountSpent}
             onChange={(e) => setAmountSpent(e.target.value)}
-            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </div>
 
         {expenseType === "other" && (
           <div>
-            <Label htmlFor="title" className="block mb-1">
+            <Label htmlFor="title" className="block mb-2 text-sm font-medium text-gray-700">
               Expense Title
             </Label>
             <Input
@@ -321,37 +317,47 @@ const AddGrocerySpendings = () => {
               placeholder="Enter expense title"
               value={expenseTitle}
               onChange={(e) => setExpenseTitle(e.target.value)}
-              className="w-full"
+              className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500"
             />
           </div>
         )}
 
         {expenseType === "groceries" && (
           <div>
-            <Label htmlFor="shopper" className="block mb-1">
+            <Label htmlFor="shopper" className="block mb-2 text-sm font-medium text-gray-700">
               Shopper
             </Label>
-            <select
-              id="shopper"
-              value={selectedShopper}
-              onChange={(e) => setSelectedShopper(e.target.value)}
-              className="w-full border px-3 py-2 rounded-md"
-            >
-              <option value="">Select a shopper</option>
-              {members.map((member) => (
-                <option key={member.member_id} value={member.member_name}>
-                  {member.member_name}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedShopper} onValueChange={setSelectedShopper}>
+              <SelectTrigger
+                id="shopper"
+                className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500"
+              >
+                <SelectValue placeholder="Select a shopper" />
+              </SelectTrigger>
+              <SelectContent>
+                {members.length > 0 ? (
+                  members.map((member) => (
+                    <SelectItem key={member.member_id} value={member.member_name}>
+                      {member.member_name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-sm text-gray-500">
+                    No active members for this date
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
-        <div>
-          <Button className="w-full" type="submit">
-            {existingDocId ? "Update" : "Submit"}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-md"
+          disabled={expenseType === "groceries" && members.length === 0}
+        >
+          Submit
+        </Button>
       </form>
     </div>
   );

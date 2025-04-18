@@ -247,118 +247,171 @@ const AddGrocerySpendings = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Add Grocery or Other Expense</h1>
-      <div className="mb-6">
-        <Label className="block mb-2 text-sm font-medium text-gray-700">
-          Select Date
-        </Label>
-        <DatePickerMealCount
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          datesWithData={datesWithData}
-        />
-      </div>
-
-      <div className="flex space-x-6 mb-6">
-        <label className="flex items-center space-x-2">
-          <input
-            type="radio"
-            id="groceries"
-            name="expenseType"
-            value="groceries"
-            checked={expenseType === "groceries"}
-            onChange={() => setExpenseType("groceries")}
-            className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
-          />
-          <Label htmlFor="groceries" className="text-sm font-medium text-gray-700">
-            Groceries
-          </Label>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input
-            type="radio"
-            id="other"
-            name="expenseType"
-            value="other"
-            checked={expenseType === "other"}
-            onChange={() => setExpenseType("other")}
-            className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
-          />
-          <Label htmlFor="other" className="text-sm font-medium text-gray-700">
-            Other
-          </Label>
-        </label>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <Label htmlFor="amount" className="block mb-2 text-sm font-medium text-gray-700">
-            Amount Spent
-          </Label>
-          <Input
-            id="amount"
-            type="number"
-            placeholder="Enter amount spent (BDT)"
-            value={amountSpent}
-            onChange={(e) => setAmountSpent(e.target.value)}
-            className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        {/* Header with gradient background */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-6 sm:py-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Add Grocery or Other Expense
+          </h1>
+          <p className="text-blue-100 text-sm mt-1 font-medium">
+            Record expenses for meal management
+          </p>
         </div>
 
-        {expenseType === "other" && (
-          <div>
-            <Label htmlFor="title" className="block mb-2 text-sm font-medium text-gray-700">
-              Expense Title
+        <div className="p-5 sm:p-8">
+          {/* Date Picker Section */}
+          <div className="mb-8">
+            <Label className="block mb-2 text-sm font-semibold text-gray-800">
+              Select Date
             </Label>
-            <Input
-              id="title"
-              type="text"
-              placeholder="Enter expense title"
-              value={expenseTitle}
-              onChange={(e) => setExpenseTitle(e.target.value)}
-              className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+              <DatePickerMealCount
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                datesWithData={datesWithData}
+              />
+            </div>
           </div>
-        )}
 
-        {expenseType === "groceries" && (
-          <div>
-            <Label htmlFor="shopper" className="block mb-2 text-sm font-medium text-gray-700">
-              Shopper
+          {/* Expense Type Selection */}
+          <div className="mb-8">
+            <Label className="block mb-3 text-sm font-semibold text-gray-800">
+              Expense Type
             </Label>
-            <Select value={selectedShopper} onValueChange={setSelectedShopper}>
-              <SelectTrigger
-                id="shopper"
-                className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500"
-              >
-                <SelectValue placeholder="Select a shopper" />
-              </SelectTrigger>
-              <SelectContent>
-                {members.length > 0 ? (
-                  members.map((member) => (
-                    <SelectItem key={member.member_id} value={member.member_id}>
-                      {member.member_name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-sm text-gray-500">
-                    No active members for this date
+            <div className="flex flex-wrap gap-4">
+              <label className="relative flex items-center group">
+                <input
+                  type="radio"
+                  id="groceries"
+                  name="expenseType"
+                  value="groceries"
+                  checked={expenseType === "groceries"}
+                  onChange={() => setExpenseType("groceries")}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-all">
+                  {expenseType === "groceries" && (
+                    <div className="h-2 w-2 rounded-full bg-white"></div>
+                  )}
+                </div>
+                <Label htmlFor="groceries" className="ml-2 text-sm font-medium text-gray-700 peer-checked:text-blue-600 cursor-pointer">
+                  Groceries
+                </Label>
+              </label>
+              <label className="relative flex items-center group">
+                <input
+                  type="radio"
+                  id="other"
+                  name="expenseType"
+                  value="other"
+                  checked={expenseType === "other"}
+                  onChange={() => setExpenseType("other")}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-all">
+                  {expenseType === "other" && (
+                    <div className="h-2 w-2 rounded-full bg-white"></div>
+                  )}
+                </div>
+                <Label htmlFor="other" className="ml-2 text-sm font-medium text-gray-700 peer-checked:text-blue-600 cursor-pointer">
+                  Other Expense
+                </Label>
+              </label>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Amount Spent Field */}
+              <div className="space-y-2">
+                <Label htmlFor="amount" className="block text-sm font-semibold text-gray-800">
+                  Amount Spent
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">৳</span>
                   </div>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={amountSpent}
+                    onChange={(e) => setAmountSpent(e.target.value)}
+                    className="pl-8 h-11 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Enter the total amount spent in BDT</p>
+              </div>
 
-        <Button
-          type="submit"
-          className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-md"
-          disabled={expenseType === "groceries" && members.length === 0}
-        >
-          Submit
-        </Button>
-      </form>
+              {/* Expense Title Field - Only for "Other" type */}
+              {expenseType === "other" && (
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="block text-sm font-semibold text-gray-800">
+                    Expense Title
+                  </Label>
+                  <Input
+                    id="title"
+                    type="text"
+                    placeholder="E.g., Cooking gas, Utilities"
+                    value={expenseTitle}
+                    onChange={(e) => setExpenseTitle(e.target.value)}
+                    className="h-11 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-base shadow-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Briefly describe the expense</p>
+                </div>
+              )}
+
+              {/* Shopper Selection - Only for "Groceries" type */}
+              {expenseType === "groceries" && (
+                <div className="space-y-2">
+                  <Label htmlFor="shopper" className="block text-sm font-semibold text-gray-800">
+                    Shopper
+                  </Label>
+                  <Select value={selectedShopper} onValueChange={setSelectedShopper}>
+                    <SelectTrigger
+                      id="shopper"
+                      className="h-11 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-base shadow-sm"
+                    >
+                      <SelectValue placeholder="Select a shopper" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-lg border-gray-200 shadow-lg">
+                      {members.length > 0 ? (
+                        members.map((member) => (
+                          <SelectItem 
+                            key={member.member_id} 
+                            value={member.member_id}
+                            className="py-2.5 text-base font-medium"
+                          >
+                            {member.member_name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                          No active members for this date
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">Select who purchased the groceries</p>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-50"
+                disabled={expenseType === "groceries" && members.length === 0}
+              >
+                {expenseType === "groceries" ? "Add Grocery Expense" : "Add Other Expense"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

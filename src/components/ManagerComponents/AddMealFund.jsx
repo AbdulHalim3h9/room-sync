@@ -244,69 +244,123 @@ const AddMealFund = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Add Meal Fund</h1>
-      <div className="flex justify-end mb-6">
-        <SingleMonthYearPicker
-          value={month}
-          onChange={(newMonth) => setMonth(newMonth)}
-          collections={["meal_funds"]}
-        />
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <Label htmlFor="donor" className="block mb-2 text-sm font-medium text-gray-700">
-            Donor Name
-          </Label>
-          <Select value={selectedDonor} onValueChange={setSelectedDonor}>
-            <SelectTrigger className="w-full rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500">
-              <SelectValue placeholder="Select a donor" />
-            </SelectTrigger>
-            <SelectContent>
-              {members.length > 0 ? (
-                members.map((member) => (
-                  <SelectItem key={member.member_id} value={member.member_name}>
-                    {member.member_name}
-                  </SelectItem>
-                ))
-              ) : (
-                <div className="px-4 py-2 text-sm text-gray-500">
-                  No active members for {month}
-                </div>
-              )}
-            </SelectContent>
-          </Select>
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        {/* Header with gradient background */}
+        <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-6 sm:py-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Add Meal Fund
+          </h1>
+          <p className="text-green-100 text-sm mt-1 font-medium">
+            Record meal fund contributions from members
+          </p>
         </div>
 
-        {previousAmount > 0 && (
-          <div className="bg-gray-50 p-4 rounded-md text-sm text-gray-700">
-            <strong>Previously Added:</strong> {previousAmount} BDT
+        <div className="p-5 sm:p-8">
+          {/* Month Picker Section */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Label className="block text-sm font-semibold text-gray-800">
+                Select Month
+              </Label>
+              <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm">
+                <SingleMonthYearPicker
+                  value={month}
+                  onChange={(newMonth) => setMonth(newMonth)}
+                  collections={["meal_funds"]}
+                />
+              </div>
+            </div>
           </div>
-        )}
 
-        <div>
-          <Label htmlFor="amount" className="block mb-2 text-sm font-medium text-gray-700">
-            Additional Amount
-          </Label>
-          <Input
-            id="amount"
-            type="number"
-            placeholder="Enter additional amount (BDT)"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Donor Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="donor" className="block text-sm font-semibold text-gray-800">
+                Donor Name
+              </Label>
+              <Select value={selectedDonor} onValueChange={setSelectedDonor}>
+                <SelectTrigger 
+                  className="h-11 rounded-lg border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 text-base shadow-sm"
+                >
+                  <SelectValue placeholder="Select a donor" />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg border-gray-200 shadow-lg">
+                  {members.length > 0 ? (
+                    members.map((member) => (
+                      <SelectItem 
+                        key={member.member_id} 
+                        value={member.member_name}
+                        className="py-2.5 text-base font-medium"
+                      >
+                        {member.member_name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                      No active members for {month}
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">Select the member who is adding funds</p>
+            </div>
+
+            {/* Previous Amount Display */}
+            {previousAmount > 0 && (
+              <div className="bg-green-50 border border-green-100 p-4 rounded-lg text-sm text-gray-700 flex items-center">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-800">Previously Added:</span>{" "}
+                  <span className="font-semibold text-green-700">{previousAmount} BDT</span>
+                </div>
+              </div>
+            )}
+
+            {/* Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="block text-sm font-semibold text-gray-800">
+                Additional Amount
+              </Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">৳</span>
+                </div>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="pl-8 h-11 rounded-lg border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Enter the additional amount in BDT</p>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <Button
+                type="submit"
+                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-green-200 focus:ring-opacity-50"
+                disabled={members.length === 0}
+              >
+                Add Meal Fund
+              </Button>
+              {members.length === 0 && (
+                <p className="text-xs text-center text-red-500 mt-2">
+                  No active members for the selected month
+                </p>
+              )}
+            </div>
+          </form>
         </div>
-
-        <Button
-          type="submit"
-          className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-md"
-          disabled={members.length === 0}
-        >
-          Submit
-        </Button>
-      </form>
+      </div>
     </div>
   );
 };

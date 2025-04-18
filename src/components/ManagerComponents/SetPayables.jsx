@@ -20,72 +20,106 @@ import { useToast } from "@/hooks/use-toast";
 
 const SharedPayablesInputs = ({ formData, onChange }) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-2 gap-4">
-      <div>
-        <Label htmlFor="roomRent" className="block mb-2 text-sm font-medium text-gray-700">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="space-y-2">
+        <Label htmlFor="roomRent" className="block text-sm font-semibold text-gray-800">
           Room Rent
         </Label>
-        <Input
-          id="roomRent"
-          type="number"
-          value={formData.roomRent}
-          onChange={(e) => onChange("roomRent", e.target.value)}
-          placeholder="Enter room rent (BDT)"
-          className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">৳</span>
+          </div>
+          <Input
+            id="roomRent"
+            type="number"
+            value={formData.roomRent}
+            onChange={(e) => onChange("roomRent", e.target.value)}
+            placeholder="Enter amount"
+            className="pl-8 h-11 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-1">Monthly room rent amount</p>
       </div>
-      <div>
-        <Label htmlFor="diningRent" className="block mb-2 text-sm font-medium text-gray-700">
+      <div className="space-y-2">
+        <Label htmlFor="diningRent" className="block text-sm font-semibold text-gray-800">
           Dining Rent
         </Label>
-        <Input
-          id="diningRent"
-          type="number"
-          value={formData.diningRent}
-          onChange={(e) => onChange("diningRent", e.target.value)}
-          placeholder="Enter dining rent (BDT)"
-          className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">৳</span>
+          </div>
+          <Input
+            id="diningRent"
+            type="number"
+            value={formData.diningRent}
+            onChange={(e) => onChange("diningRent", e.target.value)}
+            placeholder="Enter amount"
+            className="pl-8 h-11 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-1">Monthly dining space rent</p>
       </div>
     </div>
-    <div>
-      <Label htmlFor="serviceCharge" className="block mb-2 text-sm font-medium text-gray-700">
-        Service Charge
-      </Label>
-      <Input
-        id="serviceCharge"
-        type="number"
-        value={formData.serviceCharge}
-        onChange={(e) => onChange("serviceCharge", e.target.value)}
-        placeholder="Enter service charge (BDT)"
-        className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-      />
+    
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="space-y-2">
+        <Label htmlFor="serviceCharge" className="block text-sm font-semibold text-gray-800">
+          Service Charge
+        </Label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">৳</span>
+          </div>
+          <Input
+            id="serviceCharge"
+            type="number"
+            value={formData.serviceCharge}
+            onChange={(e) => onChange("serviceCharge", e.target.value)}
+            placeholder="Enter amount"
+            className="pl-8 h-11 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-1">Monthly service charge amount</p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="khalasBill" className="block text-sm font-semibold text-gray-800">
+          Khala's Bill
+        </Label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">৳</span>
+          </div>
+          <Input
+            id="khalasBill"
+            type="number"
+            value={formData.khalasBill}
+            onChange={(e) => onChange("khalasBill", e.target.value)}
+            placeholder="Enter amount"
+            className="pl-8 h-11 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-1">Monthly payment for Khala</p>
+      </div>
     </div>
-    <div>
-      <Label htmlFor="khalasBill" className="block mb-2 text-sm font-medium text-gray-700">
-        Khala's Bill
-      </Label>
-      <Input
-        id="khalasBill"
-        type="number"
-        value={formData.khalasBill}
-        onChange={(e) => onChange("khalasBill", e.target.value)}
-        placeholder="Enter Khala's bill (BDT)"
-        className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-      />
-    </div>
-    <div>
-      <Label htmlFor="utilityBill" className="block mb-2 text-sm font-medium text-gray-700">
+    
+    <div className="space-y-2">
+      <Label htmlFor="utilityBill" className="block text-sm font-semibold text-gray-800">
         Utility Bill
       </Label>
-      <Input
-        id="utilityBill"
-        type="number"
-        value={formData.utilityBill}
-        onChange={(e) => onChange("utilityBill", e.target.value)}
-        placeholder="Enter utility bill (BDT)"
-        className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-      />
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span className="text-gray-500 sm:text-sm">৳</span>
+        </div>
+        <Input
+          id="utilityBill"
+          type="number"
+          value={formData.utilityBill}
+          onChange={(e) => onChange("utilityBill", e.target.value)}
+          placeholder="Enter amount"
+          className="pl-8 h-11 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+        />
+      </div>
+      <p className="text-xs text-gray-500 mt-1">Combined electricity, water, gas bills</p>
     </div>
   </div>
 );
@@ -259,61 +293,113 @@ const PayablesForm = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Add Payables for {selectedMonth}</h1>
-      <div className="mb-6">
-        <Label htmlFor="monthPicker" className="block mb-2 text-sm font-medium text-gray-700">
-          Select Month
-        </Label>
-        <SingleMonthYearPicker
-          value={selectedMonth}
-          onChange={setSelectedMonth}
-          collections={["payables"]}
-        />
-      </div>
-      <div className="mb-6">
-        <div className="flex space-x-6">
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              value="shared"
-              checked={formType === "shared"}
-              onChange={() => setFormType("shared")}
-              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
-            />
-            <span className="text-sm font-medium text-gray-700">Shared Bill</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              value="individual"
-              checked={formType === "individual"}
-              onChange={() => setFormType("individual")}
-              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
-            />
-            <span className="text-sm font-medium text-gray-700">Individual Payables</span>
-          </label>
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        {/* Header with gradient background */}
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-6 sm:py-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Add Payables for {selectedMonth}
+          </h1>
+          <p className="text-indigo-100 text-sm mt-1 font-medium">
+            Set monthly bills and expenses for all members
+          </p>
+        </div>
+
+        <div className="p-5 sm:p-8">
+          {/* Month Picker Section */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Label htmlFor="monthPicker" className="block text-sm font-semibold text-gray-800">
+                Select Month
+              </Label>
+              <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm">
+                <SingleMonthYearPicker
+                  value={selectedMonth}
+                  onChange={setSelectedMonth}
+                  collections={["payables"]}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Form Type Selection */}
+          <div className="mb-8">
+            <Label className="block mb-3 text-sm font-semibold text-gray-800">
+              Payable Type
+            </Label>
+            <div className="flex flex-wrap gap-4">
+              <label className="relative flex items-center group">
+                <input
+                  type="radio"
+                  value="shared"
+                  checked={formType === "shared"}
+                  onChange={() => setFormType("shared")}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex items-center justify-center peer-checked:border-indigo-500 peer-checked:bg-indigo-500 transition-all">
+                  {formType === "shared" && (
+                    <div className="h-2 w-2 rounded-full bg-white"></div>
+                  )}
+                </div>
+                <span className="ml-2 text-sm font-medium text-gray-700 peer-checked:text-indigo-600 cursor-pointer">
+                  Shared Bills
+                </span>
+              </label>
+              <label className="relative flex items-center group">
+                <input
+                  type="radio"
+                  value="individual"
+                  checked={formType === "individual"}
+                  onChange={() => setFormType("individual")}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex items-center justify-center peer-checked:border-indigo-500 peer-checked:bg-indigo-500 transition-all">
+                  {formType === "individual" && (
+                    <div className="h-2 w-2 rounded-full bg-white"></div>
+                  )}
+                </div>
+                <span className="ml-2 text-sm font-medium text-gray-700 peer-checked:text-indigo-600 cursor-pointer">
+                  Individual Payables
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {formType === "shared" ? (
+              <>
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-6">
+                  <h3 className="text-sm font-semibold text-indigo-800 mb-2">About Shared Bills</h3>
+                  <p className="text-xs text-indigo-700">These bills will be distributed among all active members based on their residence type (room or dining).</p>
+                </div>
+                
+                <SharedPayablesInputs
+                  formData={formData}
+                  onChange={handleInputChange}
+                />
+                
+                <div className="pt-4">
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-indigo-200 focus:ring-opacity-50"
+                    disabled={activeMembers.length === 0}
+                  >
+                    Set Shared Payables
+                  </Button>
+                  {activeMembers.length === 0 && (
+                    <p className="text-xs text-center text-red-500 mt-2">
+                      No active members for the selected month
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <IndividualPayablesForm selectedMonth={selectedMonth} />
+            )}
+          </form>
         </div>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {formType === "shared" ? (
-          <>
-            <SharedPayablesInputs
-              formData={formData}
-              onChange={handleInputChange}
-            />
-            <Button
-              type="submit"
-              className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-md"
-              disabled={activeMembers.length === 0}
-            >
-              Submit
-            </Button>
-          </>
-        ) : (
-          <IndividualPayablesForm selectedMonth={selectedMonth} />
-        )}
-      </form>
     </div>
   );
 };

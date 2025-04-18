@@ -14,25 +14,54 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, date, members, mealCoun
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg w-[250px]">
-        <h2 className="text-lg font-semibold">Meal Counts Summary</h2>
-        <h3 className="font-light mb-4">
-          {date ? format(date, "MMM dd, EEEE") : "No Date Selected"}
-        </h3>
-        <ul>
-          {members.map((member) => (
-            <li className="p-2 flex justify-between" key={member.id}>
-              <span>{member.name}:</span>
-              <span>{mealCounts[member.id]}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 flex justify-between">
-          <Button onClick={onClose} variant="secondary">
-            Close
-          </Button>
-          <Button onClick={onConfirm}>Confirm Submit</Button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in duration-200">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
+          <h2 className="text-lg font-bold text-white">Meal Counts Summary</h2>
+          <p className="text-purple-100 text-sm mt-1">
+            {date ? format(date, "MMMM dd, yyyy (EEEE)") : "No Date Selected"}
+          </p>
+        </div>
+        
+        <div className="p-6">
+          <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 mb-4">
+            <p className="text-xs text-purple-700">Please review the meal counts below before confirming submission.</p>
+          </div>
+          
+          <div className="max-h-[240px] overflow-y-auto mb-4 rounded-lg border border-gray-100">
+            <table className="w-full">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="py-2 px-4 text-left text-sm font-semibold text-gray-700">Member</th>
+                  <th className="py-2 px-4 text-right text-sm font-semibold text-gray-700">Meals</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {members.map((member) => (
+                  <tr key={member.id} className="hover:bg-gray-50">
+                    <td className="py-3 px-4 text-sm text-gray-800">{member.name}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 text-right font-medium">{mealCounts[member.id]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="flex gap-3 justify-end">
+            <Button 
+              onClick={onClose} 
+              variant="outline"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg h-10"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={onConfirm}
+              className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg h-10 px-5"
+            >
+              Confirm & Submit
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -40,18 +69,34 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, date, members, mealCoun
 };
 
 const MemberMealInput = ({ member, mealCount, onChange }) => (
-  <div className="flex items-center space-x-12">
-    <Label htmlFor={`member-${member.id}`} className="w-28">
-      {member.name}
-    </Label>
-    <Input
-      id={`member-${member.id}`}
-      type="text"
-      value={mealCount || ""}
-      onChange={(e) => onChange(e, member.id)}
-      placeholder=""
-      className="w-[6ch] text-center appearance-none"
-    />
+  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-semibold text-sm">
+        {member.name.charAt(0)}
+      </div>
+      <Label 
+        htmlFor={`member-${member.id}`} 
+        className="text-sm font-medium text-gray-800 cursor-pointer"
+      >
+        {member.name}
+      </Label>
+    </div>
+    
+    <div className="relative w-full sm:w-auto">
+      <Input
+        id={`member-${member.id}`}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={mealCount || ""}
+        onChange={(e) => onChange(e, member.id)}
+        placeholder="0"
+        className="w-full sm:w-24 h-10 text-center font-medium text-gray-800 rounded-lg border-gray-200 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+      />
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none sm:hidden">
+        meals
+      </div>
+    </div>
   </div>
 );
 
@@ -402,39 +447,90 @@ const DailyMealForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="max-w-md mx-auto p-4 mb-8">
-        <h1 className="text-xl font-bold mb-4">Set Daily Meal Count</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <DatePickerMealCount
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            datesWithData={datesWithData}
-          />
-          {members.map((member) => (
-            <MemberMealInput
-              key={member.id}
-              member={member}
-              mealCount={mealCounts[member.id]}
-              onChange={handleInputChange}
-            />
-          ))}
-          <div className="flex space-x-4">
-            <Button onClick={handleReset} variant="secondary">
-              Reset
-            </Button>
-            <Button type="submit">{existingDocId ? "Update" : "Set"} Counts</Button>
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        {/* Header with gradient background */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-6 sm:py-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Set Daily Meal Count
+          </h1>
+          <p className="text-purple-100 text-sm mt-1 font-medium">
+            Record meal counts for {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "today"}
+          </p>
+        </div>
+
+        <div className="p-5 sm:p-8">
+          <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-6">
+            <h3 className="text-sm font-semibold text-purple-800 mb-2">About Daily Meal Counts</h3>
+            <p className="text-xs text-purple-700">Use this form to record the number of meals consumed by each member for a specific date. This information is used to calculate meal costs.</p>
           </div>
-        </form>
-        <ConfirmationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onConfirm={handleConfirmSubmit}
-          date={selectedDate}
-          members={members}
-          mealCounts={mealCounts}
-        />
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <Label className="text-sm font-semibold text-gray-800 mb-3 block">Select Date</Label>
+              <DatePickerMealCount
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                datesWithData={datesWithData}
+              />
+              <p className="text-xs text-gray-500 mt-2">Dates with existing data are highlighted</p>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-800">Member Meal Counts</h3>
+                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  {members.length} members
+                </div>
+              </div>
+              
+              {members.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                  <p className="text-sm text-gray-500">No active members for this month</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {members.map((member) => (
+                    <MemberMealInput
+                      key={member.id}
+                      member={member}
+                      mealCount={mealCounts[member.id]}
+                      onChange={handleInputChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
+              <Button 
+                type="button"
+                onClick={handleReset} 
+                variant="outline"
+                className="border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg h-11 shadow-sm transition-colors"
+              >
+                Reset Form
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={members.length === 0}
+                className="w-full sm:w-auto h-11 bg-purple-600 hover:bg-purple-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-purple-200 focus:ring-opacity-50 px-6"
+              >
+                {existingDocId ? "Update" : "Save"} Meal Counts
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
+      
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmSubmit}
+        date={selectedDate}
+        members={members}
+        mealCounts={mealCounts}
+      />
     </div>
   );
 };

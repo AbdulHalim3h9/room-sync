@@ -326,19 +326,9 @@ const IndividualPayablesForm = ({ selectedMonth }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-6 sm:py-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Set Individual Payables for {selectedMonth}
-          </h1>
-          <p className="text-purple-100 text-sm mt-1 font-medium">
-            Add custom charges for specific members
-          </p>
-        </div>
-
-        <div className="p-5 sm:p-8">
+    <div>
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="p-5 sm:p-6">
           <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-6">
             <h3 className="text-sm font-semibold text-purple-800 mb-2">About Individual Payables</h3>
             <p className="text-xs text-purple-700">Use this form to add specific charges that apply to individual members only, such as internet bills or special charges.</p>

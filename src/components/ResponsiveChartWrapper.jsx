@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -10,16 +10,26 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
 } from "recharts";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { db } from "@/firebase";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { doc, getDoc, collection, getDocs, query, orderBy, limit, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatusCard from "./dashboard/status-card";
 import { MembersContext } from "@/contexts/MembersContext";
 import { MonthContext } from "@/contexts/MonthContext";
 import AnnouncementBanner from "./AnnouncementBanner";
+import { format, formatDistance } from "date-fns";
+import { Activity, Clock, DollarSign, Utensils, ShoppingBag, Receipt, BarChart3, Home, MapPin, UserCheck, UserX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CustomizedDot = (props) => {
   const { cx, cy, value, payload } = props;
@@ -87,21 +97,87 @@ export default function ResponsiveChartWrapper() {
   const [data, setData] = useState([]);
   const [mealRate, setMealRate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdates, setLastUpdates] = useState({
+    mealFund: null,
+    mealCount: null,
+    grocery: null,
+    payables: null
+  });
+  const [activeTab, setActiveTab] = useState("chart");
+  const [showUpdateDetails, setShowUpdateDetails] = useState(false);
+  const [latestUpdate, setLatestUpdate] = useState({ type: null, timestamp: null });
+  const [memberPresence, setMemberPresence] = useState({});
+  const [loadingPresence, setLoadingPresence] = useState(true);
+  const [showMemberDetails, setShowMemberDetails] = useState(false);
 
   // Filter active members for the selected month
   const activeMembers = useMemo(() => {
+    if (membersLoading || !members.length) return [];
+    
+    const selectedMonthDate = new Date(month + "-01");
+    
     return members.filter((member) => {
       if (!member.activeFrom) return false;
+      
       const activeFromDate = new Date(member.activeFrom + "-01");
-      const selectedMonthDate = new Date(month + "-01");
       if (activeFromDate > selectedMonthDate) return false;
+      
       if (member.archiveFrom) {
         const archiveFromDate = new Date(member.archiveFrom + "-01");
         return selectedMonthDate < archiveFromDate;
       }
+      
       return true;
     });
-  }, [members, month]);
+  }, [members, month, membersLoading]);
+  
+  // Fetch member presence status
+  const fetchMemberPresence = useCallback(async () => {
+    setLoadingPresence(true);
+    try {
+      const presenceRef = collection(db, "memberPresence");
+      const querySnapshot = await getDocs(presenceRef);
+      
+      const presenceData = {};
+      querySnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        presenceData[doc.id] = data;
+      });
+      
+      setMemberPresence(presenceData);
+    } catch (error) {
+      console.error("Error fetching member presence:", error);
+    } finally {
+      setLoadingPresence(false);
+    }
+  }, []);
+  
+  useEffect(() => {
+    fetchMemberPresence();
+  }, [fetchMemberPresence]);
+
+  // Toggle member presence status
+  const toggleMemberPresence = async (memberId, isPresent) => {
+    try {
+      const presenceRef = doc(db, "memberPresence", memberId);
+      await setDoc(presenceRef, {
+        isPresent,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
+      
+      // Update local state
+      setMemberPresence(prev => ({
+        ...prev,
+        [memberId]: {
+          ...prev[memberId],
+          isPresent,
+          lastUpdated: new Date()
+        }
+      }));
+    } catch (error) {
+      console.error("Error updating member presence:", error);
+    }
+  };
 
   // Fetch meal rate from mealSummaries
   useEffect(() => {
@@ -171,8 +247,114 @@ export default function ResponsiveChartWrapper() {
       fetchData();
     }
   }, [month, activeMembers]);
+  
+  // Fetch last update timestamps for different data types
+  useEffect(() => {
+    const fetchLastUpdates = async () => {
+      try {
+        // Fetch last meal fund update
+        const mealFundQuery = query(
+          collection(db, "mealFund"), 
+          orderBy("timestamp", "desc"), 
+          limit(1)
+        );
+        const mealFundSnapshot = await getDocs(mealFundQuery);
+        const mealFundTimestamp = !mealFundSnapshot.empty ? mealFundSnapshot.docs[0].data().timestamp : null;
+        
+        // Fetch last meal count update
+        const mealCountQuery = query(
+          collection(db, "mealCount"), 
+          orderBy("timestamp", "desc"), 
+          limit(1)
+        );
+        const mealCountSnapshot = await getDocs(mealCountQuery);
+        const mealCountTimestamp = !mealCountSnapshot.empty ? mealCountSnapshot.docs[0].data().timestamp : null;
+        
+        // Fetch last grocery update
+        const groceryQuery = query(
+          collection(db, "expenses"), 
+          orderBy("timestamp", "desc"), 
+          limit(1)
+        );
+        const grocerySnapshot = await getDocs(groceryQuery);
+        const groceryTimestamp = !grocerySnapshot.empty ? grocerySnapshot.docs[0].data().timestamp : null;
+        
+        // Fetch last payables update
+        const payablesQuery = query(
+          collection(db, "payables"), 
+          orderBy("timestamp", "desc"), 
+          limit(1)
+        );
+        const payablesSnapshot = await getDocs(payablesQuery);
+        const payablesTimestamp = !payablesSnapshot.empty ? payablesSnapshot.docs[0].data().timestamp : null;
+        
+        const updates = {
+          mealFund: mealFundTimestamp,
+          mealCount: mealCountTimestamp,
+          grocery: groceryTimestamp,
+          payables: payablesTimestamp
+        };
+        
+        setLastUpdates(updates);
+        
+        // Find the most recent update
+        let latestType = null;
+        let latestTime = null;
+        
+        const updateTypes = [
+          { type: "Meal Fund", timestamp: mealFundTimestamp },
+          { type: "Meal Count", timestamp: mealCountTimestamp },
+          { type: "Grocery", timestamp: groceryTimestamp },
+          { type: "Payables", timestamp: payablesTimestamp }
+        ];
+        
+        updateTypes.forEach(update => {
+          if (!update.timestamp) return;
+          
+          const updateTime = update.timestamp.toDate ? update.timestamp.toDate() : new Date(update.timestamp);
+          
+          if (!latestTime || updateTime > latestTime) {
+            latestType = update.type;
+            latestTime = updateTime;
+          }
+        });
+        
+        if (latestType && latestTime) {
+          setLatestUpdate({ type: latestType, timestamp: latestTime });
+        }
+      } catch (error) {
+        console.error("Error fetching last updates:", error);
+      }
+    };
+    
+    fetchLastUpdates();
+  }, []);
 
   const dueMembers = data.filter((item) => item.given - item.eaten <= 0);
+
+  // Format timestamp to relative time (e.g., "2 hours ago")
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "Never updated";
+    
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return formatDistance(date, new Date(), { addSuffix: true });
+    } catch (error) {
+      return "Unknown";
+    }
+  };
+  
+  // Format timestamp to exact date and time
+  const formatExactTimestamp = (timestamp) => {
+    if (!timestamp) return "Never updated";
+    
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return format(date, "MMM d, yyyy 'at' h:mm a");
+    } catch (error) {
+      return "Unknown";
+    }
+  };
 
   if (loading || membersLoading) {
     return (
@@ -198,12 +380,222 @@ export default function ResponsiveChartWrapper() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <AnnouncementBanner />
-      <Card className="mb-8 shadow-lg">
-        <CardHeader className="pb-2">
+      
+      {/* Member Presence Section - Compact */}
+      <Card className="mb-6 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 transition-colors duration-300">
+          <CardHeader className="py-3 px-4 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Home className="h-5 w-5 text-emerald-600" />
+                <CardTitle className="text-lg font-medium">Who's in the Apartment?</CardTitle>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowMemberDetails(prev => !prev)}
+                className="h-8 w-8 p-0 rounded-full"
+              >
+                {showMemberDetails ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                )}
+              </Button>
+            </div>
+            
+            {/* Compact View - Always Visible */}
+            {loadingPresence ? (
+              <div className="flex items-center justify-center py-2 mt-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {activeMembers.map((member) => {
+                  const presenceData = memberPresence[member.memberId];
+                  const statusFound = presenceData !== undefined;
+                  const isPresent = statusFound ? presenceData.isPresent : false;
+                  
+                  return (
+                    <div 
+                      key={member.memberId}
+                      className="relative cursor-pointer hover:scale-110 transition-transform duration-200"
+                      onClick={() => toggleMemberPresence(member.memberId, !isPresent)}
+                      title={`${member.shortname || member.memberName} is ${statusFound ? (isPresent ? 'at home' : 'away') : 'unknown'}`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'} border ${statusFound ? (isPresent ? 'border-emerald-200' : 'border-gray-200') : 'border-blue-200'}`}>
+                        {member.imgSrc ? (
+                          <img 
+                            src={member.imgSrc} 
+                            alt={member.memberName} 
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-semibold">
+                            {member.memberName.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <span 
+                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${statusFound ? (isPresent ? 'bg-emerald-500' : 'bg-red-500') : 'bg-blue-500'}`}
+                      ></span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardHeader>
+          
+          {/* Expanded View - Only Visible When Expanded */}
+          {showMemberDetails && (
+            <CardContent className="pt-4 pb-2 animate-in fade-in-50 duration-300">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {activeMembers.map((member) => {
+                  const presenceData = memberPresence[member.memberId];
+                  const statusFound = presenceData !== undefined;
+                  const isPresent = statusFound ? presenceData.isPresent : false;
+                  
+                  return (
+                    <div 
+                      key={member.memberId}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${statusFound ? (isPresent ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200') : 'bg-blue-50 border-blue-200'} transition-colors duration-200`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`relative w-8 h-8 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'}`}>
+                          {member.imgSrc ? (
+                            <img 
+                              src={member.imgSrc} 
+                              alt={member.memberName} 
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-sm font-semibold">
+                              {member.memberName.charAt(0)}
+                            </span>
+                          )}
+                          <span 
+                            className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${statusFound ? (isPresent ? 'bg-emerald-500' : 'bg-red-500') : 'bg-blue-500'}`}
+                          ></span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium truncate max-w-[100px]">
+                            {member.shortname || member.memberName}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {statusFound ? (isPresent ? 'At Home' : 'Away') : 'Status not found'}
+                          </span>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={isPresent}
+                        onCheckedChange={(checked) => toggleMemberPresence(member.memberId, checked)}
+                        className={`${statusFound ? (isPresent ? 'data-[state=checked]:bg-emerald-500' : '') : 'data-[state=checked]:bg-blue-500'}`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="mt-4 px-4 py-2 border-t border-gray-100 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500 text-center">
+                  Toggle the switch to update a member's presence status
+                </p>
+              </div>
+            </CardContent>
+          )}
+        </div>
+      </Card>
+      
+      {/* Last Update Notification */}
+      {latestUpdate.type && (
+        <Card className="mb-6 shadow-lg overflow-hidden">
+          <div className={`bg-gradient-to-r ${showUpdateDetails ? "from-blue-50 to-indigo-50" : "from-blue-100 to-indigo-100"} transition-colors duration-300`}>
+            <CardHeader className="pb-2 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-lg font-medium">Latest Update</CardTitle>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowUpdateDetails(prev => !prev)}
+                  className="h-8 px-3 text-xs font-medium"
+                >
+                  {showUpdateDetails ? "Hide Details" : "Show Details"}
+                </Button>
+              </div>
+              <CardDescription>
+                <span className="font-medium">{latestUpdate.type}</span> was updated {formatTimestamp(latestUpdate.timestamp)}
+              </CardDescription>
+            </CardHeader>
+            
+            {showUpdateDetails && (
+              <CardContent className="pt-4 animate-in fade-in-50 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100 flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 text-blue-700 rounded-full">
+                      <DollarSign className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700">Meal Fund</h3>
+                      <p className="text-xs text-gray-500">{formatTimestamp(lastUpdates.mealFund)}</p>
+                      <p className="text-xs text-blue-600 mt-1">{formatExactTimestamp(lastUpdates.mealFund)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-purple-100 flex items-start gap-3">
+                    <div className="p-2 bg-purple-100 text-purple-700 rounded-full">
+                      <Utensils className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700">Meal Count</h3>
+                      <p className="text-xs text-gray-500">{formatTimestamp(lastUpdates.mealCount)}</p>
+                      <p className="text-xs text-purple-600 mt-1">{formatExactTimestamp(lastUpdates.mealCount)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100 flex items-start gap-3">
+                    <div className="p-2 bg-green-100 text-green-700 rounded-full">
+                      <ShoppingBag className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700">Grocery</h3>
+                      <p className="text-xs text-gray-500">{formatTimestamp(lastUpdates.grocery)}</p>
+                      <p className="text-xs text-green-600 mt-1">{formatExactTimestamp(lastUpdates.grocery)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-amber-100 flex items-start gap-3">
+                    <div className="p-2 bg-amber-100 text-amber-700 rounded-full">
+                      <Receipt className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700">Payables</h3>
+                      <p className="text-xs text-gray-500">{formatTimestamp(lastUpdates.payables)}</p>
+                      <p className="text-xs text-amber-600 mt-1">{formatExactTimestamp(lastUpdates.payables)}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </div>
+        </Card>
+      )}
+      
+      {/* Main Dashboard Card */}
+      <Card className="mb-8 shadow-lg overflow-hidden border-0 bg-gradient-to-br from-white to-gray-50">
+        <CardHeader className="pb-2 border-b bg-white">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle className="text-lg sm:text-xl font-medium text-center sm:text-left">
-              Monthly Summary
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-lg sm:text-xl font-medium text-center sm:text-left">
+                Monthly Summary
+              </CardTitle>
+              <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                {month}
+              </Badge>
+            </div>
             <div className="flex justify-center sm:justify-end">
               <SingleMonthYearPicker
                 value={month}
@@ -213,71 +605,212 @@ export default function ResponsiveChartWrapper() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="h-[40vh] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={data}
-                margin={{
-                  top: 20,
-                  right: 10,
-                  left: 10,
-                  bottom: 80,
-                }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  opacity={0.3}
-                />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
-                  tickMargin={30}
-                  interval={0}
-                />
-                <YAxis
-                  tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
-                  tickFormatter={(value) => `${value} tk`}
-                  width={60}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  wrapperStyle={{
-                    paddingTop: "20px",
-                  }}
-                  formatter={(value) => (
-                    <span className="text-sm font-medium">{value}</span>
-                  )}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="given"
-                  stroke="hsl(var(--chart-1))"
-                  strokeWidth={2}
-                  dot={<CustomizedDot />}
-                  name="Contribution"
-                  activeDot={{ r: 8 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="eaten"
-                  stroke="hsl(var(--chart-2))"
-                  strokeWidth={2}
-                  name="Consumption"
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="px-6 pt-4 border-b">
+            <TabsList className="grid w-full grid-cols-3 h-10">
+              <TabsTrigger value="chart" className="text-sm">
+                Line Chart
+              </TabsTrigger>
+              <TabsTrigger value="area" className="text-sm">
+                Area Chart
+              </TabsTrigger>
+              <TabsTrigger value="bar" className="text-sm">
+                Bar Chart
+              </TabsTrigger>
+            </TabsList>
           </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-2">
-            <StatusCard dueMembers={dueMembers} mealRate={mealRate} />
+          
+          <CardContent className="pt-6">
+            <TabsContent value="chart" className="mt-0">
+              <div className="h-[45vh] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={data}
+                    margin={{
+                      top: 20,
+                      right: 10,
+                      left: 10,
+                      bottom: 80,
+                    }}
+                  >
+                    <defs>
+                      <linearGradient id="colorGiven" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorEaten" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+                      tickMargin={30}
+                      interval={0}
+                    />
+                    <YAxis
+                      tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+                      tickFormatter={(value) => `${value} tk`}
+                      width={60}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      wrapperStyle={{
+                        paddingTop: "20px",
+                      }}
+                      formatter={(value) => (
+                        <span className="text-sm font-medium">{value}</span>
+                      )}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="given"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={<CustomizedDot />}
+                      name="Contribution"
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="eaten"
+                      stroke="#f59e0b"
+                      strokeWidth={2}
+                      name="Consumption"
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="area" className="mt-0">
+              <div className="h-[45vh] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={data}
+                    margin={{
+                      top: 20,
+                      right: 10,
+                      left: 10,
+                      bottom: 80,
+                    }}
+                  >
+                    <defs>
+                      <linearGradient id="colorGiven" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorEaten" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      tick={{ fill: "#333", fontSize: 12 }}
+                      tickMargin={30}
+                      interval={0}
+                    />
+                    <YAxis
+                      tick={{ fill: "#333", fontSize: 12 }}
+                      tickFormatter={(value) => `${value} tk`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="given"
+                      stroke="#3b82f6"
+                      fillOpacity={1}
+                      fill="url(#colorGiven)"
+                      name="Contribution"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="eaten"
+                      stroke="#f59e0b"
+                      fillOpacity={1}
+                      fill="url(#colorEaten)"
+                      name="Consumption"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="bar" className="mt-0">
+              <div className="h-[45vh] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data}
+                    margin={{
+                      top: 20,
+                      right: 10,
+                      left: 10,
+                      bottom: 80,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      tick={{ fill: "#333", fontSize: 12 }}
+                      tickMargin={30}
+                      interval={0}
+                    />
+                    <YAxis
+                      tick={{ fill: "#333", fontSize: 12 }}
+                      tickFormatter={(value) => `${value} tk`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar
+                      dataKey="given"
+                      name="Contribution"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="eaten"
+                      name="Consumption"
+                      fill="#f59e0b"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+          
+            <div className="mt-6 grid grid-cols-1 gap-2">
+              <StatusCard dueMembers={dueMembers} mealRate={mealRate} />
+            </div>
+          </CardContent>
+        </Tabs>
+        
+        <CardFooter className="bg-gray-50 border-t py-3 text-xs text-gray-500 flex justify-between">
+          <div className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            <span>Last updated: {formatTimestamp(lastUpdates.mealFund)}</span>
           </div>
-        </CardContent>
+          <span>Meal Rate: {mealRate || "N/A"} tk</span>
+        </CardFooter>
       </Card>
     </div>
   );

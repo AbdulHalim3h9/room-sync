@@ -298,10 +298,12 @@ const PayablesForm = () => {
         {/* Header with gradient background */}
         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-6 sm:py-8">
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Add Payables for {selectedMonth}
+            Manage Payables for {selectedMonth}
           </h1>
           <p className="text-indigo-100 text-sm mt-1 font-medium">
-            Set monthly bills and expenses for all members
+            {formType === "shared" ? 
+              "Set shared monthly bills distributed among all members" : 
+              "Add individual charges for specific members"}
           </p>
         </div>
 

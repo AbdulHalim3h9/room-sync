@@ -210,6 +210,7 @@ export function AppSidebar() {
         <SidebarGroup className="flex-1">
           <SidebarGroupContent className="p-0">
             <SidebarMenu className="space-y-0">
+              {/* Menu items for authenticated users */}
               {isAuthenticated && menuItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild>
@@ -230,22 +231,22 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {canMakeAnnouncement && (
-                <SidebarMenuItem key="announce">
-                  <SidebarMenuButton asChild>
-                    <button
-                      onClick={() => setIsAnnouncementDialogOpen(true)}
-                      className={`flex items-center w-full px-4 py-6 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50`}
-                    >
-                      <div>
-                        <AlertCircle className="mr-2 h-6 w-6" />
-                      </div>
-                      <span className="ml-3 font-medium">Make an Announcement</span>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              {/* Make an Announcement - available to everyone */}
+              <SidebarMenuItem key="announce">
+                <SidebarMenuButton asChild>
+                  <button
+                    onClick={() => setIsAnnouncementDialogOpen(true)}
+                    className={`flex items-center w-full px-4 py-6 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50`}
+                  >
+                    <div>
+                      <AlertCircle className="mr-2 h-6 w-6" />
+                    </div>
+                    <span className="ml-3 font-medium">Make an Announcement</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
+              {/* Call Khala - available to everyone */}
               <SidebarMenuItem key="call-khala">
                 <SidebarMenuButton asChild>
                   <div className="flex items-center justify-between w-full">

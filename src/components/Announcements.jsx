@@ -90,6 +90,7 @@ const Announcements = ({ isOpen, onClose }) => {
         content: newAnnouncement,
         author: user?.name || "Anonymous",
         timestamp: serverTimestamp(),
+        isAdminAnnouncement: user?.role === "Admin"
       };
       
       await addDoc(collection(db, "announcements"), announcementData);
@@ -144,11 +145,21 @@ const Announcements = ({ isOpen, onClose }) => {
               {announcements.map((announcement) => (
                 <div 
                   key={announcement.id} 
-                  className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                  className={`p-4 rounded-lg border ${announcement.isAdminAnnouncement 
+                    ? "bg-purple-50 border-purple-300" 
+                    : "bg-gray-50 border-gray-100"
+                  }`}
                 >
                   <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">{announcement.author}</p>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-700">{announcement.author}</p>
+                        {announcement.isAdminAnnouncement && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                            Admin
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500">
                         {formatTimestamp(announcement.timestamp)}
                       </p>
@@ -164,33 +175,34 @@ const Announcements = ({ isOpen, onClose }) => {
                       </Button>
                     )}
                   </div>
-                  <p className="mt-2 text-gray-800 whitespace-pre-wrap">{announcement.content}</p>
+                  <p className={`mt-2 whitespace-pre-wrap ${announcement.isAdminAnnouncement 
+                    ? "text-purple-900 font-medium" 
+                    : "text-gray-800"
+                  }`}>{announcement.content}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
         
-        {canMakeAnnouncement && (
-          <form onSubmit={handleSubmit} className="mt-4">
-            <Textarea
-              value={newAnnouncement}
-              onChange={(e) => setNewAnnouncement(e.target.value)}
-              placeholder="Write your announcement here..."
-              className="min-h-[100px] resize-none"
-              required
-            />
-            <DialogFooter className="mt-4">
-              <Button 
-                type="submit" 
-                disabled={isSubmitting || !newAnnouncement.trim()}
-                className="w-full"
-              >
-                {isSubmitting ? "Posting..." : "Post Announcement"}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="mt-4">
+          <Textarea
+            value={newAnnouncement}
+            onChange={(e) => setNewAnnouncement(e.target.value)}
+            placeholder="Write your announcement here..."
+            className="min-h-[100px] resize-none"
+            required
+          />
+          <DialogFooter className="mt-4">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !newAnnouncement.trim()}
+              className={`w-full ${isAdmin ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+            >
+              {isSubmitting ? "Posting..." : isAdmin ? "Post Admin Announcement" : "Post Announcement"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

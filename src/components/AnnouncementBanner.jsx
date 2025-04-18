@@ -51,23 +51,40 @@ const AnnouncementBanner = () => {
     return text.substring(0, maxLength) + "...";
   };
 
+  // Determine if this is an admin announcement for styling
+  const isAdminAnnouncement = latestAnnouncement.isAdminAnnouncement;
+  
+  // Use more intense blinking and colors for admin announcements
+  const bgColor = isBlinking 
+    ? (isAdminAnnouncement ? "bg-purple-100 border-purple-400" : "bg-purple-50 border-purple-200")
+    : (isAdminAnnouncement ? "bg-white border-purple-400" : "bg-white border-gray-200");
+  
+  const iconBgColor = isBlinking 
+    ? (isAdminAnnouncement ? "bg-purple-200 text-purple-800" : "bg-purple-100 text-purple-600")
+    : (isAdminAnnouncement ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-600");
+  
   return (
     <>
       <div 
-        className={`mb-4 p-4 rounded-lg border cursor-pointer transition-all ${
-          isBlinking 
-            ? "bg-purple-50 border-purple-200" 
-            : "bg-white border-gray-200"
-        }`}
+        className={`mb-4 p-4 rounded-lg border cursor-pointer transition-all ${bgColor}`}
         onClick={() => setIsDialogOpen(true)}
       >
         <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-full ${isBlinking ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-600"}`}>
+          <div className={`p-2 rounded-full ${iconBgColor}`}>
             <AlertCircle className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <div className="flex justify-between items-start">
-              <h3 className="font-medium text-gray-900">Announcement from {latestAnnouncement.author}</h3>
+            <div className="flex flex-wrap justify-between items-start gap-2">
+              <div className="flex items-center gap-2">
+                <h3 className={`font-medium ${isAdminAnnouncement ? "text-purple-900" : "text-gray-900"}`}>
+                  {isAdminAnnouncement ? "Admin Announcement" : "Announcement from"} {latestAnnouncement.author}
+                </h3>
+                {isAdminAnnouncement && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded-full animate-pulse">
+                    Important
+                  </span>
+                )}
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -80,7 +97,7 @@ const AnnouncementBanner = () => {
                 View All
               </Button>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className={`text-sm mt-1 ${isAdminAnnouncement ? "text-purple-800 font-medium" : "text-gray-600"}`}>
               {truncateText(latestAnnouncement.content)}
             </p>
           </div>

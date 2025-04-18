@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StatusCard from "./dashboard/status-card";
 import { MembersContext } from "@/contexts/MembersContext";
 import { MonthContext } from "@/contexts/MonthContext";
+import AnnouncementBanner from "./AnnouncementBanner";
 
 const CustomizedDot = (props) => {
   const { cx, cy, value, payload } = props;
@@ -101,7 +102,7 @@ export default function ResponsiveChartWrapper() {
       return true;
     });
   }, [members, month]);
-  
+
   // Fetch meal rate from mealSummaries
   useEffect(() => {
     const fetchMealRate = async () => {
@@ -196,6 +197,7 @@ export default function ResponsiveChartWrapper() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
+      <AnnouncementBanner />
       <Card className="mb-8 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

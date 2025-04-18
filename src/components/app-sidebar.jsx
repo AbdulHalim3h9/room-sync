@@ -12,6 +12,7 @@ import {
   Trash2,
   Home,
   LogOut,
+  AlertCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,6 +40,7 @@ import { collection, getDocs, setDoc, doc, deleteDoc } from "firebase/firestore"
 import LoginDialog from "./LoginDialog";
 import Cookies from "js-cookie";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Announcements from "./Announcements";
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -47,7 +49,9 @@ export function AppSidebar() {
   const [newPhone, setNewPhone] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
+  const [isAnnouncementDialogOpen, setIsAnnouncementDialogOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [activeMembers, setActiveMembers] = useState([]);
 
   const fetchPhoneNumbers = async () => {
     try {
@@ -65,9 +69,43 @@ export function AppSidebar() {
     setUser(loginData ? JSON.parse(loginData) : null);
   };
 
+  const fetchActiveMembers = async () => {
+    try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const currentMonth = `${year}-${month}`;
+
+      const membersRef = collection(db, "members");
+      const querySnapshot = await getDocs(membersRef);
+      
+      const members = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((member) => {
+          if (!member.activeFrom) return false;
+          const activeFromDate = new Date(member.activeFrom + "-01");
+          const currentMonthDate = new Date(currentMonth + "-01");
+          
+          if (activeFromDate > currentMonthDate) return false;
+          
+          if (member.archiveFrom) {
+            const archiveFromDate = new Date(member.archiveFrom + "-01");
+            return currentMonthDate < archiveFromDate;
+          }
+          
+          return true;
+        });
+      
+      setActiveMembers(members);
+    } catch (error) {
+      console.error("Error fetching active members:", error);
+    }
+  };
+
   useEffect(() => {
     updateUserState();
     fetchPhoneNumbers();
+    fetchActiveMembers();
   }, []);
 
   const handleNavigate = (path) => {
@@ -114,6 +152,9 @@ export function AppSidebar() {
   const isAdmin = user?.role === "Admin";
   const isManager = user?.role === "Manager";
   const isAuthenticated = isAdmin || isManager;
+  const canMakeAnnouncement = isAdmin || activeMembers.some(member => 
+    member.fullname === user?.name || member.shortname === user?.name
+  );
 
   const menuItems = [
     {
@@ -188,6 +229,22 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {canMakeAnnouncement && (
+                <SidebarMenuItem key="announce">
+                  <SidebarMenuButton asChild>
+                    <button
+                      onClick={() => setIsAnnouncementDialogOpen(true)}
+                      className={`flex items-center w-full px-4 py-6 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50`}
+                    >
+                      <div>
+                        <AlertCircle className="mr-2 h-6 w-6" />
+                      </div>
+                      <span className="ml-3 font-medium">Make an Announcement</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
               <SidebarMenuItem key="call-khala">
                 <SidebarMenuButton asChild>
@@ -349,6 +406,12 @@ export function AppSidebar() {
           )}
         </div>
       </SidebarContent>
+      
+      {/* Announcements Dialog */}
+      <Announcements 
+        isOpen={isAnnouncementDialogOpen} 
+        onClose={() => setIsAnnouncementDialogOpen(false)} 
+      />
     </Sidebar>
   );
 }

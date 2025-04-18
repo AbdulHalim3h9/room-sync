@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MembersContext } from "@/contexts/MembersContext";
 import { MonthContext } from "@/contexts/MonthContext";
-import { ChevronLeft, ChevronRight, Users, User, UserCheck, UserX } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Users, User, UserCheck, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -77,10 +77,11 @@ const Avatar = ({ name, imageUrl, isActive, isSelected, className }) => {
 };
 
 const NavigateMembers = () => {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [hoveredMember, setHoveredMember] = useState(null);
   const [showAllMembers, setShowAllMembers] = useState(false);
   const [animation, setAnimation] = useState(false);
+  const [hoveredMinimized, setHoveredMinimized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { members, loading, error } = React.useContext(MembersContext);
@@ -125,7 +126,11 @@ const NavigateMembers = () => {
   }, []);
 
   const toggleVisibility = () => {
-    setIsVisible((prev) => !prev);
+    // This function is no longer used but kept for compatibility
+  };
+
+  const toggleMinimized = () => {
+    setIsMinimized((prev) => !prev);
   };
 
   const toggleShowAllMembers = () => {
@@ -182,46 +187,93 @@ const NavigateMembers = () => {
     <TooltipProvider>
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
         <div className="relative">
-          {/* Toggle Button */}
-          <Button
-            className={cn(
-              "absolute top-1/2 -translate-y-1/2",
-              "transition-all duration-300 shadow-md",
-              isVisible ? "w-8 h-8 rounded-full right-[4.5rem]" : "w-12 h-12 rounded-full right-4",
-              "flex items-center justify-center p-0",
-              animation && "animate-pulse"
-            )}
-            variant={isVisible ? "outline" : "default"}
-            onClick={toggleVisibility}
-          >
-            {isVisible ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
 
-          {/* Members Panel */}
+          {/* Minimized View */}
+          {isMinimized && (
+            <div 
+              className="absolute right-2 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-100 translate-x-0"
+              onMouseEnter={() => setHoveredMinimized(true)}
+              onMouseLeave={() => setHoveredMinimized(false)}
+            >
+              <div 
+                className={cn(
+                  "rounded-2xl py-2 px-1.5 bg-white/95 backdrop-blur-sm shadow-xl border border-gray-100",
+                  "transition-all duration-300",
+                  hoveredMinimized ? "pr-8" : "pr-1.5"
+                )}
+              >
+                <div className="flex flex-col items-center gap-1.5">
+                  {/* Minimize Toggle Button (appears on hover) */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "h-6 w-6 p-0 rounded-full absolute right-1 top-1.5",
+                      "transition-opacity duration-300",
+                      hoveredMinimized ? "opacity-100" : "opacity-0"
+                    )}
+                    onClick={toggleMinimized}
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </Button>
+
+                  {/* Member Count Badge */}
+                  <div className="bg-blue-100 text-blue-800 rounded-full px-1.5 py-0.5 text-xs font-medium">
+                    {activeMembers.length}
+                  </div>
+                  
+                  {/* Member Avatars (limited to 3) */}
+                  <div className="flex flex-col gap-1.5 items-center">
+                    {activeMembers.slice(0, 3).map((member) => (
+                      <div 
+                        key={member.memberId}
+                        className="w-7 h-7 rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform"
+                        onClick={() => handleMemberClick(member.memberId)}
+                      >
+                        <Avatar
+                          name={member.memberName}
+                          imageUrl={member.imgSrc}
+                          isActive={true}
+                          isSelected={member.memberId === currentMemberId}
+                          className="rounded-full"
+                        />
+                      </div>
+                    ))}
+                    {activeMembers.length > 3 && (
+                      <div className="text-xs text-gray-500 font-medium">+{activeMembers.length - 3}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Full Members Panel */}
           <div
             className={cn(
               "absolute right-2 top-1/2 -translate-y-1/2",
               "flex flex-col gap-3 transition-all duration-300",
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-16 pointer-events-none"
+              !isMinimized ? "opacity-100 translate-x-0" : "opacity-0 translate-x-16 pointer-events-none"
             )}
           >
             <div className="rounded-2xl p-4 bg-white/95 backdrop-blur-sm shadow-xl border border-gray-100">
               {/* Header */}
               <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center">
                   <span className="text-xs font-medium text-gray-700">
                     {activeMembers.length} Active
                   </span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 w-6 p-0 rounded-full"
-                  onClick={toggleShowAllMembers}
-                >
-                  {showAllMembers ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 rounded-full"
+                    onClick={toggleMinimized}
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               
               {/* Members List */}

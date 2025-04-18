@@ -241,7 +241,7 @@ const Sidebar = React.forwardRef((
 Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar, isMobile, open } = useSidebar()
+  const { toggleSidebar, isMobile, open, openMobile } = useSidebar()
 
   return (
     <Button
@@ -251,7 +251,8 @@ const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) 
       size="icon"
       className={cn(
         "h-10 w-10 fixed top-4 left-4 shadow-md bg-white/90 backdrop-blur-sm hover:bg-gray-100/90 transition-all duration-300",
-        open ? "opacity-0 pointer-events-none" : "opacity-100 z-[1000]",
+        (open || (isMobile && openMobile)) ? "opacity-0 pointer-events-none" : "opacity-100 z-[1000]",
+        "md:left-4 left-3 md:top-4 top-3", // Adjust position for mobile
         className
       )}
       onClick={(event) => {
@@ -260,7 +261,7 @@ const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) 
       }}
       {...props}
     >
-      <Menu style={{ width: 25, height: 25 }} strokeWidth={2.5} />
+      <Menu style={{ width: isMobile ? 22 : 25, height: isMobile ? 22 : 25 }} strokeWidth={2.5} />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

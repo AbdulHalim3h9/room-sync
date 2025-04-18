@@ -4,13 +4,19 @@ import React, { useState, useEffect } from "react";
 import Member from "./Member";
 import { db } from "@/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
+import { cn } from "@/lib/utils";
+import { Users, Archive, Filter, Search, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const MembersList = () => {
   const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get current month in YYYY-MM format
   const currentMonth = (() => {
@@ -25,7 +31,6 @@ const MembersList = () => {
       collection(db, "members"),
       (snapshot) => {
         try {
-          console.log("Snapshot received, documents found:", snapshot.docs.length);
           const membersData = snapshot.docs
             .map((doc) => {
               const docData = doc.data();
@@ -40,23 +45,21 @@ const MembersList = () => {
                 }
                 return true;
               })();
-              const member = {
+              return {
                 docId: doc.id,
                 ...docData,
                 isActive,
               };
-              console.log(
-                `Member ID: ${doc.id}, Name: ${member.fullname}, ActiveFrom: ${member.activeFrom}, ArchiveFrom: ${member.archiveFrom}, IsActive: ${member.isActive}`
-              );
-              return member;
             })
-            .sort((a, b) => a.fullname.localeCompare(b.fullname));
+            .sort((a, b) => a.fullname?.localeCompare(b.fullname || ""));
+
           // Filter based on showArchived
-          const filteredMembers = membersData.filter((member) =>
+          const filtered = membersData.filter((member) =>
             showArchived ? !member.isActive : member.isActive
           );
-          console.log("Filtered members:", filteredMembers);
-          setMembers(filteredMembers);
+
+          setMembers(filtered);
+          setFilteredMembers(filtered);
           setLoading(false);
         } catch (err) {
           console.error("Error processing snapshot:", err);
@@ -71,11 +74,25 @@ const MembersList = () => {
       }
     );
 
-    return () => {
-      console.log("Unsubscribing from snapshot listener");
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [showArchived, currentMonth]);
+
+  // Filter members based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredMembers(members);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = members.filter((member) =>
+      member.fullname?.toLowerCase().includes(query) ||
+      member.email?.toLowerCase().includes(query) ||
+      member.phone?.toLowerCase().includes(query)
+    );
+
+    setFilteredMembers(filtered);
+  }, [searchQuery, members]);
 
   const handleViewArchived = () => {
     setShowArchived(true);
@@ -88,54 +105,114 @@ const MembersList = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h4 className="text-2xl font-bold text-slate-800">
-          {showArchived ? "Archived Members" : "Active Members"} ({members.length})
-        </h4>
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="More options"
-          >
-            <svg
-              className="w-6 h-6 text-gray-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-[1002]">
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg border border-gray-100">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-blue-50 rounded-lg">
+            {showArchived ? (
+              <Archive className="h-5 w-5 text-blue-600" />
+            ) : (
+              <Users className="h-5 w-5 text-blue-600" />
+            )}
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">
+            {showArchived ? "Archived Members" : "Active Members"}
+            <span className="ml-2 text-sm font-medium px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+              {filteredMembers.length}
+            </span>
+          </h2>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search members..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 w-full text-sm bg-gray-50 border-gray-200 focus:bg-white"
+            />
+            {searchQuery && (
               <button
-                onClick={showArchived ? handleViewActive : handleViewArchived}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
               >
-                {showArchived ? "View Active Members" : "View Archived Members"}
+                <span className="sr-only">Clear search</span>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Filter Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "flex items-center gap-1.5 h-9 border-gray-200",
+              showArchived ? "bg-gray-100 text-gray-800" : "bg-white text-gray-700"
+            )}
+            onClick={showArchived ? handleViewActive : handleViewArchived}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span>{showArchived ? "Show Active" : "Show Archived"}</span>
+          </Button>
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="h-px bg-gray-100 w-full my-4"></div>
+
+      {/* Content */}
       {loading ? (
-        <p className="text-center text-gray-600">Loading members...</p>
+        <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+          <Loader2 className="h-8 w-8 animate-spin mb-3 text-blue-500" />
+          <p>Loading members...</p>
+        </div>
       ) : error ? (
-        <p className="text-center text-red-500">{error}</p>
-      ) : members.length === 0 ? (
-        <p className="text-center text-gray-600">
-          No {showArchived ? "archived" : "active"} members found.
-        </p>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">
+          <p>{error}</p>
+        </div>
+      ) : filteredMembers.length === 0 ? (
+        <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+          {searchQuery ? (
+            <>
+              <p className="mb-2 text-gray-600">No results found for "{searchQuery}"</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="mt-2"
+              >
+                Clear search
+              </Button>
+            </>
+          ) : (
+            <p>No {showArchived ? "archived" : "active"} members found.</p>
+          )}
+        </div>
       ) : (
-        <ol className="space-y-4">
-          {members.map((user) => (
-            <li key={user.docId}>
+        <div className="space-y-3 divide-y divide-gray-100">
+          {filteredMembers.map((user) => (
+            <div key={user.docId} className="pt-3 first:pt-0">
               <Member user={user} />
-            </li>
+            </div>
           ))}
-        </ol>
+        </div>
       )}
     </div>
   );

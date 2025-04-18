@@ -203,61 +203,118 @@ export function AppSidebar() {
                     {isAdmin && (
                       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+                          <Button variant="ghost" size="sm" className="hover:bg-gray-100 rounded-full w-8 h-8 p-0">
                             <Pencil className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Manage Phone Numbers</DialogTitle>
-                            <DialogDescription>
-                              Add, view, or remove phone numbers that can be used to call Khala.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="flex space-x-2">
-                              <Input
-                                value={newPhone}
-                                onChange={(e) => setNewPhone(e.target.value)}
-                                placeholder="Enter phone number"
-                              />
-                              <Button onClick={handleAddPhone}>Add</Button>
-                            </div>
-                            {phoneNumbers.map((phone) => (
-                              <div key={phone.id} className="flex justify-between items-center">
-                                <span>{phone.number}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeletePhone(phone.id)}
+                        <DialogContent className="max-w-md bg-white border-gray-200 shadow-xl rounded-2xl p-0 overflow-hidden mx-4 sm:mx-0">
+                          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 sm:p-6 text-white">
+                            <DialogHeader className="items-start text-left space-y-2">
+                              <div className="bg-indigo-500 rounded-full p-2 inline-flex mb-1 shadow-md">
+                                <Pencil className="h-5 w-5 text-white" />
+                              </div>
+                              <DialogTitle className="text-xl font-bold text-white">Manage Phone Numbers</DialogTitle>
+                              <DialogDescription className="text-indigo-100 text-sm">
+                                Add, view, or remove phone numbers that can be used to call Khala.
+                              </DialogDescription>
+                            </DialogHeader>
+                          </div>
+                          
+                          <div className="p-5 sm:p-6">
+                            <div className="space-y-4">
+                              <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+                                <Input
+                                  value={newPhone}
+                                  onChange={(e) => setNewPhone(e.target.value)}
+                                  placeholder="Enter phone number"
+                                  className="flex-1 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm h-10"
+                                />
+                                <Button 
+                                  onClick={handleAddPhone}
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 px-4 transition-colors"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  Add Number
                                 </Button>
                               </div>
-                            ))}
+                              
+                              <div className="mt-4 border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-100 bg-white shadow-sm">
+                                {phoneNumbers.length > 0 ? (
+                                  phoneNumbers.map((phone, idx) => (
+                                    <div key={phone.id} className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
+                                          {idx + 1}
+                                        </div>
+                                        <span className="text-gray-800 font-medium">{phone.number}</span>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeletePhone(phone.id)}
+                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full w-8 h-8 p-0"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="py-8 text-center text-gray-500">
+                                    <p className="text-sm">No phone numbers added yet</p>
+                                    <p className="text-xs text-gray-400 mt-1">Add a number using the form above</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </DialogContent>
                       </Dialog>
                     )}
 
                     <Dialog open={isCallDialogOpen} onOpenChange={setIsCallDialogOpen}>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Select a Number to Call</DialogTitle>
-                          <DialogDescription>
-                            Choose a phone number from the list below to initiate a call to Khala.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-2">
-                          {phoneNumbers.map((phone) => (
-                            <Button
-                              key={phone.id}
-                              className="w-full"
-                              onClick={() => handleCallNumber(phone.number)}
-                            >
-                              {phone.number}
-                            </Button>
-                          ))}
+                      <DialogContent className="max-w-sm bg-gradient-to-b from-blue-50 to-white border-blue-100 shadow-2xl rounded-2xl p-0 overflow-hidden mx-0 ">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 sm:p-6 text-white">
+                          <DialogHeader className="items-center text-center space-y-2">
+                            <div className="bg-blue-500 rounded-full p-2 sm:p-3 inline-flex mx-auto mb-2 shadow-lg">
+                              <PhoneOutgoing className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                            </div>
+                            <DialogTitle className="text-lg sm:text-xl font-bold text-white">Call Khala</DialogTitle>
+                            <DialogDescription className="text-blue-100 max-w-xs mx-auto text-xs sm:text-sm">
+                              Select which Number you would like to use for this call
+                            </DialogDescription>
+                          </DialogHeader>
+                        </div>
+                        
+                        <div className="p-4 sm:p-6">
+                          <div className="space-y-2 sm:space-y-3 max-h-[240px] overflow-y-auto pr-1">
+                            {phoneNumbers.map((phone, idx) => (
+                              <button
+                                key={phone.id}
+                                className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all hover:bg-blue-50 border border-gray-100 hover:border-blue-200 hover:shadow-md group"
+                                onClick={() => handleCallNumber(phone.number)}
+                              >
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm group-hover:shadow transition-all">
+                                  <span className="text-blue-700 font-semibold text-sm sm:text-base">SIM{idx + 1}</span>
+                                </div>
+                                <div className="flex-1 text-left">
+                                  <p className="text-gray-900 font-medium text-base sm:text-lg truncate">{phone.number}</p>
+                                  <p className="text-gray-500 text-xs sm:text-sm">SIM {idx + 1} • Tap to call</p>
+                                </div>
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <PhoneOutgoing className="h-4 w-4 sm:h-5 sm:w-5" />
+                                </div>
+                              </button>
+                            ))}
+                            
+                            {phoneNumbers.length === 0 && (
+                              <div className="text-center py-6 sm:py-8 px-4">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                  <PhoneOutgoing className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
+                                </div>
+                                <p className="text-gray-500 font-medium text-sm sm:text-base">No phone numbers available</p>
+                                <p className="text-gray-400 text-xs sm:text-sm mt-1">Please add a phone number first</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </DialogContent>
                     </Dialog>

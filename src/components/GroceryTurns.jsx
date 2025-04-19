@@ -151,57 +151,51 @@ const GroceriesSpendings = () => {
             />
           </div>
 
-          <div className="space-y-3">
+          <div>
             {expenses.length > 0 ? (
-              <>
-                <div className="hidden sm:grid sm:grid-cols-[1fr_2fr_2fr_1fr] gap-x-4 pb-2 border-b border-gray-100 mb-2">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Date</span>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Description</span>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Shopper</span>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Amount</span>
-                </div>
-                
-                {expenses.map((expense) => (
-                  <div key={expense.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_2fr_1fr] gap-3 sm:gap-x-4 sm:items-center">
-                      <div className="flex items-center sm:block">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider sm:hidden mr-2">Date:</span>
-                        <span className="text-sm font-medium text-gray-800">{formatDate(expense.date)}</span>
-                      </div>
-                      
-                      <div className="flex items-center sm:block">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider sm:hidden mr-2">Description:</span>
-                        <span className="text-sm text-gray-800">
-                          {expense.expenseTitle || expense.expenseType}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center sm:block">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider sm:hidden mr-2">Shopper:</span>
-                        <span className="text-sm text-gray-600">
-                          {expense.shopperName ? (
-                            <span className="inline-flex items-center">
-                              <span className="w-6 h-6 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-xs font-medium mr-2">
-                                {expense.shopperName.charAt(0)}
-                              </span>
-                              {expense.shopperName}
+              <table className="w-full table-auto border-collapse">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-1 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap" style={{fontSize: '12px'}}>Date</th>
+                    <th className="px-1 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap" style={{fontSize: '12px'}}>Description</th>
+                    <th className="px-1 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap" style={{fontSize: '12px'}}>Shopper</th>
+                    <th className="px-1 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap text-right" style={{fontSize: '12px'}}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map((expense) => (
+                    <tr key={expense.id} className="hover:bg-gray-50">
+                      <td className="px-1 py-1 text-sm text-gray-800 whitespace-nowrap" style={{fontSize: '13px'}}>{formatDate(expense.date)}</td>
+                      <td className="px-1 py-1 text-sm text-gray-800 whitespace-nowrap" style={{fontSize: '13px'}}>{expense.expenseTitle || expense.expenseType}</td>
+                      <td className="px-1 py-1 text-sm text-gray-600 whitespace-nowrap" style={{fontSize: '13px'}}>
+                        {expense.shopperName ? (
+                          <span className="inline-flex items-center">
+                            <span className="w-5 h-5 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-xs font-medium mr-1">
+                              {expense.shopperName.charAt(0)}
                             </span>
-                          ) : (
-                            'Unknown'
-                          )}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between sm:block">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider sm:hidden">Amount:</span>
-                        <span className="text-sm font-semibold text-right text-gray-900 sm:ml-auto block">
-                          ৳ {expense.amountSpent}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </>
+                            {expense.shopperName}
+                          </span>
+                        ) : (
+                          'Unknown'
+                        )}
+                      </td>
+                      <td className="px-1 py-1 text-sm font-semibold text-right text-gray-900 whitespace-nowrap" style={{fontSize: '13px'}}>৳ {expense.amountSpent}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50">
+                    <td></td>
+                    <td className="px-1 py-1 text-sm font-medium text-gray-700 whitespace-nowrap" colSpan={2}>
+                      Total Groceries
+                      <span className="ml-1 bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                        {expenses.length}
+                      </span>
+                    </td>
+                    <td className="px-1 py-1 text-base font-bold text-right text-gray-900 whitespace-nowrap">৳ {totalSpending}</td>
+                  </tr>
+                </tfoot>
+              </table>
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -209,29 +203,6 @@ const GroceriesSpendings = () => {
                 </svg>
                 <p className="text-gray-500 font-medium">No expenses found for {month}</p>
                 <p className="text-gray-400 text-sm mt-1">Try selecting a different month or adding new expenses</p>
-              </div>
-            )}
-
-            {expenses.length > 0 && (
-              <div className="mt-6 p-4 border-t border-gray-200 bg-gray-50 rounded-lg">
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_2fr_1fr] gap-y-2 gap-x-4">
-                  <div></div>
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-gray-700">
-                      Total Groceries
-                    </span>
-                    <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                      {expenses.length}
-                    </span>
-                  </div>
-                  <div></div>
-                  <div className="flex items-center justify-between sm:block">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider sm:hidden">Total:</span>
-                    <span className="text-base font-bold text-right text-gray-900 sm:ml-auto block">
-                      ৳ {totalSpending}
-                    </span>
-                  </div>
-                </div>
               </div>
             )}
           </div>

@@ -378,133 +378,152 @@ export default function ResponsiveChartWrapper() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="container mx-auto px-6 pt-4 pb-6 max-w-7xl">
       <AnnouncementBanner />
+      {/* AnnouncementBanner is now a fixed position widget */}
       
-      {/* Member Presence Section - Compact */}
-      <Card className="mb-6 shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 transition-colors duration-300">
-          <CardHeader className="py-3 px-4 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Home className="h-5 w-5 text-emerald-600" />
-                <CardTitle className="text-lg font-medium">Who's in the Apartment?</CardTitle>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowMemberDetails(prev => !prev)}
-                className="h-8 w-8 p-0 rounded-full"
-              >
-                {showMemberDetails ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                )}
-              </Button>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm py-3 -mx-6 px-6 mb-4 border-b">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-lg sm:text-xl font-medium">
+              Monthly Summary
+            </CardTitle>
+          </div>
+          <div className="flex justify-center sm:justify-end">
+            <SingleMonthYearPicker
+              value={month}
+              onChange={setMonth}
+              collections={["contributionConsumption", "individualMeals"]}
+            />
+          </div>
+        </div>
+      </div>
+      
+      {/* Member Presence Section - Ultra Compact */}
+<Card className="mb-6 shadow-lg overflow-hidden">
+  <div className="bg-gradient-to-r from-green-50 to-emerald-50 transition-colors duration-300">
+    <CardHeader className="py-2 px-3">
+      <div className="flex items-center justify-between">
+        {/* Compact View - Single Row */}
+        <div className="flex items-center gap-2">
+          <Home className="h-5 w-5 text-emerald-600" />
+          {loadingPresence ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500"></div>
             </div>
-            
-            {/* Compact View - Always Visible */}
-            {loadingPresence ? (
-              <div className="flex items-center justify-center py-2 mt-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {activeMembers.map((member) => {
-                  const presenceData = memberPresence[member.memberId];
-                  const statusFound = presenceData !== undefined;
-                  const isPresent = statusFound ? presenceData.isPresent : false;
-                  
-                  return (
-                    <div 
-                      key={member.memberId}
-                      className="relative cursor-pointer hover:scale-110 transition-transform duration-200"
-                      onClick={() => toggleMemberPresence(member.memberId, !isPresent)}
-                      title={`${member.shortname || member.memberName} is ${statusFound ? (isPresent ? 'at home' : 'away') : 'unknown'}`}
-                    >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'} border ${statusFound ? (isPresent ? 'border-emerald-200' : 'border-gray-200') : 'border-blue-200'}`}>
-                        {member.imgSrc ? (
-                          <img 
-                            src={member.imgSrc} 
-                            alt={member.memberName} 
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-sm font-semibold">
-                            {member.memberName.charAt(0)}
-                          </span>
-                        )}
-                      </div>
-                      <span 
-                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${statusFound ? (isPresent ? 'bg-emerald-500' : 'bg-red-500') : 'bg-blue-500'}`}
-                      ></span>
+          ) : (
+            <div className="flex items-center gap-1">
+              {activeMembers.map((member) => {
+                const presenceData = memberPresence[member.memberId];
+                const statusFound = presenceData !== undefined;
+                const isPresent = statusFound ? presenceData.isPresent : false;
+
+                return (
+                  <div
+                    key={member.memberId}
+                    className="relative cursor-pointer hover:scale-110 transition-transform duration-200"
+                    onClick={() => toggleMemberPresence(member.memberId, !isPresent)}
+                    title={`${member.shortname || member.memberName} is ${statusFound ? (isPresent ? 'in apartment' : 'away') : 'unknown'}`}
+                  >
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'} border ${statusFound ? (isPresent ? 'border-emerald-200' : 'border-gray-200') : 'border-blue-200'}`}>
+                      {member.imgSrc ? (
+                        <img
+                          src={member.imgSrc}
+                          alt={member.memberName}
+                          className="w-7 h-7 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs font-semibold">
+                          {member.memberName.charAt(0)}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardHeader>
-          
-          {/* Expanded View - Only Visible When Expanded */}
-          {showMemberDetails && (
-            <CardContent className="pt-4 pb-2 animate-in fade-in-50 duration-300">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {activeMembers.map((member) => {
-                  const presenceData = memberPresence[member.memberId];
-                  const statusFound = presenceData !== undefined;
-                  const isPresent = statusFound ? presenceData.isPresent : false;
-                  
-                  return (
-                    <div 
-                      key={member.memberId}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${statusFound ? (isPresent ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200') : 'bg-blue-50 border-blue-200'} transition-colors duration-200`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className={`relative w-8 h-8 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'}`}>
-                          {member.imgSrc ? (
-                            <img 
-                              src={member.imgSrc} 
-                              alt={member.memberName} 
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-sm font-semibold">
-                              {member.memberName.charAt(0)}
-                            </span>
-                          )}
-                          <span 
-                            className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${statusFound ? (isPresent ? 'bg-emerald-500' : 'bg-red-500') : 'bg-blue-500'}`}
-                          ></span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium truncate max-w-[100px]">
-                            {member.shortname || member.memberName}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {statusFound ? (isPresent ? 'At Home' : 'Away') : 'Status not found'}
-                          </span>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={isPresent}
-                        onCheckedChange={(checked) => toggleMemberPresence(member.memberId, checked)}
-                        className={`${statusFound ? (isPresent ? 'data-[state=checked]:bg-emerald-500' : '') : 'data-[state=checked]:bg-blue-500'}`}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="mt-4 px-4 py-2 border-t border-gray-100 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500 text-center">
-                  Toggle the switch to update a member's presence status
-                </p>
-              </div>
-            </CardContent>
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${statusFound ? (isPresent ? 'bg-emerald-500' : 'bg-red-500') : 'bg-blue-500'}`}
+                    ></span>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
-      </Card>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowMemberDetails(prev => !prev)}
+          className="h-7 w-7 p-0 rounded-full"
+        >
+          {showMemberDetails ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          )}
+        </Button>
+      </div>
+    </CardHeader>
+
+    {/* Expanded View */}
+    {showMemberDetails && (
+      <CardContent className="pt-3 pb-2 animate-in fade-in-50 duration-300">
+        <CardTitle className="text-lg font-medium mb-3">Who's in the Apartment?</CardTitle>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          {activeMembers.map((member) => {
+            const presenceData = memberPresence[member.memberId];
+            const statusFound = presenceData !== undefined;
+            const isPresent = statusFound ? presenceData.isPresent : false;
+
+            return (
+              <div
+                key={member.memberId}
+                className={`flex items-center justify-between p-2 rounded-lg border ${statusFound ? (isPresent ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200') : 'bg-blue-50 border-blue-200'} transition-colors duration-200`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`relative w-7 h-7 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'}`}>
+                    {member.imgSrc ? (
+                      <img
+                        src={member.imgSrc}
+                        alt={member.memberName}
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-semibold">
+                        {member.memberName.charAt(0)}
+                      </span>
+                    )}
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${statusFound ? (isPresent ? 'bg-emerald-500' : 'bg-red-500') : 'bg-blue-500'}`}
+                    ></span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium truncate max-w-[90px]">
+                      {member.shortname || member.memberName}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {statusFound ? (isPresent ? 'In Apartment' : 'Away') : 'Status not found'}
+                    </span>
+                  </div>
+                </div>
+                <Switch
+                  checked={isPresent}
+                  onCheckedChange={(checked) => toggleMemberPresence(member.memberId, checked)}
+                  className={`${statusFound ? (isPresent ? 'data-[state=checked]:bg-emerald-500' : '') : 'data-[state=checked]:bg-blue-500'}`}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 px-3 py-1 border-t border-gray-100 bg-gray-50 rounded-lg">
+          <p className="text-xs text-gray-500 text-center">
+            Toggle the switch to update a member's presence status
+          </p>
+        </div>
+      </CardContent>
+    )}
+  </div>
+</Card>
       
       {/* Last Update Notification */}
       {latestUpdate.type && (
@@ -585,26 +604,6 @@ export default function ResponsiveChartWrapper() {
       
       {/* Main Dashboard Card */}
       <Card className="mb-8 shadow-lg overflow-hidden border-0 bg-gradient-to-br from-white to-gray-50">
-        <CardHeader className="pb-2 border-b bg-white">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              <CardTitle className="text-lg sm:text-xl font-medium text-center sm:text-left">
-                Monthly Summary
-              </CardTitle>
-              <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
-                {month}
-              </Badge>
-            </div>
-            <div className="flex justify-center sm:justify-end">
-              <SingleMonthYearPicker
-                value={month}
-                onChange={setMonth}
-                collections={["contributionConsumption", "individualMeals"]}
-              />
-            </div>
-          </div>
-        </CardHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="px-6 pt-4 border-b">

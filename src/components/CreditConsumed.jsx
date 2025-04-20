@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import NavigateMembers from "./layouts/NavigateMembers";
 import { Routes, Route } from "react-router-dom";
 import TabSwitcherMealChart from "./layouts/TabSwitcherMealChart";
@@ -9,9 +9,42 @@ import { MembersContext } from "@/contexts/MembersContext";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { detectDevice } from "@/utils/deviceDetection";
+import { storeDeviceInfo, storeUniqueDeviceInfo } from "@/utils/deviceTracking";
 
 const CreditConsumed = () => {
   const { members, loading, error } = React.useContext(MembersContext);
+
+  // Detect and store device info on component mount
+  useEffect(() => {
+    const deviceInfo = detectDevice();
+    
+    // Store regular device info
+    storeDeviceInfo(deviceInfo);
+    
+    // Store unique device info
+    storeUniqueDeviceInfo(deviceInfo).then(result => {
+      if (result.isNew) {
+        console.log('New unique device detected and stored');
+      } else {
+        console.log('Existing device detected and usage count updated');
+      }
+    });
+
+    // Log device info
+    console.log('Detailed Device Information:', {
+      'Is Mobile': deviceInfo.isMobile,
+      'Is Tablet': deviceInfo.isTablet,
+      'Is Desktop': deviceInfo.isDesktop,
+      'Is Android': deviceInfo.isAndroid,
+      'Is iOS': deviceInfo.isIOS,
+      'Device Model': deviceInfo.deviceModel,
+      'OS Version': deviceInfo.osVersion,
+      'Screen Width': `${deviceInfo.screenWidth}px`,
+      'Screen Height': `${deviceInfo.screenHeight}px`,
+      'User Agent': deviceInfo.userAgent
+    });
+  }, []);
 
   if (loading) {
     return (

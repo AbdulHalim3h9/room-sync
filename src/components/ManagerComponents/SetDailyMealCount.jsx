@@ -329,6 +329,7 @@ const DailyMealForm = () => {
       const memberTotals = {};
       let totalMealsAllMembers = 0;
 
+      // Calculate total meals per member and overall
       for (const [memberId, meals] of Object.entries(mealCountsData)) {
         const totalEntry = meals.find((meal) => meal.startsWith("Total"));
         if (totalEntry) {
@@ -338,34 +339,58 @@ const DailyMealForm = () => {
         }
       }
 
+      // Fetch mealSummaries
       const summaryRef = doc(db, "mealSummaries", month);
       const summarySnap = await getDoc(summaryRef);
       const existingData = summarySnap.exists() ? summarySnap.data() : {};
       const existingTotalMeals = existingData.totalMealsAllMembers || 0;
       const existingTotalSpendings = existingData.totalSpendings || 0;
 
+      // Check if totalSpendings is available
+      if (existingTotalSpendings === 0) {
+        console.warn(`No totalSpendings found for month ${month}. Cannot calculate mealRate.`);
+        toast({
+          title: "Warning",
+          description: "No spending data available for this month. Consumption will be set to 0.",
+          variant: "destructive",
+        });
+      }
+
       const updatedTotalMeals = existingTotalMeals + totalMealsAllMembers;
       const mealRate =
-        updatedTotalMeals > 0
+        existingTotalSpendings > 0 && updatedTotalMeals > 0
           ? (existingTotalSpendings / updatedTotalMeals).toFixed(2)
           : 0;
 
+      // Update mealSummaries
       await setDoc(
         summaryRef,
         {
           totalMealsAllMembers: updatedTotalMeals,
+          totalSpendings: existingTotalSpendings,
           mealRate: parseFloat(mealRate),
           lastUpdated: new Date().toISOString(),
         },
         { merge: true }
       );
 
+      // Update contributionConsumption for each member
       for (const member of members) {
         const memberId = member.id;
         const memberName = member.name;
         const totalMeals = memberTotals[memberId] || 0;
         const consumption = totalMeals * parseFloat(mealRate);
-        console.log("consumption",consumption);
+        
+        // Debug logging
+        console.log({
+          memberId,
+          memberName,
+          totalMeals,
+          mealRate,
+          consumption,
+          existingTotalSpendings,
+          updatedTotalMeals,
+        });
 
         const contribConsumpDocId = `${month}-${memberName}`;
         const contribConsumpRef = doc(db, "contributionConsumption", contribConsumpDocId);
@@ -449,7 +474,6 @@ const DailyMealForm = () => {
   return (
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {/* Header with gradient background */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-6 sm:py-8">
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Set Daily Meal Count
@@ -514,7 +538,7 @@ const DailyMealForm = () => {
               <Button 
                 type="submit" 
                 disabled={members.length === 0}
-                className="w-full sm:w-auto h-11 bg-purple-600 hover:bg-purple-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-purple-200 focus:ring-opacity-50 px-6"
+                className="w-full sm:w-auto h-11 bg-purple-600 hover:bg-purple-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus不为环-4 focus:ring-purple-200 focus:ring-opacity-50 px-6"
               >
                 {existingDocId ? "Update" : "Save"} Meal Counts
               </Button>

@@ -50,12 +50,14 @@ const GroceriesSpendings = () => {
             const memberDoc = await getDoc(memberRef);
             return {
               ...expense,
-              shopperName: memberDoc.exists() ? memberDoc.data().fullname : "Unknown",
+              shopperId: memberDoc.exists() ? memberDoc.data().fullname : "Unknown",
             };
           }
-          return { ...expense, shopperName: null };
+          return { ...expense};
         })
       );
+
+      console.log("hey",expensesWithShopperNames)
 
       setExpenses(expensesWithShopperNames);
       console.log("Fetched expenses for", monthString, ":", expensesWithShopperNames);
@@ -168,15 +170,15 @@ const GroceriesSpendings = () => {
                       <td className="px-1 py-1 text-sm text-gray-800 whitespace-nowrap" style={{fontSize: '13px'}}>{formatDate(expense.date)}</td>
                       <td className="px-1 py-1 text-sm text-gray-800 whitespace-nowrap" style={{fontSize: '13px'}}>{expense.expenseTitle || expense.expenseType}</td>
                       <td className="px-1 py-1 text-sm text-gray-600 whitespace-nowrap" style={{fontSize: '13px'}}>
-                        {expense.shopperName ? (
+                        {expense.shopperId ? (
                           <span className="inline-flex items-center">
                             <span className="w-5 h-5 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-xs font-medium mr-1">
-                              {expense.shopperName.charAt(0)}
+                              {expense.shopperId.charAt(0)}
                             </span>
-                            {expense.shopperName}
+                            {expense.shopperId}
                           </span>
                         ) : (
-                          'Unknown'
+                          ''
                         )}
                       </td>
                       <td className="px-1 py-1 text-sm font-semibold text-right text-gray-900 whitespace-nowrap" style={{fontSize: '13px'}}>৳ {expense.amountSpent}</td>

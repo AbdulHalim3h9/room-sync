@@ -58,68 +58,58 @@ const MealCountMonth = () => {
   const member = mealData.find((m) => m.memberId === memberId) || mealData[0];
 
   const mealsMap = new Map();
+  let totalCount = "0";
   if (member?.meals) {
     member.meals.forEach((meal, index, arr) => {
       if (index === arr.length - 1 && meal.startsWith("Total")) {
-        mealsMap.set("Total", meal.split(" ")[1]);
+        totalCount = meal.split(" ")[1];
       } else {
         mealsMap.set(meal.slice(0, 2), meal.slice(3));
       }
     });
   }
 
-  const firstHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) <= 16 || day === "Total"));
+  // Split into two halves
+  const firstHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) <= 16));
   const secondHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) > 16));
 
+  // Combine into a single array of rows for synchronized display
+  const maxRows = Math.max(firstHalf.size, secondHalf.size);
+  const tableRows = Array.from({ length: maxRows }, (_, i) => {
+    const firstHalfEntries = [...firstHalf.entries()];
+    const secondHalfEntries = [...secondHalf.entries()];
+    
+    return {
+      firstHalf: firstHalfEntries[i] || [],
+      secondHalf: secondHalfEntries[i] || []
+    };
+  });
+
   const formatDate = (day) => {
-    if (day === "Total") {
-      return <span>Total</span>;
-    }
+    if (!day) return null;
     const dateString = `${month}-${day.padStart(2, "0")}`;
     const date = new Date(dateString);
-    const options = { day: "numeric" };
     const weekday = date.toLocaleString("en-US", { weekday: "short" });
-    const formattedDay = date.toLocaleDateString("en-US", options);
+    const formattedDay = date.toLocaleDateString("en-US", { day: "numeric" });
     return (
       <span>
-        {formattedDay} <span className="text-gray-600">{weekday}</span>
+        {formattedDay} <span className="text-gray-500 text-xs">{weekday}</span>
       </span>
     );
   };
 
   if (isLoading || membersLoading) {
-    return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 bg-white rounded-full"></div>
-            </div>
-          </div>
-          <div className="text-center space-y-2">
-            <p className="text-lg font-medium text-gray-700">Loading meal data</p>
-            <p className="text-sm text-gray-500">Please wait while we fetch your information</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-64">Loading...</div>;
   }
 
   if (membersError) {
-    return (
-      <div className="max-w-6xl mx-auto p-6 text-center text-red-500">
-        {membersError}
-      </div>
-    );
+    return <div className="text-red-500 text-center p-4">{membersError}</div>;
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 md:mb-0">
-          Monthly Meal Count
-        </h2>
+    <div className="max-w-7xl mx-auto p-4">
+      <div className="flex justify-between items-center mb-6 gap-4">
+        <h2 className="text-xl font-semibold text-gray-800">Monthly Meal Count</h2>
         <SingleMonthYearPicker
           value={month}
           onChange={setMonth}
@@ -132,54 +122,78 @@ const MealCountMonth = () => {
           <p className="text-gray-600">No meal data available for this member.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 p-6">
-            <div className={`flex ${secondHalf.size === 0 ? "w-full" : "gap-4 md:gap-8"}`}>
-              <div className={secondHalf.size === 0 ? "w-full" : "w-1/2"}>
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            {/* First Half Table - always shown */}
+            <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-2/3 px-2 py-2 text-left font-medium text-gray-700">
+                      Date (1-16)
+                    </TableHead>
+                    <TableHead className="w-1/3 px-2 py-2 text-left font-medium text-gray-700">
+                      Meals
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tableRows.map((row, index) => (
+                    <TableRow 
+                      key={row.firstHalf[0] || `empty-${index}`}
+                      className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                    >
+                      <TableCell className="px-2 py-2">
+                        {formatDate(row.firstHalf[0])}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 font-medium text-indigo-600">
+                        {row.firstHalf[1] || ''}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Second Half Table - only if data exists */}
+            {secondHalf.size > 0 && (
+              <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
-                      <TableHead className="text-center font-semibold text-gray-700">Date</TableHead>
-                      <TableHead className="text-center font-semibold text-gray-700">Meal Count</TableHead>
+                      <TableHead className="w-2/3 px-2 py-2 text-left font-medium text-gray-700">
+                        Date(17-31)
+                      </TableHead>
+                      <TableHead className="w-1/3 px-2 py-2 text-left font-medium text-gray-700">
+                        Meals
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Array.from(firstHalf).map(([day, count], index) => (
+                    {tableRows.map((row, index) => (
                       <TableRow 
-                        className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`} 
-                        key={index}
+                        key={row.secondHalf[0] || `empty-${index}`}
+                        className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                       >
-                        <TableCell className="p-3 text-center text-gray-700">{formatDate(day)}</TableCell>
-                        <TableCell className="p-3 text-center font-medium text-indigo-600">{count}</TableCell>
+                        <TableCell className="px-2 py-2">
+                          {formatDate(row.secondHalf[0])}
+                        </TableCell>
+                        <TableCell className="px-2 py-2 font-medium text-indigo-600">
+                          {row.secondHalf[1] || ''}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
+            )}
+          </div>
 
-              {secondHalf.size > 0 && (
-                <div className="w-1/2">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50">
-                        <TableHead className="text-center font-semibold text-gray-700">Date</TableHead>
-                        <TableHead className="text-center font-semibold text-gray-700">Meal Count</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Array.from(secondHalf).map(([day, count], index) => (
-                        <TableRow 
-                          className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`} 
-                          key={index}
-                        >
-                          <TableCell className="p-3 text-center text-gray-700">{formatDate(day)}</TableCell>
-                          <TableCell className="p-3 text-center font-medium text-indigo-600">{count}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+          {/* Total Row */}
+          <div className={`bg-white rounded-lg border border-gray-200 p-4 ${secondHalf.size > 0 ? 'xl:w-full' : 'xl:w-1/2'}`}>
+            <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-md">
+              <span className="font-medium text-gray-700">Total Meals This Month</span>
+              <span className="text-xl font-bold text-indigo-600">{totalCount}</span>
             </div>
           </div>
         </div>

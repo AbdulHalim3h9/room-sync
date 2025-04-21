@@ -47,98 +47,81 @@ const SidebarProvider = React.forwardRef((
   },
   ref
 ) => {
-  const isMobile = useIsMobile()
-  const [openMobile, setOpenMobile] = React.useState(false)
-
-  // This is the internal state of the sidebar.
-  // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(() => {
-    // Check if there's a saved state in cookies
     const savedState = document.cookie
       .split("; ")
-      .find(row => row.startsWith(SIDEBAR_COOKIE_NAME))
+      .find(row => row.startsWith(SIDEBAR_COOKIE_NAME));
     if (savedState) {
-      return savedState.split("=")[1] === "true"
+      return savedState.split("=")[1] === "true";
     }
-    return defaultOpen
-  })
-  const open = openProp ?? _open
-  const setOpen = React.useCallback((value) => {
-    const openState = typeof value === "function" ? value(open) : value
-    if (setOpenProp) {
-      setOpenProp(openState)
-    } else {
-      _setOpen(openState)
-    }
+    return defaultOpen;
+  });
+  const open = openProp ?? _open;
+  const setOpen = React.useCallback(
+    (value) => {
+      const openState = typeof value === "function" ? value(open) : value;
+      if (setOpenProp) {
+        setOpenProp(openState);
+      } else {
+        _setOpen(openState);
+      }
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+    },
+    [setOpenProp, open]
+  );
 
-    // This sets the cookie to keep the sidebar state.
-    document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
-  }, [setOpenProp, open])
-
-  // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    if (isMobile) {
-      setOpenMobile((open) => !open)
-    } else {
-      setOpen((open) => !open)
-    }
-  }, [isMobile, setOpen, setOpenMobile])
+    setOpen((open) => !open);
+  }, [setOpen]);
 
-  // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
     const handleKeyDown = (event) => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
         (event.metaKey || event.ctrlKey)
       ) {
-        event.preventDefault()
-        toggleSidebar()
+        event.preventDefault();
+        toggleSidebar();
       }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
+    };
+    window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleSidebar])
+  }, [toggleSidebar]);
 
-  // We add a state so that we can do data-state="expanded" or "collapsed".
-  // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? "expanded" : "collapsed"
-
-  const contextValue = React.useMemo(() => ({
-    state,
-    open,
-    setOpen,
-    isMobile,
-    openMobile,
-    setOpenMobile,
-    toggleSidebar,
-  }), [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar])
+  const state = open ? "expanded" : "collapsed";
+  const contextValue = React.useMemo(
+    () => ({
+      state,
+      open,
+      setOpen,
+      isMobile: false, // Treat all screens as non-mobile for consistent behavior
+      openMobile: open,
+      setOpenMobile: setOpen,
+      toggleSidebar,
+    }),
+    [state, open, setOpen, toggleSidebar]
+  );
 
   return (
-    (<SidebarContext.Provider value={contextValue}>
+    <SidebarContext.Provider value={contextValue}>
       <TooltipProvider delayDuration={0}>
         <div
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH,
-              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-              ...style
-            }
-          }
-          className={cn(
-            // min-h-svh
-            "group/sidebar-wrapper flex  w-full has-[[data-variant=inset]]:bg-sidebar",
-            className
-          )}
+          style={{
+            "--sidebar-width": SIDEBAR_WIDTH,
+            "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+            ...style,
+          }}
+          className={cn("flex w-full", className)}
           ref={ref}
-          {...props}>
+          {...props}
+        >
           {children}
         </div>
       </TooltipProvider>
-    </SidebarContext.Provider>)
+    </SidebarContext.Provider>
   );
-})
-SidebarProvider.displayName = "SidebarProvider"
+});
+SidebarProvider.displayName = "SidebarProvider";
 
 const Sidebar = React.forwardRef((
   {
@@ -151,94 +134,30 @@ const Sidebar = React.forwardRef((
   },
   ref
 ) => {
-  const { isMobile, state, openMobile, setOpenMobile, open, setOpen } = useSidebar()
-
-  if (collapsible === "none") {
-    return (
-      (<div
-        className={cn(
-          "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
-          className
-        )}
-        ref={ref}
-        {...props}>
-        {children}
-      </div>)
-    );
-  }
-
-  if (isMobile) {
-    return (
-      (<Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetContent
-          data-sidebar="sidebar"
-          data-mobile="true"
-          className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE
-            }
-          }
-          side={side}>
-          <SheetHeader>
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-            <SheetDescription className="sr-only">
-              Main navigation menu for the application
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
-      </Sheet>)
-    );
-  }
+  const { state, open, setOpen } = useSidebar();
 
   return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 z-[998] bg-black/50 backdrop-blur-sm transition-opacity duration-200"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <div
-        ref={ref}
-        className="group peer hidden md:block text-sidebar-foreground"
-        data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
-        data-variant={variant}
-        data-side={side}>
-        <div
-          className={cn(
-            "duration-200 relative w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
-            "group-data-[collapsible=offcanvas]:w-0",
-            "group-data-[side=right]:rotate-180",
-            variant === "floating" || variant === "inset"
-              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
-          )} />
-        <div
-          className={cn(
-            "duration-200 fixed inset-y-0 z-[999] hidden w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
-            side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
-            className
-          )}
-          {...props}>
-          <div
-            data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow">
-            {children}
-          </div>
-        </div>
-      </div>
-    </>
+    <Sheet open={open} onOpenChange={setOpen} {...props}>
+      <SheetContent
+        data-sidebar="sidebar"
+        className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+        style={{
+          "--sidebar-width": SIDEBAR_WIDTH,
+        }}
+        side={side}
+      >
+        <SheetHeader>
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SheetDescription className="sr-only">
+            Main navigation menu for the application
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex h-full w-full flex-col">{children}</div>
+      </SheetContent>
+    </Sheet>
   );
-})
-Sidebar.displayName = "Sidebar"
+});
+Sidebar.displayName = "Sidebar";
 
 const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) => {
   const { toggleSidebar, isMobile, open, openMobile } = useSidebar()
@@ -250,9 +169,8 @@ const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) 
       variant="ghost"
       size="icon"
       className={cn(
-        "h-10 w-10 fixed top-4 left-4 shadow-md bg-white/90 backdrop-blur-sm hover:bg-gray-100/90 transition-all duration-300",
-        (open || (isMobile && openMobile)) ? "opacity-0 pointer-events-none" : "opacity-100 z-[1000]",
-        "md:left-4 left-3 md:top-4 top-3", // Adjust position for mobile
+        "h-10 w-10 bg-white/90 backdrop-blur-sm hover:bg-gray-100/90 transition-all duration-300",
+        !isMobile && (open || (isMobile && openMobile)) ? "opacity-0 pointer-events-none" : "opacity-100",
         className
       )}
       onClick={(event) => {

@@ -69,9 +69,15 @@ const MealCountMonth = () => {
     });
   }
 
-  // Split into two halves
-  const firstHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) <= 16));
-  const secondHalf = new Map([...mealsMap].filter(([day]) => parseInt(day) > 16));
+  // Split into two halves and sort each half
+  const firstHalf = new Map([...mealsMap.entries()]
+    .filter(([day]) => parseInt(day) <= 16)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+  );
+  const secondHalf = new Map([...mealsMap.entries()]
+    .filter(([day]) => parseInt(day) > 16)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+  );
 
   // Combine into a single array of rows for synchronized display
   const maxRows = Math.max(firstHalf.size, secondHalf.size);
@@ -124,7 +130,7 @@ const MealCountMonth = () => {
       ) : (
         <div className="space-y-4">
           <div className="flex gap-4">
-            {/* First Half Table - always shown */}
+            {/* Two tables with synchronized rows */}
             <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
               <Table>
                 <TableHeader>
@@ -154,39 +160,35 @@ const MealCountMonth = () => {
                 </TableBody>
               </Table>
             </div>
-
-            {/* Second Half Table - only if data exists */}
-            {secondHalf.size > 0 && (
-              <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="w-2/3 px-2 py-2 text-left font-medium text-gray-700">
-                        Date(17-31)
-                      </TableHead>
-                      <TableHead className="w-1/3 px-2 py-2 text-left font-medium text-gray-700">
-                        Meals
-                      </TableHead>
+            <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-2/3 px-2 py-2 text-left font-medium text-gray-700">
+                      Date (17-31)
+                    </TableHead>
+                    <TableHead className="w-1/3 px-2 py-2 text-left font-medium text-gray-700">
+                      Meals
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tableRows.map((row, index) => (
+                    <TableRow 
+                      key={row.secondHalf[0] || `empty-${index}`}
+                      className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                    >
+                      <TableCell className="px-2 py-2">
+                        {formatDate(row.secondHalf[0])}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 font-medium text-indigo-600">
+                        {row.secondHalf[1] || ''}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tableRows.map((row, index) => (
-                      <TableRow 
-                        key={row.secondHalf[0] || `empty-${index}`}
-                        className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                      >
-                        <TableCell className="px-2 py-2">
-                          {formatDate(row.secondHalf[0])}
-                        </TableCell>
-                        <TableCell className="px-2 py-2 font-medium text-indigo-600">
-                          {row.secondHalf[1] || ''}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Total Row */}

@@ -38,21 +38,22 @@ const App = () => {
   return (
     <MembersProvider>
       <ErrorBoundary>
-        <Layout />
-        <Routes>
-          <Route path="*" element={<CreditConsumed />} />
-          <Route path="/creditconsumed/*" element={<CreditConsumed />} />
-          <Route path="/payables" element={<Payables />} />
-          <Route path="/groceries_spendings" element={<Groceries_spendings />} />
-          <Route path="/add-grocery-spendings" element={<AddGrocerySpendings />} />
-          <Route path="/add-meal-fund" element={<AddMealFund />} />
-          <Route path="/set-payables" element={<SetPayables />} />
-          <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
-          <Route path="/register-member" element={<RegisterMember />} />
-          <Route path="/members" element={<MembersList />} />
-          <Route path="/member-details" element={<MemberDetails />} />
-          <Route path="/register" element={<RegistrationForm />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="*" element={<CreditConsumed />} />
+            <Route path="/creditconsumed/*" element={<CreditConsumed />} />
+            <Route path="/payables" element={<Payables />} />
+            <Route path="/groceries_spendings" element={<Groceries_spendings />} />
+            <Route path="/add-grocery-spendings" element={<AddGrocerySpendings />} />
+            <Route path="/add-meal-fund" element={<AddMealFund />} />
+            <Route path="/set-payables" element={<SetPayables />} />
+            <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
+            <Route path="/register-member" element={<RegisterMember />} />
+            <Route path="/members" element={<MembersList />} />
+            <Route path="/member-details" element={<MemberDetails />} />
+            <Route path="/register" element={<RegistrationForm />} />
+          </Routes>
+        </Layout>
         <BottomNavigation />
       </ErrorBoundary>
     </MembersProvider>

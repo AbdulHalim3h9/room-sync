@@ -9,8 +9,9 @@ export default function Layout({ children }) {
       <div className="flex w-full min-h-screen overflow-hidden">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
+          <div className="h-16"></div> {/* Reserved space for topbar */}
           <TopBar />
-          <main className="flex-1 p-4 overflow-auto">{children}</main>
+          <main className="flex-1 p-4 overflow-auto pt-2">{children}</main>
           <Toaster />
         </div>
       </div>

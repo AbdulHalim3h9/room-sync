@@ -12,7 +12,7 @@ const TabSwitcherMealChart = () => {
   return (
     <div>
       <Tabs defaultValue="chart">
-        <TabsList className="fixed left-1/2 -translate-x-1/2 top-2">
+        <TabsList className="sticky top-0 left-1/2 -translate-x-1/2 z-20 bg-white p-2 shadow-sm">
           <TabsTrigger value="chart">Chart</TabsTrigger>
           <TabsTrigger value="mealcount">Meal Count</TabsTrigger>
         </TabsList>

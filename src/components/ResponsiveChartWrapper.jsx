@@ -803,12 +803,11 @@ export default function ResponsiveChartWrapper() {
           </CardContent>
         </Tabs>
         
-        <CardFooter className="bg-gray-50 border-t py-3 text-xs text-gray-500 flex justify-between">
-          <div className="flex items-center gap-1">
+        <CardFooter className="bg-gray-50 border-t py-3 text-xs text-gray-500">
+          <div className="flex items-center gap-1 ml-auto">
             <Clock className="h-3 w-3" />
             <span>Last updated: {formatTimestamp(lastUpdates.mealFund)}</span>
           </div>
-          <span>Meal Rate: {mealRate || "N/A"} tk</span>
         </CardFooter>
       </Card>
     </div>

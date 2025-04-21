@@ -168,17 +168,20 @@ const AnnouncementBanner = () => {
           .banner {
             background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
             color: white;
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
             border-radius: 8px;
-            margin: 1rem auto;
-            max-width: 1200px;
+            margin: 0.5rem;
+            max-width: 92vw;
+            width: 100%;
             cursor: pointer;
             position: relative;
             transition: transform 0.3s ease;
+            max-height: 3.5rem;
+            overflow: hidden;
           }
 
           .banner:hover {
@@ -189,8 +192,18 @@ const AnnouncementBanner = () => {
           .banner-content {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex: 1;
+          }
+
+          .announcement-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            margin: 0 0.5rem;
           }
 
           .banner-close {

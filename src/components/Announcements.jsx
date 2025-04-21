@@ -126,41 +126,41 @@ const Announcements = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Announcements</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-[90vw] sm:max-w-md">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg sm:text-xl font-semibold">Announcements</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             Important messages for all members
           </DialogDescription>
         </DialogHeader>
         
-        <div className="max-h-[60vh] overflow-y-auto py-4">
+        <div className="max-h-[40vh] sm:max-h-[50vh] overflow-y-auto py-2 px-1 border-t border-b border-gray-200">
           {announcements.length === 0 ? (
-            <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No announcements yet</p>
+            <div className="text-center py-6">
+              <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No announcements yet</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {announcements.map((announcement) => (
                 <div 
                   key={announcement.id} 
-                  className={`p-4 rounded-lg border ${announcement.isAdminAnnouncement 
+                  className={`p-2 sm:p-3 rounded-lg border ${announcement.isAdminAnnouncement 
                     ? "bg-purple-50 border-purple-300" 
                     : "bg-gray-50 border-gray-100"
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-700">{announcement.author}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs sm:text-sm font-medium text-gray-700">{announcement.author}</p>
                         {announcement.isAdminAnnouncement && (
-                          <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                          <span className="px-1.5 py-0.5 text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
                             Admin
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
                         {formatTimestamp(announcement.timestamp)}
                       </p>
                     </div>
@@ -169,13 +169,13 @@ const Announcements = ({ isOpen, onClose }) => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => handleDelete(announcement.id)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>
-                  <p className={`mt-2 whitespace-pre-wrap ${announcement.isAdminAnnouncement 
+                  <p className={`mt-1 text-sm sm:text-base whitespace-pre-wrap ${announcement.isAdminAnnouncement 
                     ? "text-purple-900 font-medium" 
                     : "text-gray-800"
                   }`}>{announcement.content}</p>
@@ -185,24 +185,26 @@ const Announcements = ({ isOpen, onClose }) => {
           )}
         </div>
         
-        <form onSubmit={handleSubmit} className="mt-4">
-          <Textarea
-            value={newAnnouncement}
-            onChange={(e) => setNewAnnouncement(e.target.value)}
-            placeholder="Write your announcement here..."
-            className="min-h-[100px] resize-none"
-            required
-          />
-          <DialogFooter className="mt-4">
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !newAnnouncement.trim()}
-              className={`w-full ${isAdmin ? "bg-purple-600 hover:bg-purple-700" : ""}`}
-            >
-              {isSubmitting ? "Posting..." : isAdmin ? "Post Admin Announcement" : "Post Announcement"}
-            </Button>
-          </DialogFooter>
-        </form>
+        {canMakeAnnouncement && (
+          <form onSubmit={handleSubmit} className="mt-3">
+            <Textarea
+              value={newAnnouncement}
+              onChange={(e) => setNewAnnouncement(e.target.value)}
+              placeholder="Write your announcement here..."
+              className="min-h-[80px] sm:min-h-[100px] resize-none text-sm"
+              required
+            />
+            <DialogFooter className="mt-3">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || !newAnnouncement.trim()}
+                className={`w-full text-sm ${isAdmin ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+              >
+                {isSubmitting ? "Posting..." : isAdmin ? "Post Admin Announcement" : "Post Announcement"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

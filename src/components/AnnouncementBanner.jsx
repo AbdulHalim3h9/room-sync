@@ -168,19 +168,24 @@ const AnnouncementBanner = () => {
           .banner {
             background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
             color: white;
-            padding: 0.75rem 1rem;
+            padding: 1rem 1.25rem;
             display: flex;
             align-items: center;
+            gap: 1rem;
             justify-content: space-between;
             gap: 1rem;
             border-radius: 8px;
             margin: 0.5rem;
-            max-width: 92vw;
             width: 100%;
+            max-width: 92vw;
+            @media (max-width: 640px) {
+              max-width: 96vw;
+              padding: 1rem 1rem;
+            }
             cursor: pointer;
             position: relative;
             transition: transform 0.3s ease;
-            max-height: 3.5rem;
+            max-height: 4.5rem;
             overflow: hidden;
           }
 
@@ -192,7 +197,7 @@ const AnnouncementBanner = () => {
           .banner-content {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
             flex: 1;
           }
 
@@ -202,7 +207,7 @@ const AnnouncementBanner = () => {
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.2;
+            line-height: 1.4;
             margin: 0 0.5rem;
           }
 

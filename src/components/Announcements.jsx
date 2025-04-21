@@ -127,6 +127,25 @@ const Announcements = ({ isOpen, onClose }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] sm:max-w-md">
+        <style>
+          {`
+            .dialog-content {
+              max-height: 50vh;
+              @media (max-width: 640px) {
+                max-height: 33vh;
+              }
+            }
+
+            .announcement-card {
+              padding: 0.75rem;
+              margin-bottom: 0.5rem;
+            }
+
+            .announcement-text {
+              margin-top: 0.5rem;
+            }
+          `}
+        </style>
         <DialogHeader className="pb-2">
           <DialogTitle className="text-lg sm:text-xl font-semibold">Announcements</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
@@ -134,25 +153,25 @@ const Announcements = ({ isOpen, onClose }) => {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="max-h-[40vh] sm:max-h-[50vh] overflow-y-auto py-2 px-1 border-t border-b border-gray-200">
+        <div className="dialog-content max-h-[40vh] sm:max-h-[50vh] overflow-y-auto py-2 px-1 border-t border-b border-gray-200">
           {announcements.length === 0 ? (
-            <div className="text-center py-6">
-              <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+            <div className="text-center py-4">
+              <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
               <p className="text-gray-500 text-sm">No announcements yet</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {announcements.map((announcement) => (
                 <div 
                   key={announcement.id} 
-                  className={`p-2 sm:p-3 rounded-lg border ${announcement.isAdminAnnouncement 
+                  className={`announcement-card rounded-lg border ${announcement.isAdminAnnouncement 
                     ? "bg-purple-50 border-purple-300" 
                     : "bg-gray-50 border-gray-100"
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <p className="text-xs sm:text-sm font-medium text-gray-700">{announcement.author}</p>
                         {announcement.isAdminAnnouncement && (
                           <span className="px-1.5 py-0.5 text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
@@ -175,7 +194,7 @@ const Announcements = ({ isOpen, onClose }) => {
                       </Button>
                     )}
                   </div>
-                  <p className={`mt-1 text-sm sm:text-base whitespace-pre-wrap ${announcement.isAdminAnnouncement 
+                  <p className={`announcement-text text-sm sm:text-base whitespace-pre-wrap ${announcement.isAdminAnnouncement 
                     ? "text-purple-900 font-medium" 
                     : "text-gray-800"
                   }`}>{announcement.content}</p>

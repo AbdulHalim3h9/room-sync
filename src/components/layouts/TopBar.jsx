@@ -42,7 +42,7 @@ export function TopBar() {
         <div className="flex items-center gap-4">
           <SidebarTrigger className="flex-none shadow-none" />
         </div>
-        <h2 className="text-lg font-semibold ml-auto mr-4">RoomSync (beta)</h2>
+        <h2 className="text-lg font-medium ml-auto mr-4 text-gray-900">RoomSync (beta)</h2>
       </div>
     </header>
   );

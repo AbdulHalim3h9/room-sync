@@ -11,8 +11,7 @@ const StatusCard = ({ dueMembers = [], mealRate, className }) => {
         </div>
 
         {/* Meal Rate Indicator */}
-        <span className={`text-xs ${dueMembers.length > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} px-2 py-1 rounded-full font-medium`}>
-        <div className="px-3 py-1.5 rounded-full flex items-center">
+        <div className={`px-3 py-1.5 rounded-full flex items-center ${dueMembers.length > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
               <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
               <path d="M3 6h18"></path>
@@ -20,7 +19,6 @@ const StatusCard = ({ dueMembers = [], mealRate, className }) => {
             </svg>
             <span className="font-medium text-sm whitespace-nowrap">Meal Rate: {mealRate === "N/A" ? "N/A" : `${mealRate} tk`}</span>
           </div>
-        </span>
       </div>
 
       {/* Due Members Horizontal Scroll */}

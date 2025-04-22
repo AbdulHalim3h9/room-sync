@@ -29,17 +29,17 @@ const CarryforwardTable = ({
   return (
     <div className="w-full">
       <CardTitle className="text-lg font-medium mb-4">
-        Carryforward from Previous Month: {formatMonthDisplay(previousMonth)}
+        পূর্ববর্তী মাসের জের: {formatMonthDisplay(previousMonth)}
       </CardTitle>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>Funded Amount (tk)</TableHead>
-            <TableHead>Meal Count</TableHead>
-            <TableHead>Consumption (tk)</TableHead>
-            <TableHead>Awes (tk)</TableHead>
-            <TableHead>Dues (tk)</TableHead>
+            <TableHead>নাম</TableHead>
+            <TableHead>জমাকৃত পরিমাণ (টাকা)</TableHead>
+            <TableHead>মিল সংখ্যা</TableHead>
+            <TableHead>মিল খরচ (টাকা)</TableHead>
+            <TableHead>পাবে (টাকা)</TableHead>
+            <TableHead>দিবে (টাকা)</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -49,7 +49,7 @@ const CarryforwardTable = ({
             const mealCount = mealCounts.previous[member.memberName] || 0;
             const consumptionCost = mealRate.previous !== "N/A" && mealRate.previous !== "Error" ? 
               (mealCount * parseFloat(mealRate.previous)).toFixed(2) : 
-              "N/A";
+              "প্রযোজ্য নয়";
             const balance = contribution - consumption;
             const awes = balance > 0 ? balance.toFixed(2) : "0.00";
             const dues = balance < 0 ? Math.abs(balance).toFixed(2) : "0.00";
@@ -70,16 +70,16 @@ const CarryforwardTable = ({
       <Card className="mt-4 p-4 bg-gray-50 rounded-lg shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <p className="text-sm font-semibold text-gray-700">Total Groceries Worth</p>
-            <p className="text-sm text-gray-600">{totalGroceries.previous ? `${totalGroceries.previous.toFixed(2)} tk` : "N/A"}</p>
+            <p className="text-sm font-semibold text-gray-700">মোট বাজার</p>
+            <p className="text-sm text-gray-600">{totalGroceries.previous ? `${totalGroceries.previous.toFixed(2)} টাকা` : "প্রযোজ্য নয়"}</p>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-700">Net Meal Count</p>
-            <p className="text-sm text-gray-600">{totalMeals.previous || "N/A"}</p>
+            <p className="text-sm font-semibold text-gray-700">মোট মিল</p>
+            <p className="text-sm text-gray-600">{totalMeals.previous || "প্রযোজ্য নয়"}</p>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-700">Meal Rate</p>
-            <p className="text-sm text-gray-600">{mealRate.previous || "N/A"} tk</p>
+            <p className="text-sm font-semibold text-gray-700">মিল রেট</p>
+            <p className="text-sm text-gray-600">{mealRate.previous || "প্রযোজ্য নয়"} টাকা</p>
           </div>
         </div>
       </Card>

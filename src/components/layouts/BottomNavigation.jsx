@@ -34,7 +34,7 @@ const BottomNavigation = () => {
   return (
     <nav 
       className={cn(
-        "fixed z-[40] bottom-0 left-0 w-full transition-transform duration-300",
+        "fixed z-[40] bottom-0 left-0 w-full transition-transform duration-300 bg-white",
         !isVisible ? "translate-y-full" : "translate-y-0"
       )}
     >

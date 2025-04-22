@@ -247,14 +247,14 @@ const AddGrocerySpendings = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-6 sm:py-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+    <div className="w-full max-w-[98vw] sm:max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div>
+        {/* Header without background color */}
+        <div className="px-4 py-5 sm:py-6 border-b-2 border-blue-600 mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-800 tracking-tight">
             Add Grocery or Other Expense
           </h1>
-          <p className="text-blue-100 text-sm mt-1 font-medium">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 font-medium">
             Record expenses for meal management
           </p>
         </div>
@@ -265,7 +265,7 @@ const AddGrocerySpendings = () => {
             <Label className="block mb-2 text-sm font-semibold text-gray-800">
               Select Date
             </Label>
-            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <div className="p-3">
               <DatePickerMealCount
                 selectedDate={selectedDate}
                 setSelectedDate={setSelectedDate}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -7,11 +7,37 @@ import { FileText, CreditCard, ShoppingBag } from "lucide-react";
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    
+    // If scrolling up and not at the top
+    if (currentScrollY < lastScrollY && currentScrollY > 0) {
+      setIsVisible(false);
+    } else {
+      setIsVisible(true);
+    }
+
+    // Update the last scroll position
+    setLastScrollY(currentScrollY);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="fixed z-[40] bottom-0 left-0 w-full bg-white/90 backdrop-blur-lg border-t shadow-lg">
+    <nav 
+      className={cn(
+        "fixed z-[40] bottom-0 left-0 w-full transition-transform duration-300",
+        !isVisible ? "translate-y-full" : "translate-y-0"
+      )}
+    >
       <div className="flex justify-around items-center h-16 max-w-screen-lg mx-auto px-4">
         <Button
           variant="ghost"

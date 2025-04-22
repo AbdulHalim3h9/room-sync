@@ -4,8 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-// Note: Add @/components/ui/radio-group if available (e.g., via Shadcn UI)
-// import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { db } from "@/firebase";
 import {
   collection,
@@ -136,13 +134,13 @@ const PayablesForm = () => {
     serviceCharge: "",
     khalasBill: "",
     utilityBill: "",
-    status: "Pending",
   });
   const [activeMembers, setActiveMembers] = useState([]);
   const { toast } = useToast();
 
   const fetchActiveMembers = useCallback(async () => {
     try {
+      // Fetch active members
       const membersCollectionRef = collection(db, "members");
       const querySnapshot = await getDocs(membersCollectionRef);
       const membersList = querySnapshot.docs
@@ -165,7 +163,47 @@ const PayablesForm = () => {
           return true;
         })
         .sort((a, b) => a.name.localeCompare(b.name));
+
       setActiveMembers(membersList);
+
+      // Fetch existing payables data for the selected month
+      const docRef = doc(db, "payables", selectedMonth);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        // Get all bills for this month
+        const bills = docSnap.data().bills || [];
+        
+        // Calculate totals for each payable type
+        const totals = {
+          roomRent: 0,
+          diningRent: 0,
+          serviceCharge: 0,
+          khalasBill: 0,
+          utilityBill: 0
+        };
+
+        // For each bill, sum up the amounts for each payable type
+        bills.forEach(bill => {
+          bill.payables.forEach(payable => {
+            const key = payable.name.toLowerCase().replace(/[^a-z]/g, '');
+            if (totals[key] !== undefined) {
+              totals[key] += payable.amount;
+            }
+          });
+        });
+
+        // Update form data with the calculated totals
+        setFormData(prev => ({
+          ...prev,
+          roomRent: totals.roomRent.toString(),
+          diningRent: totals.diningRent.toString(),
+          serviceCharge: totals.serviceCharge.toString(),
+          khalasBill: totals.khalasBill.toString(),
+          utilityBill: totals.utilityBill.toString()
+        }));
+      }
+
       console.log("Fetched active members for", selectedMonth, ":", membersList);
       if (membersList.length === 0) {
         toast({
@@ -184,7 +222,7 @@ const PayablesForm = () => {
         className: "z-[1002]",
       });
     }
-  }, [selectedMonth, toast]);
+  }, [selectedMonth, toast, db]);
 
   useEffect(() => {
     fetchActiveMembers();
@@ -243,33 +281,40 @@ const PayablesForm = () => {
       const docSnap = await getDoc(docRef);
       let existingBills = docSnap.exists() ? docSnap.data().bills || [] : [];
 
-      const membersWithoutBills = activeMembers.filter(
-        (member) => !existingBills.some((bill) => bill.id === member.id)
-      );
+      // Create a map of existing bills by member ID for easy lookup
+      const existingBillsMap = new Map(existingBills.map(bill => [bill.id, bill]));
 
-      const updatedBills = [
-        ...existingBills,
-        ...membersWithoutBills.map((member) => {
-          const filteredPayables = sharedPayables.filter((payable) => {
-            if (member.resident === "room" && payable.name === "Dining Rent") return false;
-            if (member.resident === "dining" && payable.name === "Room Rent") return false;
-            return true;
-          });
+      // For each active member, either update existing bill or create new one
+      const updatedBills = activeMembers.map((member) => {
+        const filteredPayables = sharedPayables.filter((payable) => {
+          if (member.resident === "room" && payable.name === "Dining Rent") return false;
+          if (member.resident === "dining" && payable.name === "Room Rent") return false;
+          return true;
+        });
 
+        // If member already has a bill, update it
+        if (existingBillsMap.has(member.id)) {
           return {
-            id: member.id,
-            name: member.name,
-            status: formData.status,
-            payables: filteredPayables,
+            ...existingBillsMap.get(member.id),
+            payables: filteredPayables
           };
-        }),
-      ];
+        }
+        // Otherwise create a new bill
+        return {
+          id: member.id,
+          name: member.name,
+          payables: filteredPayables
+        };
+      });
 
-      await setDoc(docRef, { bills: updatedBills }, { merge: true });
+      await setDoc(docRef, {
+        bills: updatedBills,
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
 
       toast({
         title: "Success",
-        description: `Shared payables for ${selectedMonth} have been set.`,
+        description: `Shared payables for ${selectedMonth} have been updated.`,
         className: "z-[1002]",
       });
 
@@ -279,13 +324,12 @@ const PayablesForm = () => {
         serviceCharge: "",
         khalasBill: "",
         utilityBill: "",
-        status: "Pending",
       });
     } catch (error) {
       console.error("Error uploading/updating data:", error);
       toast({
         title: "Error",
-        description: "Failed to set payables. Please try again.",
+        description: "Failed to update payables. Please try again.",
         variant: "destructive",
         className: "z-[1002]",
       });
@@ -293,21 +337,21 @@ const PayablesForm = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-6 sm:py-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+    <div className="w-full max-w-[98vw] sm:max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div>
+        {/* Header without background color */}
+        <div className="px-4 py-5 sm:py-6 border-b-2 border-indigo-600 mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-indigo-800 tracking-tight">
             Manage Payables for {selectedMonth}
           </h1>
-          <p className="text-indigo-100 text-sm mt-1 font-medium">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 font-medium">
             {formType === "shared" ? 
               "Set shared monthly bills distributed among all members" : 
               "Add individual charges for specific members"}
           </p>
         </div>
 
-        <div className="p-5 sm:p-8">
+        <div className="p-4 sm:p-6">
           {/* Month Picker Section */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -371,9 +415,9 @@ const PayablesForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {formType === "shared" ? (
               <>
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-6">
+                <div className="mb-6">
                   <h3 className="text-sm font-semibold text-indigo-800 mb-2">About Shared Bills</h3>
-                  <p className="text-xs text-indigo-700">These bills will be distributed among all active members based on their residence type (room or dining).</p>
+                  <p className="text-xs text-gray-700">These bills will be distributed among all active members based on their residence type (room or dining).</p>
                 </div>
                 
                 <SharedPayablesInputs

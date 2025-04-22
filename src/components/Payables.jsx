@@ -147,7 +147,7 @@ const Payables = () => {
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="bg-purple-50 border border-purple-100 rounded-lg px-4 py-2 inline-flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -190,7 +190,7 @@ const Payables = () => {
                 className="bg-white border border-gray-200 shadow-sm transition-shadow duration-200"
               >
                 {/* Invoice Header */}
-                <div className="p-5 border-b border-gray-200">
+                <div className="p-4 sm:p-5 border-b border-gray-200">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-800">
                       {bill.name}
@@ -208,22 +208,8 @@ const Payables = () => {
                   </div>
                 </div>
 
-                {/* Billing Information */}
-                <div className="p-5 border-b border-gray-200">
-                  <div className="flex justify-between text-sm">
-                    <div>
-                      <p className="font-semibold text-gray-800">From:</p>
-                      <p>{bill.name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-800">To:</p>
-                      <p>Refer to the manager</p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Invoice Items Table */}
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gray-50">
@@ -250,7 +236,7 @@ const Payables = () => {
                   </table>
 
                   {/* Totals Section */}
-                  <div className="mt-4 text-sm">
+                  <div className="mt-3 text-sm">
                     <div className="flex justify-between py-2 border-t border-gray-200">
                       <span className="font-bold text-gray-800">Total:</span>
                       <span className="font-bold text-lg text-purple-700">
@@ -260,7 +246,7 @@ const Payables = () => {
                   </div>
 
                   {/* Payment Terms */}
-                  <div className="mt-4 text-xs text-gray-600 border-t border-gray-200 pt-3">
+                  <div className="mt-3 text-xs text-gray-600 border-t border-gray-200 pt-3">
                     <p className="font-semibold">Payment Terms:</p>
                     <p>
                       Please make payment by {getPaymentDueBy(effectiveMonth)}

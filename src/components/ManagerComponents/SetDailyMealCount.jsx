@@ -15,17 +15,17 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, date, members, mealCoun
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in duration-200">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
-          <h2 className="text-lg font-bold text-white">Meal Counts Summary</h2>
-          <p className="text-purple-100 text-sm mt-1">
+      <div className="w-full max-w-md animate-in fade-in duration-200">
+        <div className="px-4 py-5 border-b-2 border-purple-600">
+          <h2 className="text-xl sm:text-2xl font-bold text-purple-800 tracking-tight">Meal Counts Summary</h2>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 font-medium">
             {date ? format(date, "MMMM dd, yyyy (EEEE)") : "No Date Selected"}
           </p>
         </div>
         
         <div className="p-6">
-          <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 mb-4">
-            <p className="text-xs text-purple-700">Please review the meal counts below before confirming submission.</p>
+          <div className="mb-4">
+            <p className="text-xs text-gray-700">Please review the meal counts below before confirming submission.</p>
           </div>
           
           <div className="max-h-[240px] overflow-y-auto mb-4 rounded-lg border border-gray-100">
@@ -472,25 +472,25 @@ const DailyMealForm = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-6 sm:py-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+    <div className="w-full max-w-[98vw] sm:max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div>
+        <div className="px-4 py-5 sm:py-6 border-b-2 border-purple-600 mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-purple-800 tracking-tight">
             Set Daily Meal Count
           </h1>
-          <p className="text-purple-100 text-sm mt-1 font-medium">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 font-medium">
             Record meal counts for {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "today"}
           </p>
         </div>
 
         <div className="p-5 sm:p-8">
-          <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-6">
+          <div className="mb-6">
             <h3 className="text-sm font-semibold text-purple-800 mb-2">About Daily Meal Counts</h3>
-            <p className="text-xs text-purple-700">Use this form to record the number of meals consumed by each member for a specific date. This information is used to calculate meal costs.</p>
+            <p className="text-xs text-gray-700">Use this form to record the number of meals consumed by each member for a specific date. This information is used to calculate meal costs.</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div className="p-4">
               <Label className="text-sm font-semibold text-gray-800 mb-3 block">Select Date</Label>
               <DatePickerMealCount
                 selectedDate={selectedDate}
@@ -509,7 +509,7 @@ const DailyMealForm = () => {
               </div>
               
               {members.length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                <div className="text-center py-8">
                   <p className="text-sm text-gray-500">No active members for this month</p>
                 </div>
               ) : (
@@ -538,7 +538,7 @@ const DailyMealForm = () => {
               <Button 
                 type="submit" 
                 disabled={members.length === 0}
-                className="w-full sm:w-auto h-11 bg-purple-600 hover:bg-purple-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus不为环-4 focus:ring-purple-200 focus:ring-opacity-50 px-6"
+                className="w-full sm:w-auto h-11 bg-purple-600 hover:bg-purple-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-purple-200 focus:ring-opacity-50 px-6"
               >
                 {existingDocId ? "Update" : "Save"} Meal Counts
               </Button>

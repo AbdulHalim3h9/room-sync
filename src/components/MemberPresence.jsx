@@ -50,11 +50,25 @@ export default function MemberPresence({ activeMembers, memberPresence, setMembe
     }
   }, [activeMembers, fetchMemberPresence]);
 
+  // Handle banner click to toggle member details
+  const handleBannerClick = () => {
+    setShowMemberDetails((prev) => !prev);
+  };
+
+  // Handle avatar click to toggle presence, preventing propagation to banner
+  const handleAvatarClick = (memberId, isPresent, event) => {
+    event.stopPropagation(); // Prevent the click from triggering the banner's onClick
+    toggleMemberPresence(memberId, !isPresent);
+  };
+
   return (
     <Card className="mb-6 shadow-lg overflow-hidden">
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 transition-colors duration-300">
         <CardHeader className="py-2 px-3">
-          <div className="flex items-center justify-between">
+          <div
+            className="flex items-center justify-between cursor-pointer"
+            onClick={handleBannerClick}
+          >
             <div className="flex items-center gap-2">
               <Home className="h-5 w-5 text-emerald-600" />
               {loadingPresence ? (
@@ -72,8 +86,8 @@ export default function MemberPresence({ activeMembers, memberPresence, setMembe
                       <div
                         key={member.memberId}
                         className="relative cursor-pointer hover:scale-110 transition-transform duration-200"
-                        onClick={() => toggleMemberPresence(member.memberId, !isPresent)}
-                        title={`${member.shortname || member.memberName} is ${statusFound ? (isPresent ? 'in apartment' : 'away') : 'status not found'}`}
+                        onClick={(event) => handleAvatarClick(member.memberId, isPresent, event)}
+                        title={`${member.shortname || member.memberName} is ${statusFound ? (isPresent ? 'in flat' : 'away') : 'status not found'}`}
                       >
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center ${statusFound ? (isPresent ? 'bg-emerald-100' : 'bg-gray-100') : 'bg-blue-100'} border ${statusFound ? (isPresent ? 'border-emerald-200' : 'border-gray-200') : 'border-blue-200'}`}>
                           {member.imgSrc ? (
@@ -100,7 +114,6 @@ export default function MemberPresence({ activeMembers, memberPresence, setMembe
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowMemberDetails((prev) => !prev)}
               className="h-8 w-8 p-0 rounded-full bg-white/50 hover:bg-white/70 transition-colors"
             >
               {showMemberDetails ? (
@@ -151,7 +164,7 @@ export default function MemberPresence({ activeMembers, memberPresence, setMembe
                           {member.shortname || member.memberName}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {statusFound ? (isPresent ? 'In Apartment' : 'Away') : 'Status not found'}
+                          {statusFound ? (isPresent ? 'In Flat' : 'Away') : 'Status not found'}
                         </span>
                       </div>
                     </div>

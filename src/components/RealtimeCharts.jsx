@@ -23,36 +23,9 @@ import StatusCard from "./dashboard/status-card";
 
 // Predefined list of 30 contrasting colors
 const CONSISTENT_COLORS = [
-  "#1f77b4", // blue
-  "#ff7f0e", // orange
-  "#2ca02c", // green
-  "#d62728", // red
-  "#9467bd", // purple
-  "#8c564b", // brown
-  "#e377c2", // pink
-  "#7f7f7f", // gray
-  "#bcbd22", // olive
-  "#17becf", // teal
-  "#aec7e8", // light blue
-  "#ffbb78", // light orange
-  "#98df8a", // light green
-  "#ff9896", // light red
-  "#c5b0d5", // light purple
-  "#c49c94", // light brown
-  "#f7b6d2", // light pink
-  "#c7c7c7", // light gray
-  "#dbdb8d", // light olive
-  "#9edae5", // light teal
-  "#393b79", // dark blue
-  "#ad494a", // dark red
-  "#5254a3", // indigo
-  "#6b6ecf", // periwinkle
-  "#637939", // dark olive
-  "#8c6d31", // gold
-  "#843c39", // crimson
-  "#7b4173", // dark purple
-  "#5698c4", // steel blue
-  "#e6550d"  // burnt orange
+  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+  "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5",
+  "#393b79", "#ad494a", "#5254a3", "#6b6ecf", "#637939", "#8c6d31", "#843c39", "#7b4173", "#5698c4", "#e6550d"
 ];
 
 const CustomizedDot = (props) => {
@@ -90,15 +63,13 @@ const CustomTooltip = ({ active, payload, label }) => {
         <div className="space-y-1">
           {payload.map((entry, index) => (
             <div key={index} className={`flex items-center gap-2 ${entry.dataKey === "given" ? "text-green-500" : entry.dataKey === "eaten" ? "text-yellow-500" : "text-blue-500"}`}>
-              <span className={`w-3 h-3 rounded-full bg-${entry.dataKey === "given" ? "green" : entry.dataKey === "eaten" ? "yellow" : "blue"}-500`}>
-              </span>
+              <span className={`w-3 h-3 rounded-full bg-${entry.dataKey === "given" ? "green" : entry.dataKey === "eaten" ? "yellow" : "blue"}-500`}></span>
               <span>{entry.name}: {entry.value.toFixed(2)} {entry.dataKey === "given" || entry.dataKey === "eaten" ? "tk" : "%"}</span>
             </div>
           ))}
           {(payload.length > 1 && difference !== payload[0].value) && (
             <div className={`flex items-center gap-2 ${difference >= 0 ? "text-green-500" : "text-red-500"}`}>
-              <span className={`w-3 h-3 rounded-full ${difference >= 0 ? "bg-green-500" : "bg-red-500"}`}>
-              </span>
+              <span className={`w-3 h-3 rounded-full ${difference >= 0 ? "bg-green-500" : "bg-red-500"}`}></span>
               <span>Balance: {difference.toFixed(2)} tk</span>
             </div>
           )}
@@ -124,216 +95,87 @@ const PieTooltip = ({ active, payload }) => {
   return null;
 };
 
-// Helper function to darken a color
-const darkenColor = (color, percent) => {
-  // Convert hex to RGB first if needed
-  let r, g, b;
-  if (color.startsWith('#')) {
-    const hex = color.substring(1);
-    r = parseInt(hex.substring(0, 2), 16);
-    g = parseInt(hex.substring(2, 4), 16);
-    b = parseInt(hex.substring(4, 6), 16);
-  } else if (color.startsWith('rgb')) {
-    const match = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-    if (match) {
-      r = parseInt(match[1]);
-      g = parseInt(match[2]);
-      b = parseInt(match[3]);
-    } else {
-      return color; // Return original if we can't parse
-    }
-  } else {
-    return color; // Return original if not in expected format
-  }
-  
-  // Darken each component
-  r = Math.max(0, Math.floor(r * (1 - percent / 100)));
-  g = Math.max(0, Math.floor(g * (1 - percent / 100)));
-  b = Math.max(0, Math.floor(b * (1 - percent / 100)));
-  
-  // Convert back to hex
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-};
-
-// Calculate text anchor position for labels to avoid edge clipping
-const getTextAnchor = (midAngle) => {
-  // Angle is in the range of -180 to 180
-  if (midAngle > -90 && midAngle < 90) {
-    return 'start';
-  }
-  return 'end';
-};
-
-// 3D Pie Slice component with improved label positioning
-const Pie3DSlice = ({ cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, value, name, percent, index, total }) => {
-  const RADIAN = Math.PI / 180;
-  const midAngle = (startAngle + endAngle) / 2;
-  
-  // Calculate the position for 3D effect
-  const depth = 20;
-  
-  // Calculate position for label with offset to avoid overlap
-  // We'll place labels in a way that distributes them more evenly
-  const sin = Math.sin(-midAngle * RADIAN);
-  const cos = Math.cos(-midAngle * RADIAN);
-  
-  // Determine distance (radius) of the label based on the angle to avoid overlap
-  const isSignificant = percent > 0.03; // Only show labels for significant segments (>3%)
-  
-  // Calculate positions for the leader line and label
-  // We'll use a larger radius for the outer position to place labels further out
-  const outerPoint = {
-    x: cx + (outerRadius * 1.05) * cos,
-    y: cy + (outerRadius * 1.05) * sin
-  };
-  
-  // Points for leader line
-  // Leader line should extend radially outward and then horizontally
-  const labelRadius = outerRadius * 1.4; // Farther out for label position
-  const labelX = cx + labelRadius * cos;
-  const labelY = cy + labelRadius * sin;
-  
-  // Add horizontal extension for better readability
-  const extendDirection = cos >= 0 ? 1 : -1; // Extend right or left based on position
-  const horizExtension = 20 * extendDirection;
-  const finalLabelX = labelX + horizExtension;
-  
-  // Text alignment based on which side of the pie the label is on
-  const textAnchor = getTextAnchor(midAngle);
-  
-  // Format the percent value
-  const percentStr = `${value.toFixed(1)}%`;
-  const nameStr = name.length > 12 ? `${name.substring(0, 12)}...` : name;
-  
-  // For very small slices, only show in tooltip
-  if (!isSignificant) {
-    return (
-      <g>
-        {/* 3D Effect - Bottom side */}
-        <path 
-          d={`M ${cx} ${cy + depth}
-              L ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN) + depth}
-              A ${outerRadius} ${outerRadius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN) + depth}
-              Z`}
-          fill={darkenColor(fill, 30)}
-          className="opacity-80"
-        />
-        
-        {/* 3D Effect - Side */}
-        <path
-          d={`
-            M ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN)}
-            L ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN) + depth}
-            A ${outerRadius} ${outerRadius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN) + depth}
-            L ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN)}
-          `}
-          fill={darkenColor(fill, 15)}
-          className="opacity-90"
-        />
-        
-        {/* Top Pie Slice */}
-        <path
-          d={`
-            M ${cx} ${cy}
-            L ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN)}
-            A ${outerRadius} ${outerRadius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN)}
-            Z
-          `}
-          fill={fill}
-          strokeWidth={1}
-          stroke={darkenColor(fill, 10)}
-          className="hover:opacity-80 transition-opacity cursor-pointer"
-        />
-      </g>
-    );
-  }
-  
-  return (
-    <g>
-      {/* 3D Effect - Bottom side */}
-      <path 
-        d={`M ${cx} ${cy + depth}
-            L ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN) + depth}
-            A ${outerRadius} ${outerRadius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN) + depth}
-            Z`}
-        fill={darkenColor(fill, 30)}
-        className="opacity-80"
-      />
-      
-      {/* 3D Effect - Side */}
-      <path
-        d={`
-          M ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN)}
-          L ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN) + depth}
-          A ${outerRadius} ${outerRadius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN) + depth}
-          L ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN)}
-        `}
-        fill={darkenColor(fill, 15)}
-        className="opacity-90"
-      />
-      
-      {/* Top Pie Slice */}
-      <path
-        d={`
-          M ${cx} ${cy}
-          L ${cx + outerRadius * Math.cos(-startAngle * RADIAN)} ${cy + outerRadius * Math.sin(-startAngle * RADIAN)}
-          A ${outerRadius} ${outerRadius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)} ${cy + outerRadius * Math.sin(-endAngle * RADIAN)}
-          Z
-        `}
-        fill={fill}
-        strokeWidth={1}
-        stroke={darkenColor(fill, 10)}
-        className="hover:opacity-80 transition-opacity cursor-pointer"
-      />
-      
-      {/* Leader Line: Three-segment line for better visibility */}
-      <path
-        d={`
-          M ${outerPoint.x} ${outerPoint.y}
-          L ${labelX} ${labelY}
-          L ${finalLabelX} ${labelY}
-        `}
-        stroke="#666"
-        strokeWidth={1.5}
-        fill="none"
-        className="label-line"
-      />
-      
-      {/* Label Background - ensures text is visible against any background */}
-      <rect
-        x={textAnchor === 'start' ? finalLabelX : finalLabelX - 70}
-        y={labelY - 10}
-        width={70}
-        height={20}
-        rx={3}
-        fill="white"
-        opacity={0.7}
-        stroke="#666"
-        strokeWidth={0.5}
-      />
-      
-      {/* Label Text - Name (truncated) + value */}
-      <text
-        x={finalLabelX + (textAnchor === 'start' ? 5 : -5)}
-        y={labelY}
-        fill="#333"
-        textAnchor={textAnchor}
-        dominantBaseline="central"
-        fontSize={10}
-        fontWeight="bold"
-      >
-        {nameStr}: {percentStr}
-      </text>
-    </g>
-  );
-};
-
 // Assign colors to data based on index
 const assignConsistentColors = (data) => {
   return data.map((entry, index) => ({
     ...entry,
-    fill: CONSISTENT_COLORS[index % CONSISTENT_COLORS.length] // Use modulo to cycle through colors if more than 30 entries
+    fill: CONSISTENT_COLORS[index % CONSISTENT_COLORS.length]
   }));
+};
+
+// Custom label rendering with dynamic positioning for mobile
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, viewBox }) => {
+  const RADIAN = Math.PI / 180;
+  const isMobile = window.innerWidth < 640;
+  const outerRadiusAdjusted = isMobile ? outerRadius * 0.8 : outerRadius;
+  const labelRadius = isMobile ? outerRadiusAdjusted * 1.8 : outerRadius * 1.4;
+  const fontSize = isMobile ? 9 : 12;
+  const rectWidth = isMobile ? 60 : 80;
+  const rectHeight = isMobile ? 18 : 24;
+
+  const x = cx + labelRadius * Math.cos(-midAngle * RADIAN);
+  const y = cy + labelRadius * Math.sin(-midAngle * RADIAN);
+
+  // Get container dimensions
+  const containerRect = document.querySelector('.recharts-responsive-container')?.getBoundingClientRect();
+  const containerWidth = containerRect?.width || 0;
+  const containerLeft = containerRect?.left || 0;
+
+  // Clamp x to stay within container
+  const padding = 10;
+  const minX = containerLeft + padding + rectWidth / 2;
+  const maxX = containerLeft + containerWidth - padding - rectWidth / 2;
+  const clampedX = Math.min(Math.max(x, minX), maxX);
+
+  // Adjust y to avoid overlap (simple vertical offset based on angle)
+  const verticalOffset = midAngle > 180 ? -rectHeight * 0.6 : rectHeight * 0.6;
+  const adjustedY = y + (isMobile ? verticalOffset : 0);
+
+  const textAnchor = clampedX > cx ? 'start' : 'end';
+  const nameStr = name.length > 10 ? `${name.substring(0, 10)}...` : name;
+  const percentStr = `${(percent * 100).toFixed(1)}%`;
+
+  // Leader line points
+  const outerPointX = cx + outerRadiusAdjusted * Math.cos(-midAngle * RADIAN);
+  const outerPointY = cy + outerRadiusAdjusted * Math.sin(-midAngle * RADIAN);
+  const labelX = clampedX + (clampedX > cx ? 10 : -10);
+  const labelY = adjustedY;
+
+  return (
+    <g>
+      {/* Leader Line */}
+      <path
+        d={`M ${outerPointX} ${outerPointY} L ${clampedX} ${adjustedY} L ${labelX} ${adjustedY}`}
+        stroke="#666"
+        strokeWidth={isMobile ? 1 : 1.5}
+        fill="none"
+      />
+      {/* Label Background */}
+      <rect
+        x={textAnchor === 'start' ? labelX : labelX - rectWidth}
+        y={adjustedY - rectHeight / 2}
+        width={rectWidth}
+        height={rectHeight}
+        rx={4}
+        fill="white"
+        opacity={0.85}
+        stroke="#666"
+        strokeWidth={0.5}
+      />
+      {/* Label Text */}
+      <text
+        x={labelX + (textAnchor === 'start' ? 5 : -5)}
+        y={adjustedY}
+        fill="#333"
+        textAnchor={textAnchor}
+        dominantBaseline="central"
+        fontSize={fontSize}
+        fontWeight="bold"
+      >
+        {`${nameStr}: ${percentStr}`}
+      </text>
+    </g>
+  );
 };
 
 export default function RealtimeCharts({
@@ -344,15 +186,8 @@ export default function RealtimeCharts({
   mealRate,
 }) {
   const hasPieData = pieContributionData.some(item => item.value > 0) || pieConsumptionData.some(item => item.value > 0);
-
-  // Use consistent colors based on member index
-  const enhancedContributionData = useMemo(() => {
-    return assignConsistentColors(pieContributionData);
-  }, [pieContributionData]);
-  
-  const enhancedConsumptionData = useMemo(() => {
-    return assignConsistentColors(pieConsumptionData);
-  }, [pieConsumptionData]);
+  const enhancedContributionData = useMemo(() => assignConsistentColors(pieContributionData), [pieContributionData]);
+  const enhancedConsumptionData = useMemo(() => assignConsistentColors(pieConsumptionData), [pieConsumptionData]);
 
   return (
     <div className="space-y-6">
@@ -468,44 +303,27 @@ export default function RealtimeCharts({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Contribution Pie Chart */}
                 <div className="min-h-[350px] flex flex-col items-center">
-                  <h3 className="text-sm font-medium mb-2">Contribution (%)</h3>
+                  <h3 className="text-sm font-medium mb-2">জমা (%)</h3>
                   <div className="w-full h-[350px] relative">
                     <ResponsiveContainer width="100%" height={350}>
-                      <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 30 }}>
+                      <PieChart margin={{ top: 80, right: 80, left: 80, bottom: 80 }}>
                         <Pie
                           data={enhancedContributionData}
                           dataKey="value"
                           nameKey="name"
                           cx="50%"
-                          cy="45%"
+                          cy="50%"
                           innerRadius={30}
-                          outerRadius={70}
-                          paddingAngle={1}
+                          outerRadius={window.innerWidth < 640 ? 60 : 80}
+                          paddingAngle={2}
                           isAnimationActive={true}
-                          startAngle={90}
-                          endAngle={-270}
+                          label={renderCustomizedLabel}
+                          labelLine={false}
                         >
                           {enhancedContributionData.map((entry, index) => (
                             <Cell
                               key={`contribution-${entry.name}-${index}`}
                               fill={entry.fill}
-                              shape={(props) => (
-                                <Pie3DSlice
-                                  {...props}
-                                  cx={props.cx}
-                                  cy={props.cy}
-                                  innerRadius={props.innerRadius}
-                                  outerRadius={props.outerRadius}
-                                  startAngle={props.startAngle}
-                                  endAngle={props.endAngle}
-                                  fill={entry.fill}
-                                  value={entry.value}
-                                  name={entry.name}
-                                  percent={entry.value / 100}
-                                  index={index}
-                                  total={enhancedContributionData.length}
-                                />
-                              )}
                             />
                           ))}
                         </Pie>
@@ -517,44 +335,27 @@ export default function RealtimeCharts({
                 
                 {/* Consumption Pie Chart */}
                 <div className="min-h-[350px] flex flex-col items-center">
-                  <h3 className="text-sm font-medium mb-2">Consumption (%)</h3>
+                  <h3 className="text-sm font-medium mb-2">খরচ হয়েছে (%)</h3>
                   <div className="w-full h-[350px] relative">
                     <ResponsiveContainer width="100%" height={350}>
-                      <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 30 }}>
+                      <PieChart margin={{ top: 80, right: 80, left: 80, bottom: 80 }}>
                         <Pie
                           data={enhancedConsumptionData}
                           dataKey="value"
                           nameKey="name"
                           cx="50%"
-                          cy="45%"
+                          cy="50%"
                           innerRadius={30}
-                          outerRadius={70}
-                          paddingAngle={1}
+                          outerRadius={window.innerWidth < 640 ? 60 : 80}
+                          paddingAngle={2}
                           isAnimationActive={true}
-                          startAngle={90}
-                          endAngle={-270}
+                          label={renderCustomizedLabel}
+                          labelLine={false}
                         >
                           {enhancedConsumptionData.map((entry, index) => (
                             <Cell
                               key={`consumption-${entry.name}-${index}`}
                               fill={entry.fill}
-                              shape={(props) => (
-                                <Pie3DSlice
-                                  {...props}
-                                  cx={props.cx}
-                                  cy={props.cy}
-                                  innerRadius={props.innerRadius}
-                                  outerRadius={props.outerRadius}
-                                  startAngle={props.startAngle}
-                                  endAngle={props.endAngle}
-                                  fill={entry.fill}
-                                  value={entry.value}
-                                  name={entry.name}
-                                  percent={entry.value / 100}
-                                  index={index}
-                                  total={enhancedConsumptionData.length}
-                                />
-                              )}
                             />
                           ))}
                         </Pie>
@@ -564,7 +365,7 @@ export default function RealtimeCharts({
                   </div>
                 </div>
                 
-                {/* Color Legend - displayed below charts */}
+                {/* Color Legend */}
                 <div className="col-span-1 md:col-span-2 mt-4">
                   <div className="bg-white p-4 rounded-lg border shadow-sm">
                     <h3 className="text-sm font-medium mb-2">Members</h3>
@@ -590,7 +391,6 @@ export default function RealtimeCharts({
           </div>
         </TabsContent>
       </Tabs>
-
       <div className="mt-4">
         <StatusCard dueMembers={dueMembers} mealRate={mealRate.current} />
       </div>

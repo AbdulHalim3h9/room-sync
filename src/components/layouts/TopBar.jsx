@@ -3,7 +3,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import React from 'react';
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CarryforwardPopup } from "@/components/dashboard/CarryforwardPopup";
 
 export function TopBar() {
   const location = useLocation();
@@ -46,9 +45,6 @@ export function TopBar() {
           <SidebarTrigger className="flex-none shadow-none" />
         </div>
         <h2 className="text-lg font-medium ml-auto mr-4 text-gray-900">RoomSync (beta)</h2>
-        <div className="flex items-center gap-2">
-          <CarryforwardPopup month={new Date()} />
-        </div>
       </div>
     </header>
   );

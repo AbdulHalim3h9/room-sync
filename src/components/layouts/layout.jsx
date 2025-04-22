@@ -13,7 +13,7 @@ export default function Layout({ children }) {
           <div className="h-16"></div> {/* Reserved space for topbar */}
           <TopBar />
           <AnnouncementBanner />
-          <main className="flex-1 p-4 overflow-auto pt-2">{children}</main>
+          <main className="flex-1 p-4 overflow-auto pt-2 pb-16">{children}</main>
           <Toaster />
         </div>
       </div>

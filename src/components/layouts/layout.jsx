@@ -2,6 +2,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { TopBar } from "./TopBar";
+import AnnouncementBanner from "../AnnouncementBanner";
 
 export default function Layout({ children }) {
   return (
@@ -11,6 +12,7 @@ export default function Layout({ children }) {
         <div className="flex-1 flex flex-col min-w-0">
           <div className="h-16"></div> {/* Reserved space for topbar */}
           <TopBar />
+          <AnnouncementBanner />
           <main className="flex-1 p-4 overflow-auto pt-2">{children}</main>
           <Toaster />
         </div>

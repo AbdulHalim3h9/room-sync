@@ -25,7 +25,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StatusCard from "./dashboard/status-card";
 import { MembersContext } from "@/contexts/MembersContext";
 import { MonthContext } from "@/contexts/MonthContext";
-import AnnouncementBanner from "./AnnouncementBanner";
 import { format, formatDistance } from "date-fns";
 import { Activity, Clock, DollarSign, Utensils, ShoppingBag, Receipt, BarChart3, Home, MapPin, UserCheck, UserX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -379,8 +378,6 @@ export default function ResponsiveChartWrapper() {
 
   return (
     <div className="container mx-auto px-6 pt-4 pb-6 max-w-7xl">
-      <AnnouncementBanner />
-      {/* AnnouncementBanner is now a fixed position widget */}
       
       {/* Sticky Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm py-3 -mx-6 px-6 mb-4 border-b">

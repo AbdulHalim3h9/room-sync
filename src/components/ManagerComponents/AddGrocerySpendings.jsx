@@ -354,7 +354,7 @@ const AddGrocerySpendings = () => {
                   <Input
                     id="title"
                     type="text"
-                    placeholder="E.g., Cooking gas, Utilities"
+                    placeholder="E.g., Chingri, Noodles party"
                     value={expenseTitle}
                     onChange={(e) => setExpenseTitle(e.target.value)}
                     className="h-11 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-base shadow-sm"

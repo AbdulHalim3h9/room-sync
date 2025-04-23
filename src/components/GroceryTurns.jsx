@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
+import LastUpdated from "./LastUpdated"; // Import the new component
 
 const GroceriesSpendings = () => {
   const [month, setMonth] = useState(() => {
@@ -11,6 +12,7 @@ const GroceriesSpendings = () => {
     return `${year}-${monthNum}`;
   });
   const [expenses, setExpenses] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const formatDate = (dateString) => {
@@ -29,18 +31,27 @@ const GroceriesSpendings = () => {
     if (!monthString || !/^\d{4}-\d{2}$/.test(monthString)) {
       console.log("Invalid month format, skipping fetch");
       setExpenses([]);
+      setLastUpdated(null);
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
+
+      // Fetch the expenses collection for the selected month
       const expensesRef = collection(db, "expenses", monthString, "expenses");
       const snapshot = await getDocs(expensesRef);
       const expensesData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
+      // Fetch the lastUpdated timestamp from the expenses/{month} document
+      const monthDocRef = doc(db, "expenses", monthString);
+      const monthDoc = await getDoc(monthDocRef);
+      const lastUpdatedTimestamp = monthDoc.exists() ? monthDoc.data().lastUpdated : null;
+      setLastUpdated(lastUpdatedTimestamp);
 
       // Fetch shopper full names
       const expensesWithShopperNames = await Promise.all(
@@ -59,9 +70,11 @@ const GroceriesSpendings = () => {
 
       setExpenses(expensesWithShopperNames);
       console.log("Fetched expenses for", monthString, ":", expensesWithShopperNames);
+      console.log("Last updated:", lastUpdatedTimestamp);
     } catch (error) {
       console.error("Error fetching expenses:", error);
       setExpenses([]);
+      setLastUpdated(null);
     } finally {
       setLoading(false);
     }
@@ -152,73 +165,79 @@ const GroceriesSpendings = () => {
               value={month}
               onChange={setMonth}
               collections={["expenses"]}
-              className="h-9 sm:h-10 rounded-lg border-gray-200 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 shadow-sm w-full sm  sm:w-auto"
+              className="h-9 sm:h-10 rounded-lg border-gray-200 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 shadow-sm w-full sm:w-auto"
             />
           </div>
 
           <div>
             {expenses.length > 0 ? (
-              <table className="w-full border-collapse">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-left w-[20%]">Date</th>
-                    <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-left w-[30%]">Description</th>
-                    <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-left w-[30%]">Shopper</th>
-                    <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-right w-[20%]">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.map((expense) => (
-                    <tr key={expense.id} className="hover:bg-gray-50">
-                      <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base text-gray-800 whitespace-nowrap">{formatDate(expense.date)}</td>
-                      <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base text-gray-800 whitespace-nowrap">{expense.expenseTitle || expense.expenseType}</td>
-                      <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base text-gray-600 whitespace-nowrap">
-                        {expense.shopperId ? (
-                          <span className="inline-flex items-center">
-                            <span className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-[10px] sm:text-xs md:text-sm font-medium mr-1 sm:mr-1.5 md:mr-2">
-                              {expense.shopperId.charAt(0)}
-                            </span>
-                            {expense.shopperId}
-                          </span>
-                        ) : (
-                          ''
-                        )}
-                      </td>
-                      <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base font-semibold text-right text-gray-900 whitespace-nowrap">৳ {parseFloat(expense.amountSpent).toFixed(2)}</td>
+              <div>
+                <table className="w-full border-collapse">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-left w-[20%]">Date</th>
+                      <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-left w-[30%]">Description</th>
+                      <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-left w-[30%]">Shopper</th>
+                      <th className="px-1 py-1 sm:px-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider text-right w-[20%]">Amount</th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-gray-50">
-                    <td></td>
-                    <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base font-medium text-gray-700 whitespace-nowrap" colSpan={2}>
-                      Total Groceries
-                      <span className="ml-1 bg-purple-100 text-purple-800 text-[10px] sm:text-xs md:text-sm font-semibold px-1.5 sm:px-2 md:px-2.5 py-0.5 rounded-full">
-                        {expenses.length}
-                      </span>
-                    </td>
-                    <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base font-bold text-right text-gray-900 whitespace-nowrap">৳ {totalSpending}</td>
-                  </tr>
-                </tfoot>
-              </table>
+                  </thead>
+                  <tbody>
+                    {expenses.map((expense) => (
+                      <tr key={expense.id} className="hover:bg-gray-50">
+                        <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base text-gray-800 whitespace-nowrap">{formatDate(expense.date)}</td>
+                        <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base text-gray-800 whitespace-nowrap">{expense.expenseTitle || expense.expenseType}</td>
+                        <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base text-gray-800 whitespace-nowrap">
+                          {expense.shopperId ? (
+                            <span className="inline-flex items-center">
+                              <span className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-[10px] sm:text-xs md:text-sm font-medium mr-1 sm:mr-1.5 md:mr-2">
+                                {expense.shopperId.charAt(0)}
+                              </span>
+                              {expense.shopperId}
+                            </span>
+                          ) : (
+                            ''
+                          )}
+                        </td>
+                        <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base font-semibold text-right text-gray-900 whitespace-nowrap">৳ {parseFloat(expense.amountSpent).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-50">
+                      <td></td>
+                      <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base font-medium text-gray-700 whitespace-nowrap" colSpan={2}>
+                        Total Groceries
+                        <span className="ml-1 bg-purple-100 text-purple-800 text-[10px] sm:text-xs md:text-sm font-semibold px-1.5 sm:px-2 md:px-2.5 py-0.5 rounded-full">
+                          {expenses.length}
+                        </span>
+                      </td>
+                      <td className="px-1 py-1 sm:px-2 sm:py-2 text-xs sm:text-sm md:text-base font-bold text-right text-gray-900 whitespace-nowrap">৳ {totalSpending}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+                <LastUpdated timestamp={lastUpdated} />
+              </div>
             ) : (
-              <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 text-gray-400 mx-auto mb-3"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-                <p className="text-gray-500 font-medium text-sm">No expenses found for {month}</p>
-                <p className="text-gray-400 text-xs mt-1">Try selecting a different month or adding new expenses</p>
+              <div>
+                <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 text-gray-400 mx-auto mb-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  <p className="text-gray-500 font-medium text-sm">No expenses found for {month}</p>
+                  <p className="text-gray-400 text-xs mt-1">Try selecting a different month or adding new expenses</p>
+                </div>
+                <LastUpdated timestamp={lastUpdated} />
               </div>
             )}
           </div>

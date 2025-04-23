@@ -17,14 +17,14 @@ import {
   Cell,
 } from "recharts";
 import { db } from "@/firebase";
-import { doc, getDoc, collection, getDocs, query, orderBy, limit, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
 import { MembersContext } from "@/contexts/MembersContext";
 import { MonthContext } from "@/contexts/MonthContext";
 import Header from "./Header";
 import MemberPresence from "./MemberPresence";
-import LatestUpdate from "./LatestUpdate";
 import ChartTabs from "./ChartTabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import LastUpdated from "./LastUpdated"; // Import the LastUpdated component
 
 export default function ResponsiveChartWrapper() {
   const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
@@ -37,13 +37,8 @@ export default function ResponsiveChartWrapper() {
   const [mealCounts, setMealCounts] = useState({ current: {}, previous: {} });
   const [totalGroceries, setTotalGroceries] = useState({ current: null, previous: null });
   const [totalMeals, setTotalMeals] = useState({ current: null, previous: null });
+  const [lastUpdated, setLastUpdated] = useState(null); // State for lastUpdated timestamp
   const [loading, setLoading] = useState(true);
-  const [lastUpdates, setLastUpdates] = useState({
-    mealFund: null,
-    mealCount: null,
-    grocery: null,
-    payables: null,
-  });
   const [memberPresence, setMemberPresence] = useState({});
   const [loadingPresence, setLoadingPresence] = useState(true);
 
@@ -141,7 +136,7 @@ export default function ResponsiveChartWrapper() {
     }
   };
 
-  // Fetch meal rate and totals
+  // Fetch meal rate, totals, and lastUpdated timestamp
   useEffect(() => {
     const fetchMealRate = async () => {
       setLoading(true);
@@ -150,9 +145,11 @@ export default function ResponsiveChartWrapper() {
         const currentDocSnap = await getDoc(currentDocRef);
 
         if (currentDocSnap.exists()) {
-          const { totalSpendings, totalMealsAllMembers } = currentDocSnap.data();
+          const data = currentDocSnap.data();
+          const { totalSpendings, totalMealsAllMembers } = data;
           setTotalGroceries((prev) => ({ ...prev, current: totalSpendings || 0 }));
           setTotalMeals((prev) => ({ ...prev, current: totalMealsAllMembers || 0 }));
+          setLastUpdated(data.lastUpdated || null); // Fetch lastUpdated timestamp
           if (totalSpendings && totalMealsAllMembers && totalMealsAllMembers > 0) {
             const rate = totalSpendings / totalMealsAllMembers;
             setMealRate((prev) => ({ ...prev, current: rate.toFixed(2) }));
@@ -163,6 +160,7 @@ export default function ResponsiveChartWrapper() {
           setMealRate((prev) => ({ ...prev, current: "N/A" }));
           setTotalGroceries((prev) => ({ ...prev, current: 0 }));
           setTotalMeals((prev) => ({ ...prev, current: 0 }));
+          setLastUpdated(null);
         }
 
         const previousDocRef = doc(db, "mealSummaries", previousMonth);
@@ -190,6 +188,7 @@ export default function ResponsiveChartWrapper() {
         setMealRate({ current: "Error", previous: "Error" });
         setTotalGroceries({ current: null, previous: null });
         setTotalMeals({ current: null, previous: null });
+        setLastUpdated(null);
       } finally {
         setLoading(false);
       }
@@ -323,41 +322,6 @@ export default function ResponsiveChartWrapper() {
     }
   }, [month, previousMonth, activeMembersCurrent, activeMembersPrevious, memberIdToName]);
 
-  // Fetch last update timestamps
-  useEffect(() => {
-    const fetchLastUpdates = async () => {
-      try {
-        const mealFundQuery = query(collection(db, "mealFund"), orderBy("timestamp", "desc"), limit(1));
-        const mealFundSnapshot = await getDocs(mealFundQuery);
-        const mealFundTimestamp = !mealFundSnapshot.empty ? mealFundSnapshot.docs[0].data().timestamp : null;
-
-        const mealCountQuery = query(collection(db, "mealCount"), orderBy("timestamp", "desc"), limit(1));
-        const mealCountSnapshot = await getDocs(mealCountQuery);
-        const mealCountTimestamp = !mealCountSnapshot.empty ? mealCountSnapshot.docs[0].data().timestamp : null;
-
-        const groceryQuery = query(collection(db, "expenses"), orderBy("timestamp", "desc"), limit(1));
-        const grocerySnapshot = await getDocs(groceryQuery);
-        const groceryTimestamp = !grocerySnapshot.empty ? grocerySnapshot.docs[0].data().timestamp : null;
-
-        const payablesQuery = query(collection(db, "payables"), orderBy("timestamp", "desc"), limit(1));
-        const payablesSnapshot = await getDocs(payablesQuery);
-        const payablesTimestamp = !payablesSnapshot.empty ? payablesSnapshot.docs[0].data().timestamp : null;
-
-        const updates = {
-          mealFund: mealFundTimestamp,
-          mealCount: mealCountTimestamp,
-          grocery: groceryTimestamp,
-          payables: payablesTimestamp,
-        };
-
-        setLastUpdates(updates);
-      } catch (error) {
-        console.error("Error fetching last updates:", error);
-      }
-    };
-    fetchLastUpdates();
-  }, []);
-
   const dueMembers = realtimeData.filter((item) => item.given - item.eaten <= 0);
 
   if (loading || membersLoading) {
@@ -384,15 +348,15 @@ export default function ResponsiveChartWrapper() {
   return (
     <div className="container mx-auto px-6 pt-4 pb-6 max-w-7xl">
       <MemberPresence
-  activeMembers={activeMembersCurrent}
-  memberPresence={memberPresence}
-  setMemberPresence={setMemberPresence}
-  loadingPresence={loadingPresence}
-  setLoadingPresence={setLoadingPresence}
-  toggleMemberPresence={toggleMemberPresence}
-/>
+        activeMembers={activeMembersCurrent}
+        memberPresence={memberPresence}
+        setMemberPresence={setMemberPresence}
+        loadingPresence={loadingPresence}
+        setLoadingPresence={setLoadingPresence}
+        toggleMemberPresence={toggleMemberPresence}
+      />
       <Header month={month} setMonth={setMonth} />
-      <LatestUpdate lastUpdates={lastUpdates} />
+      <LastUpdated timestamp={lastUpdated} /> {/* Use the LastUpdated component */}
       <ChartTabs
         realtimeData={realtimeData}
         carryforwardData={carryforwardData}
@@ -405,7 +369,6 @@ export default function ResponsiveChartWrapper() {
         totalMeals={totalMeals}
         activeMembersPrevious={activeMembersPrevious}
         month={month}
-        lastUpdates={lastUpdates}
       />
     </div>
   );

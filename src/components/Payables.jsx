@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
+import LastUpdated from "./LastUpdated"; // Import the LastUpdated component
 
 const Payables = () => {
   const [month, setMonth] = useState(() => {
@@ -13,6 +14,7 @@ const Payables = () => {
     return `${year}-${monthNum}`;
   });
   const [bills, setBills] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null); // State for lastUpdated timestamp
   const [loading, setLoading] = useState(true);
 
   const defaultMonth = (() => {
@@ -33,16 +35,22 @@ const Payables = () => {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const billsData = docSnap.data().bills || [];
+        const data = docSnap.data();
+        const billsData = data.bills || [];
+        const lastUpdatedTimestamp = data.lastUpdated || null; // Fetch lastUpdated
         setBills(billsData);
+        setLastUpdated(lastUpdatedTimestamp); // Set lastUpdated state
         console.log("Fetched payables:", billsData);
+        console.log("Last updated:", lastUpdatedTimestamp);
       } else {
         console.log("No document found for", selectedMonth);
         setBills([]);
+        setLastUpdated(null);
       }
     } catch (error) {
       console.error("Error fetching data from Firestore:", error);
       setBills([]);
+      setLastUpdated(null);
     } finally {
       setLoading(false);
     }
@@ -177,109 +185,119 @@ const Payables = () => {
       </div>
 
       {bills.length > 0 ? (
-        <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bills.map((bill) => {
-            const effectiveMonth = month || defaultMonth;
-            const totalAmount = bill.payables.reduce(
-              (total, payable) => total + payable.amount,
-              0
-            );
-            return (
-              <div
-                key={bill.id}
-                className="bg-white border border-gray-200 shadow-sm transition-shadow duration-200"
-              >
-                {/* Invoice Header */}
-                <div className="p-4 sm:p-5 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {bill.name}
-                    </h3>
-                    <span className="text-sm text-gray-600">
-                      {formatDisplayMonth(effectiveMonth)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between mt-2 text-sm text-gray-600">
-                    <div></div> {/* Empty div to maintain flex layout */}
-                    <div className="text-right">
-                      <p>Due Date:</p>
-                      <p>{getDueDate(effectiveMonth)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Invoice Items Table */}
-                <div className="p-4 sm:p-5">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">
-                          Description
-                        </th>
-                        <th className="px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
-                          Amount
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bill.payables.map((payable, index) => (
-                        <tr key={index} className="border-b border-gray-100">
-                          <td className="px-2 py-2 text-sm text-gray-700">
-                            {payable.name}
-                          </td>
-                          <td className="px-2 py-2 text-sm text-gray-900 text-right">
-                            ৳ {payable.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
-                  {/* Totals Section */}
-                  <div className="mt-3 text-sm">
-                    <div className="flex justify-between py-2 border-t border-gray-200">
-                      <span className="font-bold text-gray-800">Total:</span>
-                      <span className="font-bold text-lg text-purple-700">
-                        ৳ {totalAmount.toFixed(2)}
+        <div>
+          <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bills.map((bill) => {
+              const effectiveMonth = month || defaultMonth;
+              const totalAmount = bill.payables.reduce(
+                (total, payable) => total + payable.amount,
+                0
+              );
+              return (
+                <div
+                  key={bill.id}
+                  className="bg-white border border-gray-200 shadow-sm transition-shadow duration-200"
+                >
+                  {/* Invoice Header */}
+                  <div className="p-4 sm:p-5 border-b border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {bill.name}
+                      </h3>
+                      <span className="text-sm text-gray-600">
+                        {formatDisplayMonth(effectiveMonth)}
                       </span>
                     </div>
+                    <div className="flex justify-between mt-2 text-sm text-gray-600">
+                      <div></div> {/* Empty div to maintain flex layout */}
+                      <div className="text-right">
+                        <p>Due Date:</p>
+                        <p>{getDueDate(effectiveMonth)}</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Payment Terms */}
-                  <div className="mt-3 text-xs text-gray-600 border-t border-gray-200 pt-3">
-                    <p className="font-semibold">Payment Terms:</p>
-                    <p>
-                      Please make payment by {getPaymentDueBy(effectiveMonth)}
-                    </p>
-                    <p>Reference: {bill.name}</p>
+                  {/* Invoice Items Table */}
+                  <div className="p-4 sm:p-5">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">
+                            Description
+                          </th>
+                          <th className="px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
+                            Amount
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bill.payables.map((payable, index) => (
+                          <tr key={index} className="border-b border-gray-100">
+                            <td className="px-2 py-2 text-sm text-gray-700">
+                              {payable.name}
+                            </td>
+                            <td className="px-2 py-2 text-sm text-gray-900 text-right">
+                              ৳ {payable.amount.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {/* Totals Section */}
+                    <div className="mt-3 text-sm">
+                      <div className="flex justify-between py-2 border-t border-gray-200">
+                        <span className="font-bold text-gray-800">Total:</span>
+                        <span className="font-bold text-lg text-purple-700">
+                          ৳ {totalAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Payment Terms */}
+                    <div className="mt-3 text-xs text-gray-600 border-t border-gray-200 pt-3">
+                      <p className="font-semibold">Payment Terms:</p>
+                      <p>
+                        Please make payment by{" "}
+                        {getPaymentDueBy(effectiveMonth)}
+                      </p>
+                      <p>Reference: {bill.name}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          {/* Render LastUpdated component */}
+          <LastUpdated timestamp={lastUpdated} />
         </div>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 text-gray-400 mx-auto mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <p className="text-gray-500 font-medium">
-            No payables found for {formatDisplayMonth(month || defaultMonth)}
-          </p>
-          <p className="text-gray-400 text-sm mt-1">
-            Try selecting a different month or adding new payables
-          </p>
+        <div>
+          <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-12 w-12 text-gray-400 mx-auto mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <p className="text-gray-500 font-medium">
+              No payables found for{" "}
+              {formatDisplayMonth(month || defaultMonth)}
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              Try selecting a different month or adding new payables
+            </p>
+          </div>
+          {/* Render LastUpdated component */}
+          <LastUpdated timestamp={lastUpdated} />
         </div>
       )}
     </div>

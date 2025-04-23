@@ -18,7 +18,6 @@ export default function ChartTabs({
   totalMeals,
   activeMembersPrevious,
   month,
-  lastUpdates,
 }) {
   const [activeTab, setActiveTab] = useState("realtime");
 
@@ -75,12 +74,6 @@ export default function ChartTabs({
             />
           </TabsContent>
         </CardContent>
-        <CardFooter className="bg-gray-50 border-t py-3 text-xs text-gray-500">
-          <div className="flex items-center gap-1 ml-auto">
-            <Clock className="h-3 w-3" />
-            <span>Last updated: {formatTimestamp(lastUpdates.mealFund)}</span>
-          </div>
-        </CardFooter>
       </Tabs>
     </Card>
   );

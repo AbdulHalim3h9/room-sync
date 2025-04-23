@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -26,9 +26,9 @@ const CarryforwardTable = ({
     return format(new Date(year, monthNum - 1, 1), "MMMM yyyy");
   };
 
-  const [isLandscape, setIsLandscape] = useState(true);
-  const tableRef = React.createRef(null);
-  const containerRef = React.createRef(null);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const tableRef = useRef(null);
+  const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -44,25 +44,22 @@ const CarryforwardTable = ({
       }
     };
 
-    // Initial calculation and on window resize
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     
-    // Clean up
     return () => {
       window.removeEventListener('resize', updateDimensions);
     };
-  }, [members, carryforwardData, isLandscape]); // Recalculate when data or orientation changes
+  }, [members, carryforwardData, isLandscape]);
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setIsLandscape(false);
-      } else {
-        setIsLandscape(true);
       }
     };
 
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -70,9 +67,15 @@ const CarryforwardTable = ({
     };
   }, []);
 
+  // Automatically scroll to the right in landscape mode
+  useEffect(() => {
+    if(isLandscape) {
+      containerRef.current.scrollLeft = containerRef.current.scrollWidth;
+    }
+  }, [isLandscape]);
+
   return (
     <div className="w-full">
-      {/* Mobile view controls */}
       <div className="flex justify-center my-4 md:hidden">
         <Button
           variant="outline"
@@ -89,27 +92,27 @@ const CarryforwardTable = ({
         </Button>
       </div>
 
-      {/* Outer container - no extra height in landscape mode */}
       <div 
         ref={containerRef}
-        className={`relative w-full ${isLandscape ? '' : 'overflow-auto'}`}
+        className="relative w-full overflow-auto"
         style={{
-          height: !isLandscape ? `${dimensions.width}px` : 'auto',
-          maxHeight: !isLandscape ? '90vh' : 'auto'
+          height: isLandscape ? `${dimensions.width}px` : 'auto',
+          maxHeight: isLandscape ? '90vh' : 'auto',
         }}
       >
-        {/* Inner content container */}
         <div
           ref={tableRef}
-          className={`min-w-[600px] md:w-full transition-all duration-300 ease-in-out ${isLandscape ? 'overflow-x-auto' : ''}`}
-          style={!isLandscape ? {
+          className="min-w-[600px] md:w-full transition-all duration-300 ease-in-out"
+          style={isLandscape ? {
             position: 'absolute',
             top: 0,
             left: 0,
             transform: 'rotate(90deg) translateY(-100%)',
             transformOrigin: 'top left',
             width: `${dimensions.height}px`,
-            height: `${dimensions.width}px`
+            height: `${dimensions.width}px`,
+            minWidth: `${dimensions.height}px`,
+            minHeight: `${dimensions.width}px`
           } : {}}
         >
           <CardTitle className="text-lg font-medium mb-4">
@@ -152,7 +155,7 @@ const CarryforwardTable = ({
               })}
             </TableBody>
           </Table>
-          <Card className="mt-2 p-2 bg-gray-50 rounded-lg shadow-sm">
+          <Card className="mt-2 p-2 bg-gray-50 rounded-lg shadow-sm w-full">
             <div className="flex flex-wrap justify-between items-center">
               <div className="flex items-center mx-2">
                 <p className="text-sm font-semibold text-gray-700 mr-1">মোট বাজার:</p>

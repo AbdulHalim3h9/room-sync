@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -15,6 +14,7 @@ import { db } from "@/firebase";
 import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import SingleMonthYearPicker from "../SingleMonthYearPicker";
+import Button from "@/components/ui/button"; // Import the new Button component
 
 const AddMealFund = () => {
   const [month, setMonth] = useState(() => {
@@ -328,17 +328,18 @@ const AddMealFund = () => {
 
   return (
     <div className="w-full max-w-[98vw] sm:max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-5 sm:py-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Add Meal Fund
-          </h1>
-          <p className="text-sm sm:text-base text-green-50 mt-1 font-medium">
-            Record meal fund contributions from members
-          </p>
-        </div>
+      {/* Header outside the card */}
+      <div className="px-6 py-5 sm:py-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+          Add Meal Fund
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-1 font-medium">
+          Record meal fund contributions from members
+        </p>
+      </div>
 
+      {/* Card for form content */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-5 sm:p-8">
           {/* Month Picker Section */}
           <div className="mb-8 bg-gray-50 rounded-lg p-4">
@@ -453,7 +454,7 @@ const AddMealFund = () => {
                   placeholder="Enter amount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="pl-8 h-11 rounded-lg border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer ⟸spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                  className="pl-8 h-11 rounded-lg border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">Enter the additional amount in BDT</p>
@@ -490,20 +491,10 @@ const AddMealFund = () => {
             <div className="pt-4">
               <Button
                 type="submit"
-                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white text-base font-medium rounded-lg shadow-md transition-colors duration-200 focus:ring-4 focus:ring-green-200 focus:ring-opacity-50"
                 disabled={members.length === 0 || isLoading}
+                isLoading={isLoading}
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </div>
-                ) : (
-                  "Add Meal Fund"
-                )}
+                Add Meal Fund
               </Button>
               {members.length === 0 && (
                 <p className="text-xs text-center text-red-500 mt-2">

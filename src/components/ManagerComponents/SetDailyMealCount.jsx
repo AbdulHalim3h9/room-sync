@@ -13,13 +13,15 @@ import { useToast } from "@/hooks/use-toast";
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, date, members, mealCounts }) => {
   if (!isOpen) return null;
 
+  const formattedDate = date ? format(new Date(date), "MMMM dd, yyyy (EEEE)") : "No Date Selected";
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-md animate-in fade-in duration-200">
+      <div className="w-full bg-white rounded-md max-w-md animate-in fade-in duration-200">
         <div className="px-4 py-5 border-b-2 border-purple-600">
           <h2 className="text-xl sm:text-2xl font-bold text-purple-800 tracking-tight">Meal Counts Summary</h2>
           <p className="text-sm sm:text-base text-gray-600 mt-1 font-medium">
-            {date ? format(date, "MMMM dd, yyyy (EEEE)") : "No Date Selected"}
+            {formattedDate}
           </p>
         </div>
         

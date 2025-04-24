@@ -14,7 +14,7 @@ import { db } from "@/firebase";
 import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import SingleMonthYearPicker from "../SingleMonthYearPicker";
-import Button from "@/components/ui/button"; // Import the new Button component
+import { Button } from "@/components/ui/button"; // Import the new Button component
 
 const AddMealFund = () => {
   const [month, setMonth] = useState(() => {

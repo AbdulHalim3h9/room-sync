@@ -1,47 +1,40 @@
-import React from "react";
-import { cn } from "@/lib/utils"; // Assuming you have a utility for className merging
+// src/components/ui/button.js
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-const Button = ({ type = "button", children, disabled, isLoading, className, ...props }) => {
+export const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed",
+  {
+    variants: {
+      variant: {
+        outline:
+          "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-accent",
+        ghost:
+          "bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-accent",
+        green:
+          "bg-green-600 text-white hover:bg-green-700 focus:ring-green-200 shadow-md text-base h-12 w-full",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-8 px-3",
+        lg: "h-12 px-6",
+        icon: "h-7 w-7 p-0", // For nav_button in Calendar
+      },
+    },
+    defaultVariants: {
+      variant: "outline",
+      size: "default",
+    },
+  }
+);
+
+export const Button = ({ className, variant, size, ...props }) => {
   return (
     <button
-      type={type}
-      className={cn(
-        "w-full h-12 bg-green-600 hover:bg-green-700 text-white text-base font-medium rounded-lg shadow-md transition-colors duration-200 focus:ring-4 focus:ring-green-200 focus:ring-opacity-50",
-        disabled && "opacity-50 cursor-not-allowed",
-        className
-      )}
-      disabled={disabled || isLoading}
+      className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    >
-      {isLoading ? (
-        <div className="flex items-center justify-center">
-          <svg
-            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          Processing...
-        </div>
-      ) : (
-        children
-      )}
-    </button>
+    />
   );
 };
 
-export default Button;
+Button.displayName = "Button";

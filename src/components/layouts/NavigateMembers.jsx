@@ -84,7 +84,7 @@ const NavigateMembers = () => {
   };
 
   const handleMemberClick = (memberId) => {
-    navigate(`/creditconsumed/${memberId}`);
+    navigate(`/dashboard/${memberId}`);
   };
 
   const calculateSize = (index) => {

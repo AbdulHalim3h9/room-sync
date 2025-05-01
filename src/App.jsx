@@ -4,7 +4,8 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/layouts/layout";
 import BottomNavigation from "./components/layouts/BottomNavigation";
-import CreditConsumed from "./components/CreditConsumed";
+import Dashboard from './components/Dashboard';
+import FloatingPayablesButton from './components/layouts/FloatingPayablesButton';
 import Payables from "./components/Payables";
 import Groceries_spendings from "./components/GroceryTurns";
 import AddMealFund from "./components/ManagerComponents/AddMealFund";
@@ -38,10 +39,11 @@ const App = () => {
   return (
     <MembersProvider>
       <ErrorBoundary>
-        <Layout>
+        <div className="flex flex-col min-h-screen relative">
+          <Layout>
           <Routes>
-            <Route path="*" element={<CreditConsumed />} />
-            <Route path="/creditconsumed/*" element={<CreditConsumed />} />
+            <Route path="*" element={<Dashboard />} />
+            <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/payables" element={<Payables />} />
             <Route path="/groceries_spendings" element={<Groceries_spendings />} />
             <Route path="/add-grocery-spendings" element={<AddGrocerySpendings />} />
@@ -54,7 +56,9 @@ const App = () => {
             <Route path="/register" element={<RegistrationForm />} />
           </Routes>
         </Layout>
+        <FloatingPayablesButton />
         <BottomNavigation />
+      </div>
       </ErrorBoundary>
     </MembersProvider>
   );

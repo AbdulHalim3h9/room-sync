@@ -43,30 +43,6 @@ const BottomNavigation = () => {
           variant="ghost"
           className={cn(
             "flex flex-col items-center justify-center gap-1 h-full w-full rounded-none relative transition-all",
-            isActive('/creditconsumed') 
-              ? "text-blue-600 bg-blue-50/50" 
-              : "text-gray-500 hover:text-blue-500 hover:bg-blue-50/30"
-          )}
-          onClick={() => navigate('/creditconsumed')}
-        >
-          <div className={cn(
-            "absolute bottom-0 h-[3px] w-10 rounded-t-full transition-all duration-300",
-            isActive('/creditconsumed') ? "bg-blue-500" : "bg-transparent"
-          )}></div>
-          <FileText className={cn(
-            "h-5 w-5 transition-all",
-            isActive('/creditconsumed') && "text-blue-600"
-          )} />
-          <span className={cn(
-            "text-xs font-medium transition-all",
-            isActive('/creditconsumed') ? "text-blue-600" : "text-gray-500"
-          )}>Credit/Consumed</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 h-full w-full rounded-none relative transition-all",
             isActive('/payables') 
               ? "text-blue-600 bg-blue-50/50" 
               : "text-gray-500 hover:text-blue-500 hover:bg-blue-50/30"
@@ -85,6 +61,30 @@ const BottomNavigation = () => {
             "text-xs font-medium transition-all",
             isActive('/payables') ? "text-blue-600" : "text-gray-500"
           )}>Payables</span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className={cn(
+            "flex flex-col items-center justify-center gap-1 h-full w-full rounded-none relative transition-all",
+            isActive('/dashboard') 
+              ? "text-blue-600 bg-blue-50/50" 
+              : "text-gray-500 hover:text-blue-500 hover:bg-blue-50/30"
+          )}
+          onClick={() => navigate('/dashboard')}
+        >
+          <div className={cn(
+            "absolute bottom-0 h-[3px] w-10 rounded-t-full transition-all duration-300",
+            isActive('/dashboard') ? "bg-blue-500" : "bg-transparent"
+          )}></div>
+          <FileText className={cn(
+            "h-5 w-5 transition-all",
+            isActive('/dashboard') && "text-blue-600"
+          )} />
+          <span className={cn(
+            "text-xs font-medium transition-all",
+            isActive('/dashboard') ? "text-blue-600" : "text-gray-500"
+          )}>Dashboard</span>
         </Button>
 
         <Button

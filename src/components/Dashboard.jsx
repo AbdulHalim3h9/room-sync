@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { detectDevice } from "@/utils/deviceDetection";
 import { storeDeviceInfo, storeUniqueDeviceInfo } from "@/utils/deviceTracking";
 
-const CreditConsumed = () => {
+const Dashboard = () => {
   const { members, loading, error } = React.useContext(MembersContext);
 
   // Detect and store device info on component mount
@@ -102,4 +102,4 @@ const CreditConsumed = () => {
   );
 };
 
-export default CreditConsumed;  
+export default Dashboard;  

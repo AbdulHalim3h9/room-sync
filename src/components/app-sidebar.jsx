@@ -23,6 +23,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Dialog,
@@ -108,8 +109,11 @@ export function AppSidebar() {
     fetchActiveMembers();
   }, []);
 
+  const { setOpen } = useSidebar();
+
   const handleNavigate = (path) => {
     navigate(path);
+    setOpen(false); // Close the sidebar when navigating
   };
 
   const handleCallKhala = () => {
@@ -235,7 +239,10 @@ export function AppSidebar() {
               <SidebarMenuItem key="announce">
                 <SidebarMenuButton asChild>
                   <button
-                    onClick={() => setIsAnnouncementDialogOpen(true)}
+                    onClick={() => {
+                      setIsAnnouncementDialogOpen(true);
+                      setOpen(false); // Close the sidebar
+                    }}
                     className={`flex items-center w-full px-4 py-6 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50`}
                   >
                     <div>
@@ -251,7 +258,10 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <div className="flex items-center justify-between w-full">
                     <button
-                      onClick={handleCallKhala}
+                      onClick={() => {
+                        handleCallKhala();
+                        setOpen(false); // Close the sidebar
+                      }}
                       className="flex items-center w-full px-2 py-6 rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-50"
                     >
                         <PhoneOutgoing className="mr-2 h-6 w-6" />

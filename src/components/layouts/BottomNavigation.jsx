@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { FileText, CreditCard, ShoppingBag } from "lucide-react";
+import { FileText, UsersRound, ShoppingBag } from "lucide-react";
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
@@ -43,24 +43,24 @@ const BottomNavigation = () => {
           variant="ghost"
           className={cn(
             "flex flex-col items-center justify-center gap-1 h-full w-full rounded-none relative transition-all",
-            isActive('/payables') 
+            isActive('/members') 
               ? "text-blue-600 bg-blue-50/50" 
               : "text-gray-500 hover:text-blue-500 hover:bg-blue-50/30"
           )}
-          onClick={() => navigate('/payables')}
+          onClick={() => navigate('/members')}
         >
           <div className={cn(
             "absolute bottom-0 h-[3px] w-10 rounded-t-full transition-all duration-300",
-            isActive('/payables') ? "bg-blue-500" : "bg-transparent"
+            isActive('/members') ? "bg-blue-500" : "bg-transparent"
           )}></div>
-          <CreditCard className={cn(
+          <UsersRound className={cn(
             "h-5 w-5 transition-all",
-            isActive('/payables') && "text-blue-600"
+            isActive('/members') && "text-blue-600"
           )} />
           <span className={cn(
             "text-xs font-medium transition-all",
-            isActive('/payables') ? "text-blue-600" : "text-gray-500"
-          )}>Payables</span>
+            isActive('/members') ? "text-blue-600" : "text-gray-500"
+          )}>Members</span>
         </Button>
 
         <Button

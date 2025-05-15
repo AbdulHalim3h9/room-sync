@@ -5,7 +5,8 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/layouts/layout";
 import BottomNavigation from "./components/layouts/BottomNavigation";
 import Dashboard from './components/Dashboard';
-import FloatingPayablesButton from './components/layouts/FloatingPayablesButton';
+import FloatingPaymentButton from './components/layouts/FloatingPaymentButton';
+import FloatingCarryforwardButton from './components/layouts/FloatingCarryforwardButton';
 import Payables from "./components/Payables";
 import Groceries_spendings from "./components/GroceryTurns";
 import AddMealFund from "./components/ManagerComponents/AddMealFund";
@@ -56,7 +57,8 @@ const App = () => {
             <Route path="/register" element={<RegistrationForm />} />
           </Routes>
         </Layout>
-        <FloatingPayablesButton />
+        <FloatingCarryforwardButton />
+        <FloatingPaymentButton />
         <BottomNavigation />
       </div>
       </ErrorBoundary>

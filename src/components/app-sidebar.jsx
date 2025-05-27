@@ -162,22 +162,22 @@ export function AppSidebar() {
 
   const menuItems = [
     {
-      label: "Add Grocery Spendings",
+      label: "বাজার তালিকায় যোগ করুন",
       path: "/add-grocery-spendings",
       icon: <ShoppingBasket className="mr-2 h-6 w-6" />,
     },
     {
-      label: "Add Meal Fund",
+      label: "মিলে টাকা যোগ করুন",
       path: "/add-meal-fund",
       icon: <HandHelping className="mr-2 h-6 w-6" />,
     },
     {
-      label: "Set Payables",
+      label: "বিল সেট করুন",
       path: "/set-payables",
       icon: <Banknote className="mr-2 h-6 w-6" />,
     },
     {
-      label: "Set Daily Meal Count",
+      label: "মিল কাউন্ট সেট করুন",
       path: "/set-daily-meal-count",
       icon: <UserRoundPen className="mr-2 h-6 w-6" />,
     },

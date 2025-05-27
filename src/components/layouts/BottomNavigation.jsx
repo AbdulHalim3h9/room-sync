@@ -108,7 +108,7 @@ const BottomNavigation = () => {
           <span className={cn(
             "text-xs font-medium transition-all",
             isActive('/groceries_spendings') ? "text-blue-600" : "text-gray-500"
-          )}>Groceries</span>
+          )}>মাসিক বাজার</span>
         </Button>
       </div>
     </nav>

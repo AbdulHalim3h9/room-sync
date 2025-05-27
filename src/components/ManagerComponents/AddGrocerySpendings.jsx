@@ -11,6 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 import { db } from "@/firebase";
 import {
   collection,
@@ -32,6 +43,9 @@ const AddGrocerySpendings = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [members, setMembers] = useState([]);
   const [datesWithData, setDatesWithData] = useState([]);
+  const [payLater, setPayLater] = useState(false);
+  const [showPayLaterDialog, setShowPayLaterDialog] = useState(false);
+  const [dueNote, setDueNote] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -126,7 +140,11 @@ const AddGrocerySpendings = () => {
       const querySnapshot = await getDocs(expensesRef);
       const newTotalSpendings = querySnapshot.docs.reduce((sum, doc) => {
         const data = doc.data();
-        return sum + (parseInt(data.amountSpent) || 0);
+        // Only include paid expenses (not payLater) in total spendings
+        if (!data.payLater) {
+          return sum + (parseInt(data.amountSpent) || 0);
+        }
+        return sum;
       }, 0);
 
       const summaryRef = doc(db, "mealSummaries", month);
@@ -188,6 +206,26 @@ const AddGrocerySpendings = () => {
     return true;
   };
 
+  const handlePayLaterToggle = (checked) => {
+    if (checked) {
+      setShowPayLaterDialog(true);
+    } else {
+      setPayLater(false);
+      setDueNote(""); // Reset due note when pay later is toggled off
+    }
+  };
+
+  const confirmPayLater = () => {
+    setPayLater(true);
+    setShowPayLaterDialog(false);
+  };
+
+  const cancelPayLater = () => {
+    setPayLater(false);
+    setDueNote(""); // Reset due note when pay later is canceled
+    setShowPayLaterDialog(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -203,19 +241,41 @@ const AddGrocerySpendings = () => {
       expenseType,
       expenseTitle: expenseType === "other" ? expenseTitle : null,
       date: formattedDate,
+      payLater,
     };
 
     try {
-      // Ensure the parent document exists
+      // Ensure the parent document exists for expenses
       const monthDocRef = doc(db, "expenses", docId);
       await firestoreSetDoc(monthDocRef, { createdAt: new Date().toISOString() }, { merge: true });
 
+      // Add expense to expenses collection
       const expensesRef = collection(db, "expenses", docId, "expenses");
-      await addDoc(expensesRef, expenseData);
+      const expenseDocRef = await addDoc(expensesRef, expenseData);
+
+      // If payLater is true, add to dues collection
+      if (payLater) {
+        const duesMonthDocRef = doc(db, "dues", docId);
+        await firestoreSetDoc(duesMonthDocRef, { createdAt: new Date().toISOString() }, { merge: true });
+
+        const duesRef = collection(db, "dues", docId, "dues");
+        const dueData = {
+          expenseId: expenseDocRef.id,
+          amount: parseInt(amountSpent),
+          shopperId: selectedShopper || null,
+          expenseType,
+          expenseTitle: expenseType === "other" ? expenseTitle : null,
+          date: formattedDate,
+          paymentStatus: "pending",
+          dueNote: dueNote || null, // Store due note, null if empty
+          createdAt: new Date().toISOString(),
+        };
+        await addDoc(duesRef, dueData);
+      }
 
       toast({
         title: "Success",
-        description: "Expense added successfully.",
+        description: `Expense added successfully${payLater ? " (marked as Pay Later)" : ""}.`,
         className: "z-[1002]",
       });
 
@@ -226,6 +286,8 @@ const AddGrocerySpendings = () => {
       setExpenseType("groceries");
       setExpenseTitle("");
       setSelectedDate(new Date());
+      setPayLater(false);
+      setDueNote("");
 
       // Update datesWithData
       const newDate = new Date(formattedDate);
@@ -239,7 +301,7 @@ const AddGrocerySpendings = () => {
       console.error("Error adding document: ", error);
       toast({
         title: "Error",
-        description: "Failed to add expense. Please try again.",
+        description: "Failed to add expense or due. Please try again.",
         variant: "destructive",
         className: "z-[1002]",
       });
@@ -398,6 +460,55 @@ const AddGrocerySpendings = () => {
                 </div>
               )}
             </div>
+
+            {/* Pay Later Toggle */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="pay-later"
+                  checked={payLater}
+                  onCheckedChange={handlePayLaterToggle}
+                />
+                <Label htmlFor="pay-later" className="text-sm font-semibold text-gray-800">
+                  Pay Later
+                </Label>
+              </div>
+              <p className="text-xs text-gray-500">Mark this expense to be paid later</p>
+            </div>
+
+            {/* Due Note Field - Only when Pay Later is enabled */}
+            {payLater && (
+              <div className="space-y-2">
+                <Label htmlFor="due-note" className="block text-sm font-semibold text-gray-800">
+                  Due Note
+                </Label>
+                <Input
+                  id="due-note"
+                  type="text"
+                  placeholder="E.g., Bacchar dokane baki"
+                  value={dueNote}
+                  onChange={(e) => setDueNote(e.target.value)}
+                  className="h-11 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-base shadow-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">Optional note about the due payment</p>
+              </div>
+            )}
+
+            {/* Pay Later Confirmation Dialog */}
+            <AlertDialog open={showPayLaterDialog} onOpenChange={setShowPayLaterDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Pay Later</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to mark this expense as "Pay Later"? This will record the expense as unpaid and may affect future calculations.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={cancelPayLater}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmPayLater}>Confirm</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Submit Button */}
             <div className="pt-4">

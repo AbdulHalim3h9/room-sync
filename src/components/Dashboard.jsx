@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect } from "react";
-import NavigateMembers from "./layouts/NavigateMembers";
 import { Routes, Route } from "react-router-dom";
 import TabSwitcherMealChart from "./layouts/TabSwitcherMealChart";
 import ResponsiveChartWrapper from "./ResponsiveChartWrapper";
@@ -89,7 +88,6 @@ const Dashboard = () => {
   return (
     <MonthProvider>
       <div>
-        <NavigateMembers />
         <Routes>
           <Route path="/" element={<ResponsiveChartWrapper />} />
           <Route

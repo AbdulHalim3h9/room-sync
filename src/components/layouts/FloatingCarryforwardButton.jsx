@@ -45,6 +45,7 @@ const FloatingCarryforwardButton = () => {
   };
 
   const previousMonth = getPreviousMonth(currentMonth);
+  
   // Function to fetch active members for the month
   const fetchMembers = async () => {
     try {
@@ -150,37 +151,36 @@ const FloatingCarryforwardButton = () => {
     }
   }, [isDialogOpen, previousMonth]);
 
+  if (!isVisible) return null;
+
   return (
     <>
-      {isVisible && (
-        <div className="fixed z-45 left-0 right-0 bottom-36 flex justify-center md:justify-end md:right-[10rem] md:left-auto">
-          <button
-            onClick={() => setIsDialogOpen(true)}
-            className={cn(
-              'flex items-center justify-center gap-2',
-              'h-12 px-5 rounded-full shadow-lg',
-              'hover:scale-105 group transition-all duration-300',
-              isHighlighted ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'bg-white text-blue-600',
-              isHighlighted ? 'ring-2 ring-blue-300 shadow-xl' : 'ring-1 ring-gray-200'
-            )}
-            style={{
-              transform: `translate(${animationOffset.left}px, ${animationOffset.top}px)`,
-            }}
-          >
-            <TrendingUp className="h-5 w-5" />
-            <span className="font-medium">Carryforward</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsVisible(false);
-              }}
-              className="ml-2 p-1 rounded-full hover:bg-gray-100/50 text-current opacity-60 hover:opacity-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </button>
-        </div>
-      )}
+      <button
+        onClick={() => setIsDialogOpen(true)}
+        className={cn(
+          'flex items-center justify-center gap-2',
+          'px-3 py-2 rounded-full shadow-lg',
+          'hover:scale-105 group transition-all duration-300',
+          'text-sm font-medium whitespace-nowrap',
+          isHighlighted ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'bg-white text-blue-600',
+          isHighlighted ? 'ring-2 ring-blue-300 shadow-xl' : 'ring-1 ring-gray-200'
+        )}
+        style={{
+          transform: `translate(${animationOffset.left}px, ${animationOffset.top}px)`
+        }}
+      >
+        <TrendingUp className="h-4 w-4" />
+        <span>Carryforward</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsVisible(false);
+          }}
+          className="ml-1 p-1 rounded-full hover:bg-gray-100/50 text-current opacity-60 hover:opacity-100"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl overflow-y-auto h-auto md:h-auto landscape:h-[85vh] landscape:max-h-[85vh] sm:landscape:h-[95vh] sm:landscape:max-h-[95vh]">

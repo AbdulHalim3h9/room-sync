@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { TrendingUp, X, Share2, Download, Check, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { db } from '@/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -23,6 +24,135 @@ const FloatingCarryforwardButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const dialogRef = useRef(null);
+
+  const captureAndShare = async (isSharing = false) => {
+    console.log('Capture and share triggered, isSharing:', isSharing);
+    
+    if (!dialogRef.current) {
+      console.error('Dialog ref not set');
+      alert('Error: Dialog reference not found');
+      return;
+    }
+    
+    // Set processing state
+    setIsProcessing(true);
+    
+    try {
+      console.log('Starting image capture with html2canvas...');
+      
+      // Get the element to capture
+      const element = dialogRef.current;
+      console.log('Element to capture:', element);
+      
+      if (!element) {
+        throw new Error('Element not found for capture');
+      }
+      
+      // Capture the element with html2canvas
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        logging: true,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      });
+      
+      // Convert canvas to data URL
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      console.log('Image captured successfully, data URL length:', dataUrl.length);
+      
+      if (!dataUrl || dataUrl.length < 1000) { // Basic validation
+        throw new Error('Captured image data is too small');
+      }
+      
+      if (isSharing && navigator.share) {
+        console.log('Sharing image...');
+        try {
+          // Convert data URL to blob
+          canvas.toBlob(async (blob) => {
+            try {
+              const file = new File([blob], 'carryforward.png', { 
+                type: 'image/png',
+                lastModified: Date.now()
+              });
+              
+              // Share the file
+              await navigator.share({
+                title: `Carryforward - ${new Date(currentMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+                files: [file],
+              });
+              console.log('Share successful');
+            } catch (shareError) {
+              console.error('Share error:', shareError);
+              // Fallback to download if sharing fails
+              downloadImage(dataUrl);
+            }
+          }, 'image/png');
+        } catch (shareError) {
+          console.error('Share error, falling back to download:', shareError);
+          // Fallback to download if sharing fails
+          downloadImage(dataUrl);
+        }
+      } else {
+        console.log('Downloading image...');
+        downloadImage(dataUrl);
+      }
+    } catch (error) {
+      console.error('Capture error:', error);
+      alert(`Failed to capture image: ${error.message || 'Unknown error'}`);
+    } finally {
+      // Reset processing state
+      setIsProcessing(false);
+    }
+  };
+  
+  const downloadImage = (dataUrl) => {
+    try {
+      console.log('Starting download...');
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      
+      // Generate a filename with the current date
+      const dateStr = new Date().toISOString().split('T')[0];
+      const fileName = `carryforward-${currentMonth}-${dateStr}.png`;
+      
+      // Set the download attributes
+      link.download = fileName;
+      link.href = dataUrl;
+      
+      // Make the link invisible
+      link.style.display = 'none';
+      
+      // Add to the document, trigger download, and remove
+      document.body.appendChild(link);
+      console.log('Triggering download click...', { fileName, dataUrl: dataUrl.substring(0, 50) + '...' });
+      
+      // Use setTimeout to ensure the click is registered
+      setTimeout(() => {
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          console.log('Download cleanup complete');
+          
+          // Revoke the object URL to free up memory
+          URL.revokeObjectURL(dataUrl);
+        }, 100);
+      }, 100);
+      
+      console.log('Download initiated');
+      
+    } catch (error) {
+      console.error('Error in downloadImage:', error);
+      alert('Failed to download image. Please try again.');
+    }
+  };
   
   // State for data needed by CarryforwardSection
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -109,6 +239,40 @@ const FloatingCarryforwardButton = () => {
     }
   };
 
+  const generateShareableText = () => {
+    let text = `Carryforward Details - ${new Date(currentMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' })}\n\n`;
+    
+    if (carryforwardData.length > 0) {
+      text += "Member\t\tMeals\t\tAmount\n";
+      text += "-".repeat(40) + "\n";
+      
+      carryforwardData.forEach(member => {
+        text += `${member.name || 'N/A'}\t\t${member.meals || 0}\t\t${member.amount || 0}\n`;
+      });
+      
+      text += "\n";
+      text += `Total Meals: ${totalMeals.previous || 0}\n`;
+      text += `Meal Rate: ${mealRate.previous === 'N/A' ? 'N/A' : '৳' + mealRate.previous}`;
+    } else {
+      text += "No carryforward data available for this month.";
+    }
+    
+    return text;
+  };
+
+  const handleDownload = () => {
+    const text = generateShareableText();
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `carryforward-${currentMonth}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Toggle highlight effect every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -155,36 +319,82 @@ const FloatingCarryforwardButton = () => {
 
   return (
     <>
-      <button
-        onClick={() => setIsDialogOpen(true)}
-        className={cn(
-          'flex items-center justify-center gap-2',
-          'px-3 py-2 rounded-full shadow-lg',
-          'hover:scale-105 group transition-all duration-300',
-          'text-sm font-medium whitespace-nowrap',
-          isHighlighted ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'bg-white text-blue-600',
-          isHighlighted ? 'ring-2 ring-blue-300 shadow-xl' : 'ring-1 ring-gray-200'
-        )}
-        style={{
-          transform: `translate(${animationOffset.left}px, ${animationOffset.top}px)`
-        }}
-      >
-        <TrendingUp className="h-4 w-4" />
-        <span>Carryforward</span>
+      <div>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsVisible(false);
+          onClick={() => setIsDialogOpen(true)}
+          className={cn(
+            'flex items-center justify-center gap-2',
+            'px-3 py-2 rounded-full shadow-lg',
+            'hover:scale-105 group transition-all duration-300',
+            'text-sm font-medium whitespace-nowrap',
+            isHighlighted ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'bg-white text-blue-600',
+            isHighlighted ? 'ring-2 ring-blue-300 shadow-xl' : 'ring-1 ring-gray-200'
+          )}
+          style={{
+            transform: `translate(${animationOffset.left}px, ${animationOffset.top}px)`
           }}
-          className="ml-1 p-1 rounded-full hover:bg-gray-100/50 text-current opacity-60 hover:opacity-100"
         >
-          <X className="h-3 w-3" />
+          <TrendingUp className="h-4 w-4" />
+          <span>Carryforward</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsVisible(false);
+            }}
+            className="ml-1 p-1 rounded-full hover:bg-gray-100/50 text-current opacity-60 hover:opacity-100"
+          >
+            <X className="h-3 w-3" />
+          </button>
         </button>
-      </button>
-
+      </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl overflow-y-auto h-auto md:h-auto landscape:h-[85vh] landscape:max-h-[85vh] sm:landscape:h-[95vh] sm:landscape:max-h-[95vh]">
-          <div className="h-full max-h-[85vh] overflow-auto">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] p-0 overflow-hidden">
+          <div className="flex flex-col h-full">
+            <div className="p-4 border-b sticky top-0 bg-white z-10">
+              <div className="flex justify-between items-center">
+                <DialogTitle className="text-xl font-semibold m-0">
+                  Carryforward Details - {new Date(currentMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' })}
+                </DialogTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => captureAndShare(true)}
+                    disabled={isProcessing}
+                    className="flex items-center gap-1 min-w-[80px]"
+                  >
+                    {isProcessing ? (
+                      <span>Processing...</span>
+                    ) : (
+                      <>
+                        <Share2 className="h-4 w-4" />
+                        <span>Share</span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => captureAndShare(false)}
+                    disabled={isProcessing}
+                    className="flex items-center gap-1 min-w-[100px]"
+                  >
+                    {isProcessing ? (
+                      <span>Processing...</span>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        <span>Download</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div 
+              ref={dialogRef}
+              className="flex-1 overflow-auto p-6 bg-white"
+            >
             {isLoading ? (
               <div className="space-y-6 p-6">
                 {/* Announcement skeleton */}
@@ -220,6 +430,7 @@ const FloatingCarryforwardButton = () => {
                 totalMeals={totalMeals}
               />
             )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

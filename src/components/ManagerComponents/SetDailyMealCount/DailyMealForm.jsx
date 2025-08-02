@@ -5,24 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import DatePickerMealCount from "./DatePickerMealCount";
-import ConfirmationModal from "./SetDailyMealCount/ConfirmationModal";
-import MemberMealInput from "./SetDailyMealCount/MemberMealInput";
-import useMealData from "./SetDailyMealCount/useMealData";
-import { validateSubmission, handleConfirmSubmit } from "./SetDailyMealCount/mealUtils";
+import ConfirmationModal from "./ConfirmationModal";
+import MemberMealInput from "./MemberMealInput";
+import useMealData from "./useMealData";
+import { validateSubmission, handleConfirmSubmit } from "./mealUtils";
 
-const SetDailyMealCount = () => {
+const DailyMealForm = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mealCounts, setMealCounts] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { 
-    members, 
-    datesWithData, 
-    setDatesWithData, 
-    existingDocId, 
-    fetchMembersAndDates, 
-    fetchMealCounts, 
-    toast 
-  } = useMealData(selectedDate, mealCounts, setMealCounts);
+  const { members, datesWithData, existingDocId, fetchMembersAndDates, fetchMealCounts, toast } = useMealData(selectedDate, mealCounts, setMealCounts);
 
   const handleInputChange = (e, memberId) => {
     const value = e.target.value;
@@ -138,4 +130,4 @@ const SetDailyMealCount = () => {
   );
 };
 
-export default SetDailyMealCount;
+export default DailyMealForm;

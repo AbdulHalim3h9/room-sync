@@ -179,15 +179,42 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 };
 
 export default function RealtimeCharts({
-  realtimeData,
-  pieContributionData,
-  pieConsumptionData,
-  dueMembers,
-  mealRate,
+  realtimeData = [],
+  pieContributionData = [],
+  pieConsumptionData = [],
+  dueMembers = [],
+  mealRate = { current: null },
 }) {
-  const hasPieData = pieContributionData.some(item => item.value > 0) || pieConsumptionData.some(item => item.value > 0);
-  const enhancedContributionData = useMemo(() => assignConsistentColors(pieContributionData), [pieContributionData]);
-  const enhancedConsumptionData = useMemo(() => assignConsistentColors(pieConsumptionData), [pieConsumptionData]);
+  console.log('RealtimeCharts render with data:', {
+    realtimeData,
+    pieContributionData,
+    pieConsumptionData,
+    dueMembers,
+    mealRate
+  });
+
+  // Handle empty or missing data
+  if (!realtimeData || realtimeData.length === 0) {
+    console.log('No realtimeData available, showing empty state');
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">No data available for the selected month</p>
+      </div>
+    );
+  }
+
+  const hasPieData = (pieContributionData && pieContributionData.length > 0 && pieContributionData.some(item => item.value > 0)) || 
+                    (pieConsumptionData && pieConsumptionData.length > 0 && pieConsumptionData.some(item => item.value > 0));
+  
+  const enhancedContributionData = useMemo(() => 
+    pieContributionData && pieContributionData.length > 0 ? assignConsistentColors(pieContributionData) : [], 
+    [pieContributionData]
+  );
+  
+  const enhancedConsumptionData = useMemo(() => 
+    pieConsumptionData && pieConsumptionData.length > 0 ? assignConsistentColors(pieConsumptionData) : [], 
+    [pieConsumptionData]
+  );
 
   return (
     <div className="space-y-6">

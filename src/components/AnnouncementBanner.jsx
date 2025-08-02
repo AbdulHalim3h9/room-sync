@@ -77,6 +77,10 @@ const AnnouncementBanner = () => {
     }
   }, [announcements]);
 
+  // Don't show anything if there are no announcements and we're not loading
+  if (announcements.length === 0 && !isLoading) return null;
+  
+  // Don't show if user has closed the banner
   if (!showBanner) return null;
 
   const renderDots = () => {

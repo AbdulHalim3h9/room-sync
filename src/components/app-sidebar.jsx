@@ -13,6 +13,7 @@ import {
   Home,
   LogOut,
   AlertCircle,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -161,6 +162,11 @@ export function AppSidebar() {
   );
 
   const menuItems = [
+    {
+      label: "Misc Settings",
+      path: "/misc-settings",
+      icon: <SettingsIcon className="mr-2 h-6 w-6 text-purple-600" />,
+    },
     {
       label: "বাজার তালিকায় যোগ করুন",
       path: "/add-grocery-spendings",

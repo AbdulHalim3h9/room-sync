@@ -18,6 +18,8 @@ import MemberDetails from "./components/AdminComponents/MemberDetails";
 import RegistrationForm from "./components/RegisterAdminManager";
 import { MembersProvider } from "@/contexts/MembersContext";
 import { FloatingButtonsProvider } from "@/contexts/FloatingButtonsContext";
+import { MiscSettingsProvider } from "@/contexts/MiscSettingsContext";
+import MiscSettings from "./components/MiscSettings";
 
 // ErrorBoundary component
 class ErrorBoundary extends React.Component {
@@ -41,6 +43,7 @@ const App = () => {
     <MembersProvider>
       <ErrorBoundary>
         <FloatingButtonsProvider>
+          <MiscSettingsProvider>
           <div className="flex flex-col min-h-screen relative">
             <Layout>
               <Routes>
@@ -56,11 +59,13 @@ const App = () => {
                 <Route path="/members" element={<MembersList />} />
                 <Route path="/member-details" element={<MemberDetails />} />
                 <Route path="/register" element={<RegistrationForm />} />
+                <Route path="/misc-settings" element={<MiscSettings />} />
               </Routes>
             </Layout>
             <FloatingButtons />
             <BottomNavigation />
           </div>
+          </MiscSettingsProvider>
         </FloatingButtonsProvider>
       </ErrorBoundary>
     </MembersProvider>

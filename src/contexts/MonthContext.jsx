@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useContext } from "react";
 
 export const MonthContext = createContext();
 
@@ -16,3 +16,14 @@ export const MonthProvider = ({ children }) => {
     </MonthContext.Provider>
   );
 };
+
+// Custom hook to use the month context
+export const useMonth = () => {
+  const context = useContext(MonthContext);
+  if (context === undefined) {
+    throw new Error('useMonth must be used within a MonthProvider');
+  }
+  return context;
+};
+
+export default MonthContext;

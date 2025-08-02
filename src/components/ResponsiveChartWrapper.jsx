@@ -150,9 +150,34 @@ export default function ResponsiveChartWrapper() {
     fetchMealRate();
   }, [month]);
 
+  // Function to generate contrasting colors
+  const generateContrastingColor = () => {
+    try {
+      const hue = Math.floor(Math.random() * 360);
+      const saturation = Math.floor(Math.random() * 20 + 70);
+      const lightness = Math.floor(Math.random() * 20 + 40);
+
+      const hslToRgb = (h, s, l) => {
+        s /= 100;
+        l /= 100;
+        const k = n => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        return `rgb(${Math.round(f(0) * 255)}, ${Math.round(f(8) * 255)}, ${Math.round(f(4) * 255)})`;
+      };
+
+      return hslToRgb(hue, saturation, lightness);
+    } catch (error) {
+      console.error('Error in generateContrastingColor:', error);
+      // Fallback to a default color if there's an error
+      return 'rgb(100, 100, 100)';
+    }
+  };
+
   // Fetch contribution/consumption and meal count data
   useEffect(() => {
     const fetchData = async () => {
+      console.log('Starting to fetch data for month:', month);
       setLoading(true);
       try {
         const contribConsumpRef = collection(db, "contributionConsumption");
@@ -213,6 +238,12 @@ export default function ResponsiveChartWrapper() {
           color: pieColorMap[item.name],
         }));
 
+        console.log('Fetched data:', {
+          realtimeChartData,
+          contributionPieData,
+          consumptionPieData
+        });
+        
         setRealtimeData(realtimeChartData);
         setPieContributionData(contributionPieData);
         setPieConsumptionData(consumptionPieData);
@@ -241,12 +272,12 @@ export default function ResponsiveChartWrapper() {
   if (loading || membersLoading) {
     return (
       <div className="container mx-auto p-6 max-w-7xl">
-        <Skeleton className="h-8 w-48 mx-auto mb-8" />
-        <div className="flex justify-end mb-8">
-          <Skeleton className="h-10 w-48" />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading chart data...</p>
+          </div>
         </div>
-        <Skeleton className="h-[40vh] w-full mb-8" />
-        <Skeleton className="h-24 w-full" />
       </div>
     );
   }
@@ -259,23 +290,16 @@ export default function ResponsiveChartWrapper() {
     );
   }
 
-  // Helper function for generating contrasting colors
-  const generateContrastingColor = () => {
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = Math.floor(Math.random() * 20 + 70);
-    const lightness = Math.floor(Math.random() * 20 + 40);
 
-    const hslToRgb = (h, s, l) => {
-      s /= 100;
-      l /= 100;
-      const k = n => (n + h / 30) % 12;
-      const a = s * Math.min(l, 1 - l);
-      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-      return `rgb(${Math.round(f(0) * 255)}, ${Math.round(f(8) * 255)}, ${Math.round(f(4) * 255)})`;
-    };
 
-    return hslToRgb(hue, saturation, lightness);
-  };
+  console.log('Rendering ResponsiveChartWrapper with state:', {
+    loading,
+    membersLoading,
+    realtimeData,
+    pieContributionData,
+    pieConsumptionData,
+    activeMembersCurrent
+  });
 
   return (
     <div className="container mx-auto px-6 pt-4 pb-6 max-w-7xl">

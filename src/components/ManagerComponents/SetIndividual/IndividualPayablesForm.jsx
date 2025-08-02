@@ -2,15 +2,14 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import IndividualSection from "./SetIndividual/IndividualSection";
-import usePayablesData from "./SetIndividual/usePayablesData";
-import { validateForm, handleSubmit } from "./SetIndividual/payablesUtils";
+import IndividualSection from "./IndividualSection";
+import usePayablesData from "./usePayablesData";
+import { validateForm, handleSubmit } from "./payablesUtils";
 
-const SetIndividual = ({ selectedMonth }) => {
+const IndividualPayablesForm = ({ selectedMonth }) => {
   const [individuals, setIndividuals] = useState([
     { member: "", fields: [{ title: "", amount: "" }] },
   ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { activeMembers, isLoading, toast } = usePayablesData(selectedMonth);
 
   const handleIndividualChange = (e, index) => {
@@ -54,7 +53,7 @@ const SetIndividual = ({ selectedMonth }) => {
   };
 
   const onSubmit = () => {
-    handleSubmit(selectedMonth, individuals, activeMembers, setIndividuals, toast, setIsSubmitting);
+    handleSubmit(selectedMonth, individuals, activeMembers, setIndividuals, toast, setIsLoading);
   };
 
   return (
@@ -76,7 +75,7 @@ const SetIndividual = ({ selectedMonth }) => {
               onAddField={handleAddField}
               onRemoveField={handleRemoveField}
               onRemoveIndividual={handleRemoveIndividual}
-              isLoading={isLoading || isSubmitting}
+              isLoading={isLoading}
             />
           ))}
           
@@ -85,7 +84,7 @@ const SetIndividual = ({ selectedMonth }) => {
               type="button"
               onClick={handleAddIndividual}
               variant="outline"
-              disabled={isLoading || isSubmitting}
+              disabled={isLoading}
               className="border border-purple-200 text-purple-700 hover:bg-purple-50 rounded-lg h-11 shadow-sm transition-colors"
             >
               + Add Another Member
@@ -97,7 +96,7 @@ const SetIndividual = ({ selectedMonth }) => {
               type="button"
               onClick={onSubmit}
               className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white text-base font-medium rounded-lg shadow-sm transition-colors duration-200 focus:ring-4 focus:ring-purple-200 focus:ring-opacity-50"
-              disabled={activeMembers.length === 0 || isLoading || isSubmitting}
+              disabled={activeMembers.length === 0 || isLoading}
             >
               {isLoading ? "Processing..." : "Save Individual Payables"}
             </Button>
@@ -113,4 +112,4 @@ const SetIndividual = ({ selectedMonth }) => {
   );
 };
 
-export default SetIndividual;
+export default IndividualPayablesForm;

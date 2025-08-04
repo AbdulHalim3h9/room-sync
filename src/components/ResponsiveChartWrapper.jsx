@@ -311,14 +311,14 @@ export default function ResponsiveChartWrapper() {
         setLoadingPresence={setLoadingPresence}
         toggleMemberPresence={toggleMemberPresence}
       />
-      <Header month={month} setMonth={setMonth} />
-      <LastUpdated timestamp={lastUpdated} />
+      <Header />
       <ChartTabs
         realtimeData={realtimeData}
         pieContributionData={pieContributionData}
         pieConsumptionData={pieConsumptionData}
         dueMembers={dueMembers}
         mealRate={mealRate}
+        lastUpdated={lastUpdated}
       />
     </div>
   );

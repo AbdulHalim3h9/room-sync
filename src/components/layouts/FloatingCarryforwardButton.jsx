@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { db } from '@/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { useFloatingButtons } from '@/contexts/FloatingButtonsContext';
 import CarryforwardSection from "../CarryforwardSection";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +24,11 @@ const FloatingCarryforwardButton = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isVisible, setIsVisible] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const dialogRef = useRef(null);
+  const { isButtonVisible } = useFloatingButtons();
+  const isVisible = isButtonVisible('carryforward') ?? true;
 
   const captureAndShare = async (isSharing = false) => {
     console.log('Capture and share triggered, isSharing:', isSharing);

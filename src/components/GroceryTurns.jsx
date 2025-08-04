@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import LastUpdated from "./LastUpdated";
+import { MonthContext } from "@/contexts/MonthContext";
 
 const GroceriesSpendings = () => {
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-    return `${year}-${monthNum}`;
-  });
+  const { month, setMonth } = useContext(MonthContext);
   const [expenses, setExpenses] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -132,7 +128,7 @@ const GroceriesSpendings = () => {
             Monthly Grocery Spendings
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-1 font-medium">
-            View all grocery expenses for {month}
+            View all grocery expenses for {new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
           </p>
         </div>
 
@@ -159,7 +155,10 @@ const GroceriesSpendings = () => {
             </div>
             <SingleMonthYearPicker
               value={month}
-              onChange={setMonth}
+              onChange={(newMonth) => {
+                setMonth(newMonth);
+                fetchExpenses(newMonth);
+              }}
               collections={["expenses"]}
               className="h-9 sm:h-10 rounded-lg border-gray-200 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 shadow-sm w-full sm:w-auto"
             />
@@ -230,7 +229,7 @@ const GroceriesSpendings = () => {
                       d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                     />
                   </svg>
-                  <p className="text-gray-500 font-medium text-sm">No expenses found for {month}</p>
+                  <p className="text-gray-500 font-medium text-sm">No expenses found for {new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
                   <p className="text-gray-400 text-xs mt-1">Try selecting a different month or adding new expenses</p>
                 </div>
                 <LastUpdated timestamp={lastUpdated} />

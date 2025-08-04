@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { useParams } from "react-router-dom";
 import {
   BarChart,
@@ -16,16 +16,13 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { MembersContext } from "@/contexts/MembersContext";
-import SingleMonthYearPicker from "./SingleMonthYearPicker";
+import { MonthContext } from "@/contexts/MonthContext";
 import { debounce } from "lodash";
 
 const CreditChart = () => {
   const { memberId } = useParams();
-  const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const { members, loading: membersLoading, error: membersError } = useContext(MembersContext);
+  const { month } = useContext(MonthContext);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,13 +30,6 @@ const CreditChart = () => {
   const member = Array.isArray(members)
     ? members.find((m) => m.memberId === memberId)
     : null;
-
-  const handleMonthChange = useCallback(
-    debounce((newMonth) => {
-      setMonth(newMonth);
-    }, 300),
-    []
-  );
 
   const fetchCreditData = useCallback(async () => {
     if (!month || !memberId || !member || !Array.isArray(members)) {
@@ -118,12 +108,6 @@ const CreditChart = () => {
     fetchCreditData();
   }, [fetchCreditData]);
 
-  useEffect(() => {
-    return () => {
-      handleMonthChange.cancel();
-    };
-  }, [handleMonthChange]);
-
   if (membersLoading) {
     return (
       <div className="text-center text-gray-600">
@@ -179,28 +163,33 @@ const CreditChart = () => {
     return <div className="text-center text-red-500">{error}</div>;
   }
 
+  // Format number to 2 decimal places with ceiling
+  const formatCurrency = (value) => {
+    // Use Math.ceil to round up to nearest 2 decimal places
+    const roundedValue = Math.ceil(value * 100) / 100;
+    // Format to exactly 2 decimal places
+    return roundedValue.toFixed(2);
+  };
+
   const contribution = chartData[0]?.contributed || 0;
   const consumption = chartData[1]?.consumed || 0;
   const balance = contribution - consumption;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <div className="flex items-center space-x-4 mb-4 md:mb-0">
-          <img
-            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-            src={member.imgSrc}
-            alt={member.memberName}
-          />
-          <h3 className="text-2xl font-semibold text-gray-800">
-            {member.memberName}
+    <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg">
+      <div className="flex flex-col items-center justify-center w-full mb-8">
+        <div className="flex flex-col items-center w-full max-w-md">
+          <div className="mb-4">
+            <img
+              className="w-28 h-28 rounded-full object-cover border-2 border-gray-200"
+              src={member?.imgSrc || "/images/placeholder.jpg"}
+              alt={member?.memberName || 'Member'}
+            />
+          </div>
+          <h3 className="text-2xl font-semibold text-gray-800 text-center">
+            {member?.memberName || 'Member'}
           </h3>
         </div>
-        <SingleMonthYearPicker
-          value={month}
-          onChange={handleMonthChange}
-          collections={["contributionConsumption"]}
-        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -222,7 +211,7 @@ const CreditChart = () => {
                 tickFormatter={(value) => `${value} tk`}
               />
               <Tooltip
-                formatter={(value) => [`${value} tk`, ""]}
+                formatter={(value) => [`${formatCurrency(value)} tk`, ""]}
                 contentStyle={{
                   backgroundColor: "rgba(255, 255, 255, 0.9)",
                   border: "1px solid #E5E7EB",
@@ -253,13 +242,13 @@ const CreditChart = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Contribution</span>
               <span className="text-xl font-semibold text-indigo-600">
-                {contribution} tk
+                {formatCurrency(contribution)} tk
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Consumption</span>
               <span className="text-xl font-semibold text-emerald-600">
-                {consumption} tk
+                {formatCurrency(consumption)} tk
               </span>
             </div>
             <div className="border-t border-gray-200 pt-4">
@@ -270,7 +259,7 @@ const CreditChart = () => {
                     balance >= 0 ? "text-indigo-600" : "text-red-500"
                   }`}
                 >
-                  {balance} tk
+                  {formatCurrency(balance)} tk
                 </span>
               </div>
               {balance < 0 && (

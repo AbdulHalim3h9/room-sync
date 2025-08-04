@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MembersContext } from "@/contexts/MembersContext";
 import { MonthContext } from "@/contexts/MonthContext";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const getInitials = (name) => {
@@ -18,40 +18,37 @@ const getInitials = (name) => {
 };
 
 const Avatar = ({ name, imageUrl, className }) => {
-  if (imageUrl) {
-    return (
-      <img
-        className={cn("w-full h-full object-cover", className)}
-        src={imageUrl}
-        alt={name}
-      />
-    );
-  }
-
-  const initials = getInitials(name);
-  const colors = [
-    "bg-red-500",
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-yellow-500",
-    "bg-purple-500",
-    "bg-pink-500",
-    "bg-indigo-500",
-    "bg-teal-500",
-  ];
-  const colorIndex = initials.charCodeAt(0) % colors.length;
-  const bgColor = colors[colorIndex];
-
-  return (
+  const avatarContent = imageUrl ? (
+    <img
+      className={cn("w-full h-full object-cover rounded-2xl", className)}
+      src={imageUrl}
+      alt={name}
+    />
+  ) : (
     <div
       className={cn(
-        "w-full h-full flex items-center justify-center",
+        "w-full h-full flex items-center justify-center rounded-2xl",
         "text-white font-semibold",
-        bgColor,
+        [
+          "bg-red-500",
+          "bg-blue-500",
+          "bg-green-500",
+          "bg-yellow-500",
+          "bg-purple-500",
+          "bg-pink-500",
+          "bg-indigo-500",
+          "bg-teal-500",
+        ][name.charCodeAt(0) % 8],
         className
       )}
     >
-      {initials}
+      {getInitials(name)}
+    </div>
+  );
+
+  return (
+    <div className="relative w-full h-full">
+      {avatarContent}
     </div>
   );
 };
@@ -66,18 +63,35 @@ const NavigateMembers = () => {
 
   const currentMemberId = location.pathname.split("/").pop();
 
-  // Filter active members for the selected month
-  const activeMembers = members.filter((member) => {
-    if (!member.activeFrom) return false;
-    const activeFromDate = new Date(member.activeFrom + "-01");
-    const selectedMonthDate = new Date(month + "-01");
-    if (activeFromDate > selectedMonthDate) return false;
-    if (member.archiveFrom) {
-      const archiveFromDate = new Date(member.archiveFrom + "-01");
-      return selectedMonthDate < archiveFromDate;
-    }
-    return true;
-  });
+  // Filter active members for the selected month from MonthContext
+  const activeMembers = React.useMemo(() => {
+    if (!month || !Array.isArray(members)) return [];
+    
+    return members.filter((member) => {
+      // Member must have an activeFrom date
+      if (!member.activeFrom) return false;
+      
+      const activeFromDate = new Date(member.activeFrom + "-01");
+      const selectedMonthDate = new Date(month + "-01");
+      
+      // Check if member was active at the start of the selected month
+      if (activeFromDate > selectedMonthDate) return false;
+      
+      // If member has an archive date, check if they were still active during the selected month
+      if (member.archiveFrom) {
+        const archiveFromDate = new Date(member.archiveFrom + "-01");
+        return selectedMonthDate < archiveFromDate;
+      }
+      
+      // If no archive date, member is still active
+      return true;
+    });
+  }, [members, month]);
+
+  // Log active members for debugging
+  React.useEffect(() => {
+    console.log('Active members:', activeMembers.map(m => m.memberName));
+  }, [activeMembers]);
 
   const toggleVisibility = () => {
     setIsVisible((prev) => !prev);
@@ -150,11 +164,24 @@ const NavigateMembers = () => {
                       variant="ghost"
                       onClick={() => handleMemberClick(member.memberId)}
                     >
-                      <Avatar
-                        name={member.memberName}
-                        imageUrl={member.imgSrc}
-                        className="rounded-2xl"
-                      />
+                      <div className="relative">
+                        <div className="relative">
+                          <Avatar
+                            name={member.memberName}
+                            imageUrl={member.imgSrc}
+                            className="rounded-2xl"
+                          />
+                          {/* Member name display */}
+                          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap bg-white px-1 rounded">
+                            {member.memberName}
+                          </div>
+                        </div>
+                        {loading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
+                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          </div>
+                        )}
+                      </div>
                     </Button>
                   </div>
                 );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
 
 const FloatingButtonsContext = createContext();
 
@@ -8,26 +8,32 @@ export const FloatingButtonsProvider = ({ children }) => {
   const [buttons, setButtons] = useState([]);
   const buttonRefs = useRef({});
 
-  const registerButton = (id, isVisible = true) => {
+  const registerButton = useCallback((id, isVisible = true) => {
     setButtons(prev => {
-      if (prev.some(btn => btn.id === id)) {
+      // Check if button already exists to prevent unnecessary re-renders
+      const existingButton = prev.find(btn => btn.id === id);
+      if (existingButton && existingButton.isVisible === isVisible) {
+        return prev;
+      }
+      
+      if (existingButton) {
         return prev.map(btn => 
           btn.id === id ? { ...btn, isVisible } : btn
         );
       }
       return [...prev, { id, isVisible }];
     });
-  };
+  }, []);
 
-  const updateButtonVisibility = (id, isVisible) => {
+  const updateButtonVisibility = useCallback((id, isVisible) => {
     setButtons(prev => 
       prev.map(btn => 
         btn.id === id ? { ...btn, isVisible } : btn
       )
     );
-  };
+  }, []);
 
-  const getButtonOffset = (id) => {
+  const getButtonOffset = useCallback((id) => {
     const visibleButtons = buttons.filter(btn => btn.isVisible);
     const buttonIndex = visibleButtons.findIndex(btn => btn.id === id);
     
@@ -45,7 +51,12 @@ export const FloatingButtonsProvider = ({ children }) => {
     }
     
     return offset;
-  };
+  }, [buttons]);
+
+  const isButtonVisible = useCallback((id) => {
+    const button = buttons.find(btn => btn.id === id);
+    return button?.isVisible ?? true;
+  }, [buttons]);
 
   return (
     <FloatingButtonsContext.Provider 
@@ -53,6 +64,7 @@ export const FloatingButtonsProvider = ({ children }) => {
         registerButton, 
         updateButtonVisibility,
         getButtonOffset,
+        isButtonVisible,
         buttonRefs
       }}
     >

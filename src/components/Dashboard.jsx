@@ -5,7 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import TabSwitcherMealChart from "./layouts/TabSwitcherMealChart";
 import ResponsiveChartWrapper from "./ResponsiveChartWrapper";
 import { MembersContext } from "@/contexts/MembersContext";
-import { MonthProvider } from "@/contexts/MonthContext";
+import { useMonth } from "@/contexts/MonthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { detectDevice } from "@/utils/deviceDetection";
@@ -86,17 +86,15 @@ const Dashboard = () => {
   }
 
   return (
-    <MonthProvider>
-      <div>
-        <Routes>
-          <Route path="/" element={<ResponsiveChartWrapper />} />
-          <Route
-            path=":memberId"
-            element={<TabSwitcherMealChart members={members} />}
-          />
-        </Routes>
-      </div>
-    </MonthProvider>
+    <div>
+      <Routes>
+        <Route path="/" element={<ResponsiveChartWrapper />} />
+        <Route
+          path=":memberId"
+          element={<TabSwitcherMealChart members={members} />}
+        />
+      </Routes>
+    </div>
   );
 };
 

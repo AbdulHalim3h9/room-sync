@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
-import LastUpdated from "./LastUpdated"; // Import the new component
+import LastUpdated from "./LastUpdated";
 
 const GroceriesSpendings = () => {
   const [month, setMonth] = useState(() => {
@@ -29,7 +29,6 @@ const GroceriesSpendings = () => {
 
   const fetchExpenses = async (monthString) => {
     if (!monthString || !/^\d{4}-\d{2}$/.test(monthString)) {
-      console.log("Invalid month format, skipping fetch");
       setExpenses([]);
       setLastUpdated(null);
       setLoading(false);
@@ -39,21 +38,23 @@ const GroceriesSpendings = () => {
     try {
       setLoading(true);
 
-      // Fetch the expenses collection for the selected month
       const expensesRef = collection(db, "expenses", monthString, "expenses");
       const snapshot = await getDocs(expensesRef);
-      const expensesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const expensesData = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+          date: data.date?.toDate ? data.date.toDate() : data.date,
+        };
+      });
 
-      // Fetch the lastUpdated timestamp from the expenses/{month} document
       const monthDocRef = doc(db, "expenses", monthString);
       const monthDoc = await getDoc(monthDocRef);
-      const lastUpdatedTimestamp = monthDoc.exists() ? monthDoc.data().lastUpdated : null;
+      const lastUpdatedTimestamp = monthDoc.exists() ? monthDoc.data().createdAt : null;
       setLastUpdated(lastUpdatedTimestamp);
 
-      // Fetch shopper full names
       const expensesWithShopperNames = await Promise.all(
         expensesData.map(async (expense) => {
           if (expense.shopper) {
@@ -69,10 +70,7 @@ const GroceriesSpendings = () => {
       );
 
       setExpenses(expensesWithShopperNames);
-      console.log("Fetched expenses for", monthString, ":", expensesWithShopperNames);
-      console.log("Last updated:", lastUpdatedTimestamp);
     } catch (error) {
-      console.error("Error fetching expenses:", error);
       setExpenses([]);
       setLastUpdated(null);
     } finally {
@@ -81,7 +79,6 @@ const GroceriesSpendings = () => {
   };
 
   useEffect(() => {
-    console.log("Fetching expenses for month:", month);
     fetchExpenses(month);
   }, [month]);
 
@@ -130,7 +127,6 @@ const GroceriesSpendings = () => {
   return (
     <div className="w-full max-w-[98vw] sm:max-w-6xl mx-auto px-4 sm:px-0 py-0">
       <div>
-        {/* Header without background color */}
         <div className="px-4 py-5 sm:py-6 border-b-2 border-purple-600">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-800 tracking-tight">
             Monthly Grocery Spendings

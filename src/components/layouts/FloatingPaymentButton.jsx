@@ -4,13 +4,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFloatingButtons } from '@/contexts/FloatingButtonsContext';
 
 const FloatingPaymentButton = () => {
   const navigate = useNavigate();
   const [isHighlighted, setIsHighlighted] = useState(false);
   const [animationOffset, setAnimationOffset] = useState({ top: 0, left: 0 });
-  const [isVisible, setIsVisible] = useState(true);
   const buttonRef = useRef(null);
+  const { isButtonVisible } = useFloatingButtons();
+  const isVisible = isButtonVisible('bills') ?? true;
 
   // Toggle highlight effect every 2 seconds
   useEffect(() => {

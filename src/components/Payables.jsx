@@ -3,16 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import SingleMonthYearPicker from "./SingleMonthYearPicker";
-import LastUpdated from "./LastUpdated"; // Import the LastUpdated component
+import LastUpdated from "./LastUpdated";
+import { useMonth } from "@/contexts/MonthContext";
 
 const Payables = () => {
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const monthNum = String(today.getMonth() + 1).padStart(2, "0");
-    return `${year}-${monthNum}`;
-  });
+  const { month, setMonth } = useMonth();
   const [bills, setBills] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null); // State for lastUpdated timestamp
   const [loading, setLoading] = useState(true);
@@ -24,9 +19,7 @@ const Payables = () => {
     return `${year}-${monthNum}`;
   })();
 
-  const handleDateChange = (newMonth) => {
-    setMonth(newMonth);
-  };
+
 
   const fetchBills = async (selectedMonth) => {
     try {
@@ -175,13 +168,7 @@ const Payables = () => {
             {bills.length} {bills.length === 1 ? "bill" : "bills"} for this month
           </span>
         </div>
-
-        <SingleMonthYearPicker
-          value={month || defaultMonth}
-          onChange={(newMonth) => setMonth(newMonth)}
-          collections={["payables"]}
-          className="h-10 rounded-lg border-gray-200 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 shadow-sm"
-        />
+        <LastUpdated timestamp={lastUpdated} />
       </div>
 
       {bills.length > 0 ? (

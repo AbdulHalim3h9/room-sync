@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import {
   Table,
@@ -14,14 +14,12 @@ import SingleMonthYearPicker from "./SingleMonthYearPicker";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { MembersContext } from "@/contexts/MembersContext";
+import { MonthContext } from "@/contexts/MonthContext";
 
 const MealCountMonth = () => {
   const { memberId } = useParams();
-  const { members, loading: membersLoading, error: membersError } = React.useContext(MembersContext);
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const { members, loading: membersLoading, error: membersError } = useContext(MembersContext);
+  const { month, setMonth } = useContext(MonthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [mealData, setMealData] = useState([]);
 
@@ -115,13 +113,14 @@ const MealCountMonth = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-800">Monthly Meal Count</h2>
-        <SingleMonthYearPicker
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Meal Count for {member?.memberName || 'Member'}</h2>
+        <SingleMonthYearPicker 
           value={month}
           onChange={setMonth}
           collections={["individualMeals"]}
+          className="h-9 sm:h-10 rounded-lg border-gray-200 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 shadow-sm"
         />
       </div>
 

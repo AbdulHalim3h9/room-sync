@@ -19,6 +19,7 @@ import RegistrationForm from "./components/RegisterAdminManager";
 import { MembersProvider } from "@/contexts/MembersContext";
 import { FloatingButtonsProvider } from "@/contexts/FloatingButtonsContext";
 import { MiscSettingsProvider } from "@/contexts/MiscSettingsContext";
+import { MonthProvider } from "@/contexts/MonthContext";
 import MiscSettings from "./components/MiscSettings";
 
 // ErrorBoundary component
@@ -44,27 +45,29 @@ const App = () => {
       <ErrorBoundary>
         <FloatingButtonsProvider>
           <MiscSettingsProvider>
-          <div className="flex flex-col min-h-screen relative">
-            <Layout>
-              <Routes>
-                <Route path="*" element={<Dashboard />} />
-                <Route path="/dashboard/*" element={<Dashboard />} />
-                <Route path="/payables" element={<Payables />} />
-                <Route path="/groceries_spendings" element={<Groceries_spendings />} />
-                <Route path="/add-grocery-spendings" element={<AddGrocerySpendings />} />
-                <Route path="/add-meal-fund" element={<AddMealFund />} />
-                <Route path="/set-payables" element={<SetPayables />} />
-                <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
-                <Route path="/register-member" element={<RegisterMember />} />
-                <Route path="/members" element={<MembersList />} />
-                <Route path="/member-details" element={<MemberDetails />} />
-                <Route path="/register" element={<RegistrationForm />} />
-                <Route path="/misc-settings" element={<MiscSettings />} />
-              </Routes>
-            </Layout>
-            <FloatingButtons />
-            <BottomNavigation />
-          </div>
+            <MonthProvider>
+              <div className="flex flex-col min-h-screen relative">
+                <Layout>
+                  <Routes>
+                    <Route path="*" element={<Dashboard />} />
+                    <Route path="/dashboard/*" element={<Dashboard />} />
+                    <Route path="/payables" element={<Payables />} />
+                    <Route path="/groceries_spendings" element={<Groceries_spendings />} />
+                    <Route path="/add-grocery-spendings" element={<AddGrocerySpendings />} />
+                    <Route path="/add-meal-fund" element={<AddMealFund />} />
+                    <Route path="/set-payables" element={<SetPayables />} />
+                    <Route path="/set-daily-meal-count" element={<SetDailyMealCount />} />
+                    <Route path="/register-member" element={<RegisterMember />} />
+                    <Route path="/members" element={<MembersList />} />
+                    <Route path="/member-details" element={<MemberDetails />} />
+                    <Route path="/register" element={<RegistrationForm />} />
+                    <Route path="/misc-settings" element={<MiscSettings />} />
+                  </Routes>
+                </Layout>
+                <FloatingButtons />
+                <BottomNavigation />
+              </div>
+            </MonthProvider>
           </MiscSettingsProvider>
         </FloatingButtonsProvider>
       </ErrorBoundary>

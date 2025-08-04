@@ -31,8 +31,9 @@ const FloatingDuesButton = () => {
   const [dues, setDues] = useState([]);
   const [members, setMembers] = useState({});
   const { toast } = useToast();
-  const [isVisible, setIsVisible] = useState(true);
   const buttonRef = useRef(null);
+  const { isButtonVisible } = useFloatingButtons();
+  const isVisible = isButtonVisible('due') ?? true;
 
   // Toggle highlight effect every 2 seconds
   useEffect(() => {

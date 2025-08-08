@@ -1,5 +1,6 @@
 import { db } from "@/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { addToGlobalMealFund } from "@/utils/globalFundManager";
 
 export const validateForm = (selectedDonor, amount, toast) => {
   const errors = [];
@@ -77,21 +78,9 @@ export const saveMealFund = async (selectedMonth, donor, newAmount, isFirstEntry
       { merge: true }
     );
 
-    const summaryRef = doc(db, "mealSummaries", selectedMonth);
-    const summarySnap = await getDoc(summaryRef);
-    const existingData = summarySnap.exists() ? summarySnap.data() : {};
-    const existingTotalMealFund = existingData.totalMealFund || 0;
+    // Add to global meal fund (month-independent)
     const amountToAdd = isFirstEntry ? adjustedAmount : newAmount;
-    const updatedTotalMealFund = existingTotalMealFund + amountToAdd;
-
-    await setDoc(
-      summaryRef,
-      {
-        totalMealFund: updatedTotalMealFund,
-        lastUpdated: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    await addToGlobalMealFund(amountToAdd);
 
     const contribConsumpDocId = `${selectedMonth}-${donor}`;
     const contribConsumpRef = doc(db, "contributionConsumption", contribConsumpDocId);

@@ -34,6 +34,7 @@ import {
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import DatePickerMealCount from "./DatePickerMealCount";
+import { addToGlobalSpendings } from "@/utils/globalFundManager";
 
 const AddGrocerySpendings = () => {
   const [amountSpent, setAmountSpent] = useState("");
@@ -46,6 +47,9 @@ const AddGrocerySpendings = () => {
   const [payLater, setPayLater] = useState(false);
   const [showPayLaterDialog, setShowPayLaterDialog] = useState(false);
   const [dueNote, setDueNote] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] = useState("low");
+  const [contactInfo, setContactInfo] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -147,6 +151,12 @@ const AddGrocerySpendings = () => {
         return sum;
       }, 0);
 
+      // Add to global spendings (month-independent)
+      if (newTotalSpendings > 0) {
+        await addToGlobalSpendings(newTotalSpendings);
+      }
+
+      // Update monthly meal summaries for meal rate calculation
       const summaryRef = doc(db, "mealSummaries", month);
       const summarySnap = await getDoc(summaryRef);
       const existingData = summarySnap.exists() ? summarySnap.data() : {};
@@ -160,7 +170,7 @@ const AddGrocerySpendings = () => {
       await firestoreSetDoc(
         summaryRef,
         {
-          totalSpendings: newTotalSpendings,
+          totalSpendings: newTotalSpendings, // Monthly spendings for meal rate calculation
           mealRate: parseFloat(mealRate),
           lastUpdated: new Date().toISOString(),
         },
@@ -194,6 +204,10 @@ const AddGrocerySpendings = () => {
       errors.push("Expense Title");
     }
 
+    if (payLater && (!dueNote || !dueDate)) {
+      errors.push("Due Note and Due Date are required for Pay Later expenses.");
+    }
+
     if (errors.length > 0) {
       toast({
         title: "Validation Error",
@@ -212,6 +226,9 @@ const AddGrocerySpendings = () => {
     } else {
       setPayLater(false);
       setDueNote(""); // Reset due note when pay later is toggled off
+      setDueDate("");
+      setPriority("low");
+      setContactInfo("");
     }
   };
 
@@ -223,6 +240,9 @@ const AddGrocerySpendings = () => {
   const cancelPayLater = () => {
     setPayLater(false);
     setDueNote(""); // Reset due note when pay later is canceled
+    setDueDate("");
+    setPriority("low");
+    setContactInfo("");
     setShowPayLaterDialog(false);
   };
 
@@ -268,6 +288,9 @@ const AddGrocerySpendings = () => {
           date: formattedDate,
           paymentStatus: "pending",
           dueNote: dueNote || null, // Store due note, null if empty
+          dueDate: dueDate || null, // Store due date, null if empty
+          priority: priority || null, // Store priority, null if empty
+          contactInfo: contactInfo || null, // Store contact info, null if empty
           createdAt: new Date().toISOString(),
         };
         await addDoc(duesRef, dueData);
@@ -288,6 +311,9 @@ const AddGrocerySpendings = () => {
       setSelectedDate(new Date());
       setPayLater(false);
       setDueNote("");
+      setDueDate("");
+      setPriority("low");
+      setContactInfo("");
 
       // Update datesWithData
       const newDate = new Date(formattedDate);
@@ -476,21 +502,72 @@ const AddGrocerySpendings = () => {
               <p className="text-xs text-gray-500">Mark this expense to be paid later</p>
             </div>
 
-            {/* Due Note Field - Only when Pay Later is enabled */}
+            {/* Pay Later Fields - Only when Pay Later is enabled */}
             {payLater && (
-              <div className="space-y-2">
-                <Label htmlFor="due-note" className="block text-sm font-semibold text-gray-800">
-                  Due Note
-                </Label>
-                <Input
-                  id="due-note"
-                  type="text"
-                  placeholder="E.g., Bacchar dokane baki"
-                  value={dueNote}
-                  onChange={(e) => setDueNote(e.target.value)}
-                  className="h-11 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-base shadow-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">Optional note about the due payment</p>
+              <div className="space-y-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="space-y-2">
+                  <Label htmlFor="due-note" className="block text-sm font-semibold text-gray-800">
+                    Due Note
+                  </Label>
+                  <Input
+                    id="due-note"
+                    type="text"
+                    placeholder="E.g., Bacchar dokane baki, or specific details"
+                    value={dueNote}
+                    onChange={(e) => setDueNote(e.target.value)}
+                    className="h-11 rounded-lg border-gray-200 focus:border-orange-500 focus:ring focus:ring-orange-200 focus:ring-opacity-50 text-base shadow-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Optional note about the due payment</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="due-date" className="block text-sm font-semibold text-gray-800">
+                      Due Date
+                    </Label>
+                    <Input
+                      id="due-date"
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="h-11 rounded-lg border-gray-200 focus:border-orange-500 focus:ring focus:ring-orange-200 focus:ring-opacity-50 text-base shadow-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">When this due should be paid</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="priority" className="block text-sm font-semibold text-gray-800">
+                      Priority Level
+                    </Label>
+                    <Select value={priority} onValueChange={setPriority}>
+                      <SelectTrigger className="h-11 rounded-lg border-gray-200 focus:border-orange-500 focus:ring focus:ring-orange-200 focus:ring-opacity-50 text-base shadow-sm">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg border-gray-200 shadow-lg">
+                        <SelectItem value="low" className="py-2.5 text-base font-medium">Low</SelectItem>
+                        <SelectItem value="medium" className="py-2.5 text-base font-medium">Medium</SelectItem>
+                        <SelectItem value="high" className="py-2.5 text-base font-medium">High</SelectItem>
+                        <SelectItem value="urgent" className="py-2.5 text-base font-medium">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">How urgent this payment is</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact-info" className="block text-sm font-semibold text-gray-800">
+                    Contact Information
+                  </Label>
+                  <Input
+                    id="contact-info"
+                    type="text"
+                    placeholder="E.g., Shop owner's phone number or address"
+                    value={contactInfo}
+                    onChange={(e) => setContactInfo(e.target.value)}
+                    className="h-11 rounded-lg border-gray-200 focus:border-orange-500 focus:ring focus:ring-orange-200 focus:ring-opacity-50 text-base shadow-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Contact details for the person/shop to be paid</p>
+                </div>
               </div>
             )}
 

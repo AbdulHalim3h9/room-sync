@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { db } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { getGlobalFund } from "@/utils/globalFundManager";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function FundIndicator() {
@@ -11,16 +10,9 @@ export function FundIndicator() {
   useEffect(() => {
     const fetchFundData = async () => {
       try {
-        const today = new Date();
-        const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-        const mealSummaryRef = doc(db, "mealSummaries", currentMonth);
-        const mealSummarySnap = await getDoc(mealSummaryRef);
-        
-        if (mealSummarySnap.exists()) {
-          const data = mealSummarySnap.data();
-          setTotalMealFund(parseFloat(data.totalMealFund || 0));
-          setTotalSpendings(parseFloat(data.totalSpendings || 0));
-        }
+        const globalFund = await getGlobalFund();
+        setTotalMealFund(parseFloat(globalFund.totalMealFund || 0));
+        setTotalSpendings(parseFloat(globalFund.totalSpendings || 0));
       } catch (error) {
         console.error("Error fetching fund data:", error);
       } finally {

@@ -20,18 +20,60 @@ export const validateSubmission = async (selectedDate, mealCounts, toast) => {
   }
 
   const month = format(selectedDate, "yyyy-MM");
-  let startDay = 1;
 
   try {
     const docRef = doc(db, "individualMeals", month);
     const docSnap = await getDoc(docRef);
     const existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
-    for (const [memberId] of Object.entries(mealCounts)) {
-      const meals = existingData.mealCounts[memberId] || [];
-      const secondLastMeal = meals.length > 1 ? meals[meals.length - 2] : "";
-      startDay = meals.length === 0 ? 0 : parseInt(secondLastMeal.slice(0, 2));
+    // Find the highest date from all existing members
+    let highestDate = 0;
+    for (const [memberId, meals] of Object.entries(existingData.mealCounts)) {
+      if (Array.isArray(meals) && meals.length > 0) {
+        // Find the last non-Total entry
+        for (let i = meals.length - 1; i >= 0; i--) {
+          const entry = meals[i];
+          if (entry && !entry.startsWith("Total")) {
+            const day = parseInt(entry.slice(0, 2));
+            highestDate = Math.max(highestDate, day);
+            break;
+          }
+        }
+      }
     }
+
+    console.log(`Validation: Highest date found: ${highestDate}, Selected date: ${selectedDate.getDate()}`);
+
+    // Check if this is a new entry (no existing data) or sequential entry
+    const selectedDay = selectedDate.getDate();
+    
+    if (highestDate === 0) {
+      // No existing data for this month - must start from day 1
+      console.log("No existing data for this month - must start from day 1");
+      if (selectedDay !== 1) {
+        toast({
+          title: "Validation Error",
+          description: "Please start with day 1 for the first entry of this month",
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    }
+
+    // Check if the selected date is the next expected date
+    const nextExpectedDate = highestDate + 1;
+    console.log(`Next expected date: ${nextExpectedDate}, Selected date: ${selectedDay}`);
+    if (selectedDay !== nextExpectedDate) {
+      toast({
+        title: "Validation Error",
+        description: `Please fill out the meal count for date ${nextExpectedDate} first`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
   } catch (error) {
     toast({
       title: "Error",
@@ -40,17 +82,6 @@ export const validateSubmission = async (selectedDate, mealCounts, toast) => {
     });
     return false;
   }
-
-  if (selectedDate.getDate() - startDay !== 1 && selectedDate.getDate() > startDay) {
-    toast({
-      title: "Validation Error",
-      description: `Please fill out the meal count for date ${startDay + 1} first`,
-      variant: "destructive",
-    });
-    return false;
-  }
-
-  return true;
 };
 
 /**
@@ -173,6 +204,22 @@ export const handleConfirmSubmit = async (mealCounts, members, datesWithData, se
     const docSnap = await getDoc(docRef);
     let existingData = docSnap.exists() ? docSnap.data() : { mealCounts: {} };
 
+    // Find the highest date from all existing members
+    let highestDate = 0;
+    for (const [memberId, meals] of Object.entries(existingData.mealCounts)) {
+      if (Array.isArray(meals) && meals.length > 0) {
+        // Find the last non-Total entry
+        for (let i = meals.length - 1; i >= 0; i--) {
+          const entry = meals[i];
+          if (entry && !entry.startsWith("Total")) {
+            const day = parseInt(entry.slice(0, 2));
+            highestDate = Math.max(highestDate, day);
+            break;
+          }
+        }
+      }
+    }
+
     const isUpdate = Object.entries(existingData.mealCounts).some(([_, meals]) => 
       Array.isArray(meals) && meals.some(entry => entry.startsWith(day))
     );
@@ -188,26 +235,38 @@ export const handleConfirmSubmit = async (mealCounts, members, datesWithData, se
 
     const { date, ...mealData } = mealCounts;
 
-    const allZeros = Object.values(mealData).every(count => count === '0' || count === 0 || count === '');
-    if (allZeros) {
-      toast({
-        title: "Warning",
-        description: "All meal counts are zero. No data will be saved.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    // Fill missing dates with zeros for new members
     for (const [memberId, mealCount] of Object.entries(mealData)) {
       let meals = Array.isArray(existingData.mealCounts[memberId]) ? 
                 [...existingData.mealCounts[memberId]] : [];
       
+      // Remove existing entries for the current day and Total
       meals = meals.filter(
         (entry) => !entry.startsWith(day) && !entry.startsWith("Total")
       );
+
+      // If this is a new member or has fewer entries than the highest date, fill missing dates with zeros
+      if (meals.length < highestDate) {
+        console.log(`Filling missing dates for member ${memberId}. Current length: ${meals.length}, Highest date: ${highestDate}`);
+        for (let i = 1; i <= highestDate; i++) {
+          const dayStr = i.toString().padStart(2, '0');
+          if (!meals.some(entry => entry.startsWith(dayStr))) {
+            meals.push(`${dayStr} 0`);
+            console.log(`Added ${dayStr} 0 for member ${memberId}`);
+          }
+        }
+        // Sort the meals array by date
+        meals.sort((a, b) => {
+          const dayA = parseInt(a.split(' ')[0]);
+          const dayB = parseInt(b.split(' ')[0]);
+          return dayA - dayB;
+        });
+      }
       
+      // Add the current day's meal count
       meals.push(`${day} ${parseInt(mealCount, 10)}`);
 
+      // Calculate new total
       const newSum = meals.reduce((sum, entry) => {
         const [, count] = entry.split(" ");
         return sum + (parseInt(count, 10) || 0);

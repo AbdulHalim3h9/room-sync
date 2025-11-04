@@ -2,6 +2,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
 import * as Sidebar from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import Cookies from "js-cookie";
@@ -17,11 +18,11 @@ import Announcements from "./Announcements";
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setOpen } = useSidebar();
   const [phoneNumbers, setPhoneNumbers] = useState([]);
   const [user, setUser] = useState(null);
   const [activeMembers, setActiveMembers] = useState([]);
   const [isAnnouncementDialogOpen, setIsAnnouncementDialogOpen] = useState(false);
-  const [open, setOpen] = useState(false);
 
   const fetchPhoneNumbers = async () => {
     try {
